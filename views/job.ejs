@@ -1,0 +1,92 @@
+<%- include('partials/careers-header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › <a href="/careers">Careers</a> › <%= job.title %></div>
+    <span class="badge badge--service" style="background:rgba(255,255,255,0.9);"><%= job.service %></span>
+    <h1 style="margin-top:0.8rem;"><%= job.title %></h1>
+    <p><%= job.summary %></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="job-detail">
+      <!-- description -->
+      <div class="prose">
+        <h2 style="margin-top:0;">About the role</h2>
+        <p><%= job.description %></p>
+
+        <% if (job.responsibilities && job.responsibilities.length) { %>
+        <h2>What you’ll be doing</h2>
+        <ul><% job.responsibilities.forEach(function(r){ %><li><%= r %></li><% }) %></ul>
+        <% } %>
+
+        <% if (job.requirements && job.requirements.length) { %>
+        <h2>What we’re looking for</h2>
+        <ul><% job.requirements.forEach(function(r){ %><li><%= r %></li><% }) %></ul>
+        <% } %>
+
+        <h2>What we offer</h2>
+        <ul>
+          <li>Paid breaks and holiday entitlement</li>
+          <li>A funded Care Certificate and recognised Health &amp; Social Care Diploma</li>
+          <li>NMC revalidation funded for our nurses</li>
+          <li>A proper induction and the chance to grow as we do</li>
+        </ul>
+      </div>
+
+      <!-- apply -->
+      <aside class="apply-card" id="apply">
+        <h3>Apply for this job</h3>
+        <p class="muted" style="margin-top:-0.3rem;font-size:0.92rem;">Job application — takes about 2 minutes.</p>
+        <ul class="job-facts">
+          <li><span>Location</span><span><%= job.location %></span></li>
+          <li><span>Contract</span><span><%= job.employmentType %></span></li>
+          <% if (job.salary) { %><li><span>Salary</span><span><%= job.salary %></span></li><% } %>
+          <% if (job.hours) { %><li><span>Hours</span><span><%= job.hours %></span></li><% } %>
+          <% if (job.closingDate) { %><li><span>Closing date</span><span><%= job.closingDate %></span></li><% } %>
+        </ul>
+
+        <% if (error) { %><div class="alert alert--error"><%= error %></div><% } %>
+
+        <form action="/careers/<%= job.id %>/apply" method="post" enctype="multipart/form-data">
+          <div class="field">
+            <label for="name">Full name *</label>
+            <input type="text" id="name" name="name" required value="<%= form.name || '' %>" />
+          </div>
+          <div class="field">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required value="<%= form.email || '' %>" />
+          </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" value="<%= form.phone || '' %>" />
+          </div>
+          <div class="field">
+            <label for="rightToWork">Do you have the right to work in the UK?</label>
+            <select id="rightToWork" name="rightToWork">
+              <option value="">Please select</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+              <option value="Sponsorship needed">I’d need sponsorship</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="message">Cover message</label>
+            <textarea id="message" name="message" placeholder="Tell us a little about yourself and why you’d like to join us"><%= form.message || '' %></textarea>
+          </div>
+          <div class="field">
+            <label for="cv">Upload your CV</label>
+            <input type="file" id="cv" name="cv" accept=".pdf,.doc,.docx,.rtf,.txt,.odt" />
+            <span class="hint">PDF or Word, up to 8&nbsp;MB (optional).</span>
+          </div>
+          <button type="submit" class="btn btn--primary btn--block">Submit application</button>
+          <p class="hint mt-1" style="text-align:center;">By applying you agree to our recruitment privacy notice.</p>
+        </form>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/careers-footer') %>

@@ -1,0 +1,92 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Contact</div>
+    <span class="eyebrow hero__eyebrow">Contact us</span>
+    <h1>Speak to a real person about care</h1>
+    <p>Ask about availability at any of our four homes, book a visit, or get help working out the right kind of care. Call us, or send a message and we'll reply within one working day.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="job-detail">
+      <div>
+        <% if (sent) { %>
+        <div class="alert alert--success" style="font-size:1rem;padding:1.2rem 1.4rem;">
+          <strong>Thank you — your message has been sent.</strong><br />Our team will be in touch within one working day, often sooner.
+        </div>
+        <% } %>
+        <h2 style="margin-top:0;">Send us a message</h2>
+        <p class="muted">Fill in the form and we’ll get back to you, usually within one working day.</p>
+        <form action="/contact" method="post" style="max-width:560px;">
+          <div class="admin-form">
+            <div class="grid-2">
+              <div class="field"><label for="name">Your name *</label><input type="text" id="name" name="name" required value="<%= form.name||'' %>" /></div>
+              <div class="field"><label for="email">Email *</label><input type="email" id="email" name="email" required value="<%= form.email||'' %>" /></div>
+            </div>
+            <div class="grid-2">
+              <div class="field"><label for="phone">Phone</label><input type="tel" id="phone" name="phone" value="<%= form.phone||'' %>" /></div>
+              <div class="field"><label for="subject">Subject</label>
+                <select id="subject" name="subject">
+                  <option>General enquiry</option>
+                  <option>Arranging care</option>
+                  <option>Book a visit</option>
+                  <option>Fees &amp; funding</option>
+                  <option>Careers</option>
+                </select>
+              </div>
+            </div>
+            <div class="field"><label for="message">Message *</label><textarea id="message" name="message" required><%= form.message||'' %></textarea></div>
+            <button type="submit" class="btn btn--primary">Send message</button>
+          </div>
+        </form>
+      </div>
+
+      <aside class="apply-card">
+        <h3>Get in touch</h3>
+        <ul class="job-facts">
+          <li><span>Call us</span><span><a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a></span></li>
+          <li><span>Email</span><span><a href="mailto:<%= SITE.email %>"><%= SITE.email %></a></span></li>
+          <li><span>Lines open</span><span>Mon–Sun, 8am–8pm</span></li>
+        </ul>
+        <p class="muted" style="font-size:0.92rem;"><strong style="color:var(--green-800)">Head office</strong><br /><%= SITE.address %></p>
+        <a href="/care-homes" class="btn btn--ghost btn--block">Find your nearest home</a>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- Request a callback -->
+<section class="section section--alt" id="callback">
+  <div class="container">
+    <div style="max-width:640px;margin-inline:auto;text-align:center;">
+      <% if (callbackSent) { %>
+      <div class="alert alert--success" style="font-size:1rem;padding:1.2rem 1.4rem;text-align:left;">
+        <strong>Thank you — your callback request is in.</strong><br />A member of our team will call you back, usually the same working day.
+      </div>
+      <% } %>
+      <span class="eyebrow">Prefer us to call you?</span>
+      <h2 class="h2">Request a callback</h2>
+      <p class="lead" style="margin-inline:auto;">Leave your number and a good time, and a friendly member of our team will call you back — no obligation.</p>
+      <form action="/callback" method="post" class="admin-form" style="text-align:left;margin-top:1.5rem;">
+        <div class="grid-2">
+          <div class="field"><label for="cb-name">Your name *</label><input type="text" id="cb-name" name="name" required value="<%= cbForm.name||'' %>" /></div>
+          <div class="field"><label for="cb-phone">Phone number *</label><input type="tel" id="cb-phone" name="phone" required value="<%= cbForm.phone||'' %>" /></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label for="cb-time">Best time to call</label>
+            <select id="cb-time" name="time"><option>Anytime</option><option>Morning (8am–12pm)</option><option>Afternoon (12–5pm)</option><option>Evening (5–8pm)</option></select>
+          </div>
+          <div class="field"><label for="cb-home">Home of interest (optional)</label>
+            <select id="cb-home" name="home"><option value="">Any / not sure</option><% homes.forEach(function(h){ %><option><%= h.name %></option><% }) %></select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn--primary">Request my callback</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

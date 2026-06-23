@@ -1,0 +1,71 @@
+<%- include('../partials/admin-header') %>
+
+<div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;">
+  <div>
+    <h1 class="admin-h1">Dashboard</h1>
+    <p class="muted mb-0">Manage your live vacancies and review applications.</p>
+  </div>
+  <a href="/admin/jobs/new" class="btn btn--primary">+ Post a new job</a>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><div class="n"><%= stats.open %></div><div class="l">Live vacancies</div></div>
+  <div class="stat-card"><div class="n"><%= stats.closed %></div><div class="l">Closed vacancies</div></div>
+  <div class="stat-card"><div class="n"><%= stats.applications %></div><div class="l">Total applications</div></div>
+  <div class="stat-card"><div class="n"><%= stats.messages %></div><div class="l">Enquiries</div></div>
+</div>
+
+<div class="panel">
+  <div class="panel__head">
+    <h2>Vacancies</h2>
+    <a href="/admin/jobs/new" class="btn btn--sm btn--muted">+ New</a>
+  </div>
+  <div class="panel__body" style="padding:0;">
+    <% if (jobs.length) { %>
+    <table class="table">
+      <thead>
+        <tr><th>Role</th><th>Service</th><th>Location</th><th>Status</th><th>Applications</th><th>Posted</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% jobs.forEach(function(job){ %>
+        <tr>
+          <td>
+            <strong><%= job.title %></strong>
+            <% if (job.featured) { %><span class="badge badge--featured" style="margin-left:.4rem;">Featured</span><% } %>
+            <div class="muted" style="font-size:.85rem;"><%= job.employmentType %><%= job.salary ? ' · ' + job.salary : '' %></div>
+          </td>
+          <td><%= job.service %></td>
+          <td><%= job.location %></td>
+          <td><span class="badge <%= job.status === 'open' ? 'badge--open' : 'badge--closed' %>"><%= job.status %></span></td>
+          <td>
+            <% if (counts[job.id]) { %>
+              <a href="/admin/applications?job=<%= job.id %>"><strong><%= counts[job.id] %></strong> view</a>
+            <% } else { %><span class="muted">0</span><% } %>
+          </td>
+          <td class="muted" style="font-size:.85rem;"><%= new Date(job.postedAt).toLocaleDateString('en-GB') %></td>
+          <td>
+            <div class="row-actions">
+              <a href="/careers/<%= job.id %>" target="_blank" rel="noopener" class="btn btn--sm btn--muted">View</a>
+              <a href="/admin/jobs/<%= job.id %>/edit" class="btn btn--sm btn--ghost">Edit</a>
+              <form action="/admin/jobs/<%= job.id %>/toggle" method="post" class="inline-form">
+                <button class="btn btn--sm btn--muted"><%= job.status === 'open' ? 'Close' : 'Reopen' %></button>
+              </form>
+              <form action="/admin/jobs/<%= job.id %>/delete" method="post" class="inline-form" onsubmit="return confirm('Delete this vacancy and its applications? This cannot be undone.');">
+                <button class="btn btn--sm btn--danger">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } else { %>
+    <div style="padding:2.5rem;text-align:center;" class="muted">
+      <p>No vacancies yet.</p>
+      <a href="/admin/jobs/new" class="btn btn--primary">Post your first job</a>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

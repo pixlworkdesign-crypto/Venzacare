@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title ? title + ' · ' : '' %><%= SITE.name %></title>
+  <meta name="description" content="Venza Care UK runs four care homes in London, Kent and Cambridge — residential, nursing, dementia and end-of-life care, all CQC-regulated. Find a home or a job in care." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" type="image/png" href="/images/logo.png" />
+</head>
+<body class="page">
+  <header class="nav">
+    <div class="nav__inner">
+      <a href="/" class="brand" aria-label="Venza Care UK home">
+        <img src="/images/logo.png" alt="Venza Care" class="brand__logo" />
+        <span class="brand__uk">United<br />Kingdom</span>
+      </a>
+      <nav class="nav__links" id="navlinks">
+        <a href="/our-care" class="<%= currentPath === '/our-care' ? 'is-active' : '' %>">Our care</a>
+        <a href="/care-homes" class="<%= currentPath.startsWith('/care-homes') ? 'is-active' : '' %>">Our homes</a>
+        <a href="/contact" class="<%= currentPath === '/contact' ? 'is-active' : '' %>">Contact</a>
+      </nav>
+      <div class="nav__cta">
+        <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>" class="nav__call">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
+          Call us
+        </a>
+        <a href="/contact" class="btn btn--primary btn--sm">Book a visit</a>
+      </div>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+  <main>

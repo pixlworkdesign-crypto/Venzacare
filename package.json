@@ -1,0 +1,20 @@
+{
+  "name": "venza-care-uk",
+  "version": "1.0.0",
+  "description": "Venza Care UK — residential, nursing & complex care website with careers board and admin backoffice",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^2.2.0"
+  }
+}

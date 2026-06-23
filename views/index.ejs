@@ -1,0 +1,198 @@
+<%- include('partials/header') %>
+
+<!-- HERO -->
+<section class="hero has-photo" style="background-image: linear-gradient(100deg, rgba(13,79,92,0.88) 0%, rgba(13,79,92,0.6) 46%, rgba(17,93,108,0.32) 100%), url('/images/hero-home.jpg'); background-size: cover; background-position: center;">
+  <div class="hero__inner">
+    <span class="eyebrow hero__eyebrow">Residential · Nursing · Dementia · End-of-life care</span>
+    <h1>The care home you'd choose for your own family</h1>
+    <p class="hero__lead">Four care homes in London, Kent and Cambridge — offering residential, nursing and dementia care, all registered and inspected by the Care Quality Commission.</p>
+    <div class="hero__cta">
+      <a href="/care-homes" class="btn btn--gold">Find a care home</a>
+      <a href="/careers" class="btn btn--outline-light">Explore careers</a>
+    </div>
+  </div>
+</section>
+
+<!-- Care-home finder (overlapping card) -->
+<div class="finder-band">
+  <div class="container">
+    <div class="finder">
+      <h3>Find your nearest Venza Care home</h3>
+      <form action="/care-homes" method="get">
+        <div class="field">
+          <label for="f-q">Town or postcode</label>
+          <input type="text" id="f-q" name="q" placeholder="e.g. Croydon or CR0" />
+        </div>
+        <div class="field">
+          <label for="f-region">Region</label>
+          <select id="f-region" name="region">
+            <option value="">All regions</option>
+            <% SITE.regions.forEach(function(r){ %><option value="<%= r %>"><%= r %></option><% }) %>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-care">Type of care</label>
+          <select id="f-care" name="careType">
+            <option value="">Any care</option>
+            <% ['Residential Care','Nursing Care','Dementia Care','Respite Care','End-of-life Care'].forEach(function(c){ %><option value="<%= c %>"><%= c %></option><% }) %>
+          </select>
+        </div>
+        <button type="submit" class="btn btn--primary">Search</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- TRUST BAR -->
+<div class="trustbar">
+  <div class="trustbar__inner">
+    <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Z"/></svg> <strong>CQC&nbsp;regulated</strong></span>
+    <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg> <strong>4</strong> care homes</span>
+    <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg> London · Kent · Cambridge</span>
+    <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Family always welcome</span>
+  </div>
+</div>
+
+
+<!-- LIFE ENRICHMENT SPLIT -->
+<section class="section section--alt">
+  <div class="container">
+    <div class="split">
+      <div class="split__media split__media--bordered has-photo" style="background-image:url('/images/life.jpg');"></div>
+      <div>
+        <span class="eyebrow">Life in our homes</span>
+        <h2 class="h2">There's more to the day than care</h2>
+        <p class="lead">Good days are made of small things — something to do, a proper meal, time outdoors and a visit from the people who matter. Each home runs its own programme of activities shaped around what residents actually enjoy.</p>
+        <ul style="list-style:none;padding:0;margin:1.5rem 0;display:grid;gap:0.8rem;">
+          <% ['A regular programme of activities and outings','Freshly prepared meals, with special diets catered for','Comfortable lounges and gardens to enjoy','Family and friends always welcome'].forEach(function(p){ %>
+          <li style="display:flex;gap:0.7rem;align-items:flex-start;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#20a7bc" stroke-width="2.2" style="flex:none;margin-top:2px"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><%= p %></span>
+          </li>
+          <% }) %>
+        </ul>
+        <a href="/our-care" class="btn btn--primary">More about life with us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section section--alt about-split">
+  <div class="container">
+    <div class="split split--reverse">
+      <div class="split__media split__media--bordered has-photo" style="background-image:url('/images/about.jpg');"></div>
+      <div>
+        <span class="eyebrow">About Venza Care</span>
+        <h2 class="h2">Care that starts with getting to know you</h2>
+        <p class="lead">Across our four homes in London, Kent and Cambridge, around 300 people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. We offer residential, nursing, dementia and end-of-life care, but it always begins with the person, never the task.</p>
+        <p>Our carers and nurses take time to learn the little things — the name of a grandchild, a favourite song, the routine that makes a day feel right. Every home is registered with and inspected by the Care Quality Commission.</p>
+        <div class="hero__cta" style="margin-top:1.5rem;">
+          <a href="/our-care" class="btn btn--primary">Our approach to care</a>
+          <a href="/care-homes" class="btn btn--ghost">Find a home</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS (figures computed live from our real home data) -->
+<section class="section section--green">
+  <div class="container">
+    <div class="section-head center" style="margin-inline:auto;">
+      <span class="eyebrow" style="color:var(--gold-400)">Venza Care at a glance</span>
+      <h2 class="h2" style="color:#fff;">Trusted care, by the numbers</h2>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat__num"><%= stats.homes %></div><div class="stat__label">Care homes</div></div>
+      <div class="stat"><div class="stat__num"><%= stats.beds %></div><div class="stat__label">Beds across our homes</div></div>
+      <div class="stat"><div class="stat__num"><%= stats.careTypes %></div><div class="stat__label">Types of care, from residential to nursing</div></div>
+      <div class="stat"><div class="stat__num">24/7</div><div class="stat__label">Registered nursing on site</div></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- GUIDES -->
+<section class="section section--alt">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow">Help &amp; advice</span>
+      <h2 class="h2">Free guides for families</h2>
+      <p class="lead" style="margin-inline:auto;">Choosing care can feel overwhelming. Our friendly guides break it all down — at no cost and no obligation.</p>
+    </div>
+    <div class="guides">
+      <% var guides=[
+        {t:'A guide to choosing a care home',d:'What to look for, questions to ask and how to know it feels right.',pdf:'/guides/choosing-a-care-home.pdf'},
+        {t:'Understanding fees &amp; funding',d:'NHS, local authority and self-funding explained in plain English.',pdf:'/guides/understanding-fees-and-funding.pdf'},
+        {t:'Living well with dementia',d:'Practical advice and reassurance for families and carers.',pdf:'/guides/living-well-with-dementia.pdf'},
+        {t:'Making the move easier',d:'How to help a loved one settle in and feel at home quickly.',pdf:'/guides/making-the-move-easier.pdf'}
+      ]; guides.forEach(function(g){ %>
+      <div class="guide-card">
+        <div class="ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13ZM4 19.5A2.5 2.5 0 0 0 6.5 22H20"/></svg></div>
+        <h4><%- g.t %></h4>
+        <p><%- g.d %></p>
+        <a href="<%= g.pdf %>" class="care-card__link" download target="_blank" rel="noopener">Download free
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>
+        </a>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+
+<!-- WHY FAMILIES CHOOSE US -->
+<section class="section">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow">Why families choose us</span>
+      <h2 class="h2">The things that matter most</h2>
+      <p class="lead" style="margin-inline:auto;">Choosing a care home is one of the hardest decisions a family makes. Here's what you can count on from every Venza Care home.</p>
+    </div>
+    <div class="testi-grid">
+      <% var values=[
+        {t:'Known, not just cared for', d:'A named carer who learns your routines, your stories and the little things that make a day feel right.'},
+        {t:'Care that adapts', d:'Residential, nursing and dementia care under one roof, so as needs change your loved one rarely has to move home.'},
+        {t:'Family always welcome', d:'Open visiting, a named contact at each home, and a team that picks up the phone whenever you need to talk.'}
+      ]; values.forEach(function(v){ %>
+      <div class="quote-card">
+        <div class="care-card__icon" style="margin-bottom:1rem;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h3 style="font-size:1.2rem;"><%= v.t %></h3>
+        <p style="color:var(--muted);margin:0;"><%= v.d %></p>
+      </div>
+      <% }) %>
+    </div>
+    <p class="muted" style="text-align:center;margin-top:2rem;">Reviews from residents and their families will appear here.</p>
+  </div>
+</section>
+
+<!-- REGULATION / TRUST -->
+<section class="section section--alt" style="padding-top:0;">
+  <div class="container">
+    <div class="section-head center"><h2 class="h2" style="font-size:1.6rem;">Regulated, inspected and open about it</h2></div>
+    <div class="awards">
+      <% ['Every home registered with the CQC','Inspection reports published in full','Residential, nursing &amp; dementia care','Local authority &amp; NHS partnerships'].forEach(function(a){ %>
+      <div class="award"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Z"/></svg><%- a %></div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="cta-band" style="background:linear-gradient(120deg,var(--green-800),var(--green-600));">
+      <h2>Looking for care? Let's talk.</h2>
+      <p>Tell us what you need and we'll check availability across our four homes. Call us, or book a visit and we'll come back to you within one working day.</p>
+      <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>" class="btn btn--gold btn--call">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
+        Call <%= SITE.phone %>
+      </a>
+      <a href="/contact" class="btn btn--outline-light">Book a visit</a>
+      <a href="/contact#callback" class="btn btn--outline-light">Request a callback</a>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

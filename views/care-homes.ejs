@@ -1,0 +1,260 @@
+<%- include('partials/header') %>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Find a home</div>
+    <span class="eyebrow hero__eyebrow">Our homes</span>
+    <h1>Find a Venza Care home</h1>
+    <p>Search by town, region or the type of care you need — or use your location to find your nearest home.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <!-- Finder -->
+    <div class="finder" style="max-width:none;margin-top:0;margin-bottom:1.5rem;">
+      <form action="/care-homes" method="get" id="finderForm">
+        <div class="field">
+          <label for="q">Town or postcode</label>
+          <input type="text" id="q" name="q" value="<%= q %>" placeholder="e.g. Croydon or CR0" />
+        </div>
+        <div class="field">
+          <label for="region">Region</label>
+          <select id="region" name="region">
+            <option value="">All regions</option>
+            <% SITE.regions.forEach(function(r){ %><option value="<%= r %>" <%= region===r?'selected':'' %>><%= r %></option><% }) %>
+          </select>
+        </div>
+        <div class="field">
+          <label for="careType">Type of care</label>
+          <select id="careType" name="careType">
+            <option value="">Any care</option>
+            <% ['Residential Care','Nursing Care','Dementia Care','Respite Care','End-of-life Care'].forEach(function(c){ %><option value="<%= c %>" <%= careType===c?'selected':'' %>><%= c %></option><% }) %>
+          </select>
+        </div>
+        <button type="submit" class="btn btn--primary">Search</button>
+      </form>
+    </div>
+
+    <div class="finder-actions">
+      <p class="muted" style="margin:0;"><strong style="color:var(--green-800)"><span id="resultNum"><%= homes.length %></span></strong> home<span id="resultPlural"><%= homes.length===1?'':'s' %></span> found</p>
+      <div class="finder-actions__btns">
+        <button type="button" class="btn btn--ghost btn--sm" id="useLocation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          Use my location
+        </button>
+        <button type="button" class="btn btn--muted btn--sm" id="clearFilters" style="display:none;">Clear</button>
+      </div>
+    </div>
+
+    <div class="homes-grid">
+      <% homes.forEach(function(h, i){ %>
+      <a class="home-card" href="/care-homes/<%= h.id %>"
+         data-id="<%= h.id %>"
+         data-name="<%= h.name.toLowerCase() %>"
+         data-town="<%= h.town.toLowerCase() %>"
+         data-postcode="<%= h.postcode.toLowerCase().replace(/\s/g,'') %>"
+         data-region="<%= h.region %>"
+         data-care="<%= h.careTypes.join('|') %>"
+         data-lat="<%= h.lat %>" data-lng="<%= h.lng %>">
+        <div class="home-card__media<%= h.photo ? ' has-photo' : '' %>"<% if (h.photo) { %> style="background-image:url('/images/<%= h.photo %>'); background-repeat:no-repeat; background-position:center; background-size:cover;"<% } %>>
+          <% if (h.cqc === 'Good' || h.cqc === 'Outstanding') { %>
+          <span class="home-card__rating <%= h.cqc === 'Outstanding' ? 'is-outstanding' : '' %>">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/></svg>
+            CQC <%= h.cqc %>
+          </span>
+          <% } else { %>
+          <span class="home-card__rating">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Z"/></svg>
+            CQC registered
+          </span>
+          <% } %>
+        </div>
+        <div class="home-card__body">
+          <span class="home-card__town"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg><%= h.town %></span>
+          <h3><%= h.name %></h3>
+          <p><%= h.blurb %></p>
+          <div class="chips">
+            <% h.careTypes.forEach(function(c){ %><span class="chip"><%= c %></span><% }) %>
+          </div>
+          <span class="btn btn--ghost btn--sm">View this home</span>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <h3>No homes match your search</h3>
+      <p>Try widening your search, or <button type="button" class="link-btn" id="emptyClear">view all our homes</button>.</p>
+    </div>
+
+    <div id="homes-map" class="homes-map" role="img" aria-label="Map showing the location of our care homes" style="margin-top:2.5rem;margin-bottom:0;"></div>
+  </div>
+</section>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  (function () {
+    var homesData = <%- JSON.stringify(homes.map(function (h) {
+      return { id: h.id, name: h.name, town: h.town, postcode: h.postcode, lat: h.lat, lng: h.lng };
+    })) %>;
+
+    var grid = document.querySelector('.homes-grid');
+    var cards = grid ? Array.prototype.slice.call(grid.querySelectorAll('.home-card')) : [];
+    var countEl = document.getElementById('resultNum');
+    var pluralEl = document.getElementById('resultPlural');
+    var emptyEl = document.getElementById('emptyState');
+    var form = document.getElementById('finderForm');
+    var qEl = document.getElementById('q'), regionEl = document.getElementById('region'), careEl = document.getElementById('careType');
+    var clearBtn = document.getElementById('clearFilters');
+
+    // ----- Map -----
+    var mapEl = document.getElementById('homes-map');
+    var map = null, markerById = {}, userMarker = null;
+    if (mapEl && window.L) {
+      map = L.map(mapEl, { scrollWheelZoom: true });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      homesData.forEach(function (h) {
+        if (typeof h.lat !== 'number' || typeof h.lng !== 'number') return;
+        var gmaps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(h.name + ', ' + h.town + ' ' + h.postcode);
+        var m = L.marker([h.lat, h.lng]);
+        m.bindTooltip(h.name + ' - ' + h.town + ' (click for Google Maps)');
+        m.on('click', function () { window.open(gmaps, '_blank', 'noopener'); });
+        markerById[h.id] = m;
+      });
+    }
+
+    var searchBtn = form ? form.querySelector('button[type="submit"]') : null;
+
+    function norm(s) { return (s || '').toString().toLowerCase().replace(/\s+/g, ''); }
+    function haversine(aLat, aLng, bLat, bLng) {
+      var R = 3958.8, dLat = (bLat - aLat) * Math.PI / 180, dLng = (bLng - aLng) * Math.PI / 180;
+      var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(aLat * Math.PI / 180) * Math.cos(bLat * Math.PI / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+    }
+    function regionCareOk(card) {
+      var region = regionEl ? regionEl.value : '', care = careEl ? careEl.value : '';
+      var okR = !region || card.getAttribute('data-region') === region;
+      var okC = !care || (card.getAttribute('data-care') || '').split('|').indexOf(care) > -1;
+      return okR && okC;
+    }
+    function textOk(card, q) {
+      if (!q) return true;
+      return norm(card.getAttribute('data-town')).indexOf(q) > -1
+        || norm(card.getAttribute('data-name')).indexOf(q) > -1
+        || (card.getAttribute('data-postcode') || '').indexOf(q) > -1;
+    }
+    function anyFilterActive() { return (qEl && qEl.value) || (regionEl && regionEl.value) || (careEl && careEl.value); }
+    function render(shown) {
+      cards.forEach(function (c) { c.style.display = shown.indexOf(c) > -1 ? '' : 'none'; });
+      if (countEl) countEl.textContent = shown.length;
+      if (pluralEl) pluralEl.textContent = shown.length === 1 ? '' : 's';
+      if (emptyEl) emptyEl.style.display = shown.length ? 'none' : '';
+      if (clearBtn) clearBtn.style.display = anyFilterActive() ? '' : 'none';
+      if (map) {
+        Object.keys(markerById).forEach(function (id) { map.removeLayer(markerById[id]); });
+        var vis = [];
+        shown.forEach(function (card) { var m = markerById[card.getAttribute('data-id')]; if (m) { m.addTo(map); vis.push(m); } });
+        if (userMarker) userMarker.addTo(map);
+        if (vis.length) { var g = L.featureGroup(vis); if (vis.length === 1) map.setView(vis[0].getLatLng(), 13); else map.fitBounds(g.getBounds().pad(0.2)); }
+      }
+    }
+    function apply() {
+      var q = norm(qEl ? qEl.value : '');
+      var shown = cards.filter(function (c) { return regionCareOk(c) && textOk(c, q); });
+      render(shown);
+      return shown;
+    }
+    // Badge each card with distance from a point, sort nearest-first, drop a marker.
+    function sortByPoint(plat, plng, list, markerLabel) {
+      list.forEach(function (card) {
+        var lat = parseFloat(card.getAttribute('data-lat')), lng = parseFloat(card.getAttribute('data-lng'));
+        var d = (isFinite(lat) && isFinite(lng)) ? haversine(plat, plng, lat, lng) : Infinity;
+        card._dist = d;
+        var badge = card.querySelector('.home-card__dist');
+        if (!badge) { badge = document.createElement('span'); badge.className = 'home-card__dist'; var body = card.querySelector('.home-card__body'); if (body) body.insertBefore(badge, body.firstChild); }
+        badge.textContent = isFinite(d) ? ('~' + (Math.round(d * 10) / 10) + ' miles away') : '';
+      });
+      list.sort(function (a, b) { return a._dist - b._dist; });
+      list.forEach(function (card) { grid.appendChild(card); });
+      if (map) {
+        if (userMarker) map.removeLayer(userMarker);
+        userMarker = L.circleMarker([plat, plng], { radius: 7, color: '#15677a', fillColor: '#20a7bc', fillOpacity: 0.9, weight: 2 }).bindTooltip(markerLabel || 'Your location');
+        userMarker.addTo(map);
+      }
+    }
+    // Look up a UK postcode or outcode (e.g. "HA8") via the free postcodes.io API.
+    function looksLikePostcode(q) { return /^[a-z]{1,2}\d/i.test(q.replace(/\s/g, '')); }
+    function geocodePostcode(q) {
+      function tryUrl(u) {
+        return fetch(u).then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) { return (d && d.result && typeof d.result.latitude === 'number') ? { lat: d.result.latitude, lng: d.result.longitude } : null; })
+          .catch(function () { return null; });
+      }
+      var full = q.trim().replace(/\s+/g, '');
+      return tryUrl('https://api.postcodes.io/postcodes/' + encodeURIComponent(full)).then(function (res) {
+        if (res) return res;
+        var outcode = q.trim().split(/\s+/)[0];
+        return tryUrl('https://api.postcodes.io/outcodes/' + encodeURIComponent(outcode));
+      });
+    }
+    function doSearch() {
+      var raw = qEl ? qEl.value.trim() : '';
+      if (raw && looksLikePostcode(raw)) {
+        var base = cards.filter(regionCareOk);
+        var lbl = searchBtn ? searchBtn.textContent : '';
+        if (searchBtn) { searchBtn.textContent = 'Searching…'; searchBtn.disabled = true; }
+        geocodePostcode(raw).then(function (pt) {
+          if (searchBtn) { searchBtn.textContent = lbl || 'Search'; searchBtn.disabled = false; }
+          if (pt) { render(base); sortByPoint(pt.lat, pt.lng, base, 'Near ' + raw.toUpperCase()); if (clearBtn) clearBtn.style.display = ''; }
+          else { apply(); }
+        });
+      } else { apply(); }
+    }
+
+    // Reflect any URL params (so shared links / the static preview filter correctly)
+    var params = new URLSearchParams(location.search);
+    if (qEl && params.get('q')) qEl.value = params.get('q');
+    if (regionEl && params.get('region')) regionEl.value = params.get('region');
+    if (careEl && params.get('careType')) careEl.value = params.get('careType');
+    doSearch();
+
+    if (form) form.addEventListener('submit', function (e) { e.preventDefault(); doSearch(); });
+    [regionEl, careEl].forEach(function (el) { if (el) el.addEventListener('change', doSearch); });
+    function clearAll() { if (qEl) qEl.value = ''; if (regionEl) regionEl.value = ''; if (careEl) careEl.value = ''; if (userMarker && map) { map.removeLayer(userMarker); userMarker = null; } apply(); }
+    if (clearBtn) clearBtn.addEventListener('click', clearAll);
+    var emptyClear = document.getElementById('emptyClear');
+    if (emptyClear) emptyClear.addEventListener('click', clearAll);
+
+    // ----- Use my location -----
+    var locBtn = document.getElementById('useLocation');
+    if (locBtn) {
+      if (!navigator.geolocation) { locBtn.style.display = 'none'; }
+      else {
+        locBtn.addEventListener('click', function () {
+          var label = locBtn.innerHTML;
+          locBtn.textContent = 'Locating…'; locBtn.disabled = true;
+          navigator.geolocation.getCurrentPosition(function (pos) {
+            var base = cards.filter(regionCareOk);
+            render(base);
+            sortByPoint(pos.coords.latitude, pos.coords.longitude, base, 'You are here');
+            if (clearBtn) clearBtn.style.display = '';
+            locBtn.innerHTML = label; locBtn.disabled = false;
+          }, function () {
+            locBtn.innerHTML = label; locBtn.disabled = false;
+            alert('We could not get your location. Please allow location access in your browser, or search by town or postcode instead.');
+          });
+        });
+      }
+    }
+  })();
+</script>
+
+<%- include('partials/footer') %>

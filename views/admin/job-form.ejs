@@ -1,0 +1,103 @@
+<%- include('../partials/admin-header') %>
+<%
+  var j = job || {};
+  var action = mode === 'edit' ? '/admin/jobs/' + j.id : '/admin/jobs';
+  var services = ['Residential Care','Nursing Care','Complex & High-Acuity Care','Dementia Care','Respite Care','Palliative Care','Leadership','Hospitality & Support'];
+  var types = ['Full-time','Part-time','Bank / Flexible','Fixed-term','Apprenticeship'];
+  function sel(a,b){ return a===b ? 'selected' : ''; }
+%>
+
+<div class="crumbs" style="color:var(--muted);margin-bottom:.5rem;"><a href="/admin">Dashboard</a> › <%= mode === 'edit' ? 'Edit vacancy' : 'New vacancy' %></div>
+<h1 class="admin-h1"><%= mode === 'edit' ? 'Edit vacancy' : 'Post a new job' %></h1>
+<p class="muted">Anything you publish here appears instantly on the public <a href="/careers" target="_blank" rel="noopener">careers page</a>.</p>
+
+<div class="panel" style="margin-top:1.5rem;">
+  <div class="panel__body">
+    <form action="<%= action %>" method="post" class="admin-form">
+      <div class="field">
+        <label for="title">Job title *</label>
+        <input type="text" id="title" name="title" required value="<%= j.title || '' %>" placeholder="e.g. Registered Nurse (RGN)" />
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="service">Service / department</label>
+          <select id="service" name="service">
+            <% services.forEach(function(s){ %><option value="<%= s %>" <%= sel(j.service, s) %>><%= s %></option><% }) %>
+          </select>
+        </div>
+        <div class="field">
+          <label for="location">Location *</label>
+          <input type="text" id="location" name="location" required value="<%= j.location || '' %>" placeholder="e.g. London — Richmond" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="employmentType">Contract type</label>
+          <select id="employmentType" name="employmentType">
+            <% types.forEach(function(t){ %><option value="<%= t %>" <%= sel(j.employmentType, t) %>><%= t %></option><% }) %>
+          </select>
+        </div>
+        <div class="field">
+          <label for="salary">Salary / rate</label>
+          <input type="text" id="salary" name="salary" value="<%= j.salary || '' %>" placeholder="e.g. £38,000 – £44,000 per year" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="hours">Hours</label>
+          <input type="text" id="hours" name="hours" value="<%= j.hours || '' %>" placeholder="e.g. 36 hours/week, days or nights" />
+        </div>
+        <div class="field">
+          <label for="closingDate">Closing date</label>
+          <input type="date" id="closingDate" name="closingDate" value="<%= j.closingDate || '' %>" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="summary">Short summary *</label>
+        <input type="text" id="summary" name="summary" required value="<%= j.summary || '' %>" placeholder="One sentence shown on the careers list" />
+      </div>
+
+      <div class="field">
+        <label for="description">Full description *</label>
+        <textarea id="description" name="description" required placeholder="Describe the role..."><%= j.description || '' %></textarea>
+      </div>
+
+      <div class="field">
+        <label for="responsibilities">Key responsibilities</label>
+        <span class="hint">One per line.</span>
+        <textarea id="responsibilities" name="responsibilities" placeholder="Assess and plan individual care&#10;Lead the team on shift"><%= (j.responsibilities || []).join('\n') %></textarea>
+      </div>
+
+      <div class="field">
+        <label for="requirements">What we’re looking for</label>
+        <span class="hint">One per line.</span>
+        <textarea id="requirements" name="requirements" placeholder="Valid NMC PIN&#10;Right to work in the UK"><%= (j.requirements || []).join('\n') %></textarea>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="open" <%= sel(j.status, 'open') %>>Open (live on site)</option>
+            <option value="closed" <%= sel(j.status, 'closed') %>>Closed (hidden)</option>
+          </select>
+        </div>
+        <div class="field checkbox" style="justify-content:flex-start;margin-top:1.8rem;">
+          <input type="checkbox" id="featured" name="featured" <%= j.featured ? 'checked' : '' %> />
+          <label for="featured" style="margin:0;">Feature on the homepage</label>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:.7rem;margin-top:1rem;">
+        <button type="submit" class="btn btn--primary"><%= mode === 'edit' ? 'Save changes' : 'Publish job' %></button>
+        <a href="/admin" class="btn btn--muted">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

@@ -1,0 +1,102 @@
+<%- include('partials/careers-header') %>
+
+<section class="careers-hero">
+  <div class="container">
+    <span class="eyebrow hero__eyebrow">Venza Care UK Careers</span>
+    <h1>Caring careers, close to home</h1>
+    <p>We're hiring carers, nurses, chefs and managers across our care homes. Funded qualifications, real progression, and a team that has your back. Find a role and apply in minutes.</p>
+    <div class="careers-hero__stats">
+      <span><strong><%= jobs.length %></strong> open roles</span>
+      <span><strong><%= locations.length %></strong> locations</span>
+      <span><strong>100%</strong> funded training</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:2.5rem;">
+  <div class="container">
+
+    <!-- Filter toolbar -->
+    <form class="careers-toolbar" action="/careers" method="get">
+      <div class="field">
+        <label for="q">Search</label>
+        <input type="text" id="q" name="q" value="<%= q %>" placeholder="Job title or keyword" />
+      </div>
+      <div class="field">
+        <label for="service">Service</label>
+        <select id="service" name="service">
+          <option value="">All services</option>
+          <% services.forEach(function(s){ %><option value="<%= s %>" <%= service===s?'selected':'' %>><%= s %></option><% }) %>
+        </select>
+      </div>
+      <div class="field">
+        <label for="location">Location</label>
+        <select id="location" name="location">
+          <option value="">All locations</option>
+          <% locations.forEach(function(l){ %><option value="<%= l %>" <%= location===l?'selected':'' %>><%= l %></option><% }) %>
+        </select>
+      </div>
+      <div class="careers-toolbar__actions">
+        <button type="submit" class="btn btn--primary">Search</button>
+        <% if (q||service||location) { %><a href="/careers" class="btn btn--muted">Clear</a><% } %>
+      </div>
+    </form>
+
+    <p class="muted" style="margin:1.5rem 0;"><strong style="color:var(--green-800)"><%= jobs.length %></strong> open role<%= jobs.length===1?'':'s' %></p>
+
+    <% if (jobs.length) { %>
+    <div class="job-list">
+      <% jobs.forEach(function(job){ %>
+      <a class="job-card" href="/careers/<%= job.id %>">
+        <div class="job-card__top">
+          <div>
+            <span class="badge badge--service"><%= job.service %></span>
+            <% if (job.featured) { %><span class="badge badge--featured">Featured</span><% } %>
+            <h3 style="margin-top:0.7rem;"><%= job.title %></h3>
+          </div>
+          <span class="btn btn--ghost btn--sm">View &amp; apply
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </span>
+        </div>
+        <div class="job-card__meta">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg><%= job.location %></span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><%= job.employmentType %></span>
+          <% if (job.salary) { %><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 13c5 0 5 8 0 8m0-8H6m3 0c4 0 4 8 0 8M6 3h12M6 8h12"/></svg><%= job.salary %></span><% } %>
+        </div>
+        <p class="muted" style="margin:0;"><%= job.summary %></p>
+      </a>
+      <% }) %>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <h3>No roles match your search</h3>
+      <p>Try clearing your filters, or <a href="/contact">register your interest</a> and we'll be in touch when something suitable comes up.</p>
+    </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- Why join us -->
+<section id="why" class="section section--alt">
+  <div class="container">
+    <div class="section-head center" style="margin-inline:auto;">
+      <span class="eyebrow">Why join Venza Care</span>
+      <h2 class="h2">More than a job</h2>
+    </div>
+    <div class="care-grid">
+      <% var perks=[
+        {t:'Funded qualifications',d:'We fund the Care Certificate and recognised Health &amp; Social Care Diplomas, plus NMC revalidation for our nurses.'},
+        {t:'Room to grow',d:'Clear routes into senior and leadership roles — and the support and mentoring to get there.'},
+        {t:'Supported from day one',d:'A proper induction, paid breaks, wellbeing support and a team that has your back on every shift.'}
+      ]; perks.forEach(function(p){ %>
+      <div class="care-card">
+        <div class="care-card__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h3 style="font-size:1.15rem;"><%- p.t %></h3>
+        <p style="margin:0;"><%- p.d %></p>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/careers-footer') %>

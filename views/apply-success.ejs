@@ -1,0 +1,17 @@
+<%- include('partials/careers-header') %>
+
+<section class="section">
+  <div class="container">
+    <div class="success-wrap">
+      <div class="tick"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h1>Thank you — your application is in!</h1>
+      <p class="lead" style="margin-inline:auto;">We’ve received your application for <strong><%= job.title %></strong> (<%= job.location %>). Our recruitment team will review it and be in touch soon. Keep an eye on your inbox.</p>
+      <div style="margin-top:2rem;display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap;">
+        <a href="/careers" class="btn btn--primary">Browse more roles</a>
+        <a href="/" class="btn btn--ghost">Main website</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/careers-footer') %>

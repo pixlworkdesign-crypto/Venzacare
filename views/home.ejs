@@ -1,0 +1,114 @@
+<%- include('partials/header') %>
+
+<section class="page-hero<%= home.photo ? ' has-photo' : '' %>"<% if (home.photo) { %> style="background-color: var(--green-800); background-image: linear-gradient(90deg, rgba(13,79,92,0.96) 0%, rgba(13,79,92,0.72) 30%, rgba(13,79,92,0.15) 52%, rgba(13,79,92,0) 66%), url('/images/<%= home.photo %>'); background-repeat: no-repeat, no-repeat; background-position: center, right center; background-size: cover, contain;"<% } %>>
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › <a href="/care-homes">Find a home</a> › <%= home.name %></div>
+    <% if (home.cqc === 'Good' || home.cqc === 'Outstanding') { %>
+    <span class="home-card__rating <%= home.cqc === 'Outstanding' ? 'is-outstanding' : '' %>" style="position:static;display:inline-flex;margin-bottom:1rem;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/></svg>
+      CQC <%= home.cqc %>
+    </span>
+    <% } else { %>
+    <span class="home-card__rating" style="position:static;display:inline-flex;margin-bottom:1rem;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Z"/></svg>
+      CQC registered
+    </span>
+    <% } %>
+    <h1><%= home.name %></h1>
+    <p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg> <%= home.town %> · <%= home.postcode %></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="job-detail">
+      <div class="prose">
+        <p class="lead"><%= home.blurb %></p>
+        <h2>About this home</h2>
+        <p><%= home.name %> is a <%= home.beds %>-bed care home in <%= home.town %>, offering <%= home.careTypes.join(', ').toLowerCase() %>.<% if (home.cqc === 'Good' || home.cqc === 'Outstanding') { %> It is rated <strong><%= home.cqc %></strong> by the Care Quality Commission, and you can read the full inspection report on the CQC website.<% } else { %> It is registered with and inspected by the Care Quality Commission.<% } %></p>
+        <div class="care-panel">
+          <h3>Types of care</h3>
+          <ul class="tick-list">
+            <% home.careTypes.forEach(function(c){ %>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><%= c %></span></li>
+            <% }) %>
+          </ul>
+          <% if (home.dementiaNote) { %>
+          <p class="muted" style="font-size:0.9rem;margin:0.25rem 0 0;"><%= home.dementiaNote %></p>
+          <% } %>
+
+          <% if (home.specialisms && home.specialisms.length) { %>
+          <h3>Specialist care we support</h3>
+          <ul class="tick-list">
+            <% home.specialisms.forEach(function(s){ %>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><%= s %></span></li>
+            <% }) %>
+          </ul>
+          <% } %>
+
+          <h3>Facilities &amp; daily life</h3>
+          <div class="facility-grid">
+            <% var facilities=[
+              {l:'Comfortable lounges &amp; gardens', i:'M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z'},
+              {l:'Freshly prepared meals, special diets catered for', i:'M3 12h18a9 9 0 0 1-18 0zM8 4v3M12 3v4M16 4v3'},
+              {l:'Daily activities &amp; outings', i:'M9 18V6l12-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'},
+              {l:'En-suite rooms you can make your own', i:'M3 12h18v6M3 18v-8a1 1 0 0 1 1-1h7v5'},
+              {l:'Open visiting &mdash; family welcome any time', i:'M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'}
+            ]; facilities.forEach(function(f){ %>
+            <div class="fac"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="<%= f.i %>"/></svg><span><%- f.l %></span></div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+
+      <aside class="apply-card">
+        <h3>Arrange a visit</h3>
+        <p class="muted" style="margin-top:0;">The best way to judge <%= home.name %> is to see it for yourself. Arrange a visit and we'll show you around and answer your questions — no obligation.</p>
+        <ul class="job-facts">
+          <li><span>CQC</span><span><%= (home.cqc === 'Good' || home.cqc === 'Outstanding') ? home.cqc : 'Registered' %></span></li>
+          <li><span>Beds</span><span><%= home.beds %></span></li>
+          <li><span>Location</span><span><%= home.town %> · <%= home.postcode %></span></li>
+          <li><span>Enquiries</span><span><a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a></span></li>
+        </ul>
+        <a href="/contact" class="btn btn--primary btn--block">Book a visit</a>
+        <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>" class="btn btn--ghost btn--block mt-1">Call our team</a>
+      </aside>
+    </div>
+
+    <% if (home.gallery && home.gallery.length) { %>
+    <div style="margin-top:3.5rem;">
+      <h2 class="h2" style="font-size:1.6rem;">A look around <%= home.name %></h2>
+      <div class="gallery-grid">
+        <% home.gallery.forEach(function(g, gi){ %>
+        <button type="button" class="gallery-item" data-full="/images/<%= g %>" aria-label="View photo <%= gi+1 %>" style="background-image:url('/images/<%= g %>');"></button>
+        <% }) %>
+      </div>
+    </div>
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <button type="button" class="lightbox__close" aria-label="Close">&times;</button>
+      <button type="button" class="lightbox__nav lightbox__prev" aria-label="Previous photo">&#8249;</button>
+      <img class="lightbox__img" src="" alt="<%= home.name %> photo" />
+      <button type="button" class="lightbox__nav lightbox__next" aria-label="Next photo">&#8250;</button>
+    </div>
+    <% } %>
+
+    <% if (jobs && jobs.length) { %>
+    <div style="margin-top:3.5rem;">
+      <h2 class="h2" style="font-size:1.6rem;">Careers at <%= home.name %></h2>
+      <div class="job-list" style="margin-top:1.2rem;">
+        <% jobs.forEach(function(job){ %>
+        <a class="job-card" href="/careers/<%= job.id %>">
+          <div class="job-card__top">
+            <div><span class="badge badge--service"><%= job.service %></span><h3 style="margin-top:0.6rem;"><%= job.title %></h3></div>
+            <span class="btn btn--ghost btn--sm">View job</span>
+          </div>
+          <p class="muted" style="margin:0.5rem 0 0;"><%= job.summary %></p>
+        </a>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

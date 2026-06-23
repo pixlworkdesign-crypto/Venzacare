@@ -1,0 +1,29 @@
+<%- include('../partials/admin-header') %>
+
+<h1 class="admin-h1">Enquiries</h1>
+<p class="muted">Messages sent through the contact form.</p>
+
+<div class="panel" style="margin-top:1.5rem;">
+  <div class="panel__head"><h2><%= messages.length %> enquir<%= messages.length===1?'y':'ies' %></h2></div>
+  <div class="panel__body" style="padding:0;">
+    <% if (messages.length) { %>
+    <table class="table">
+      <thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th></tr></thead>
+      <tbody>
+        <% messages.forEach(function(m){ %>
+        <tr>
+          <td><strong><%= m.name %></strong><div class="muted" style="font-size:.85rem;"><a href="mailto:<%= m.email %>"><%= m.email %></a><% if (m.phone) { %><br /><%= m.phone %><% } %></div></td>
+          <td><%= m.subject || '—' %></td>
+          <td style="max-width:42ch;"><%= m.message %></td>
+          <td class="muted" style="font-size:.85rem;white-space:nowrap;"><%= new Date(m.createdAt).toLocaleDateString('en-GB') %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } else { %>
+    <div style="padding:2.5rem;text-align:center;" class="muted">No enquiries yet.</div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

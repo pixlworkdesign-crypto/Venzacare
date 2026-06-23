@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title ? title + ' · ' : '' %>Careers · <%= SITE.name %></title>
+  <meta name="description" content="Careers at Venza Care UK — caring jobs across our care homes. Search roles and apply online in minutes." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" type="image/png" href="/images/logo.png" />
+</head>
+<body class="page careers-portal">
+  <header class="careers-nav">
+    <div class="careers-nav__inner">
+      <a href="/careers" class="careers-brand" aria-label="Venza Care Careers">
+        <img src="/images/logo.png" alt="Venza Care" class="careers-brand__logo" />
+        <span class="careers-brand__tag">Careers</span>
+      </a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <nav class="careers-nav__links" id="navlinks">
+        <a href="/careers" class="<%= currentPath === '/careers' ? 'is-active' : '' %>">All jobs</a>
+        <a href="/careers#why">Why join us</a>
+        <a href="/contact">Contact HR</a>
+        <a href="/" class="careers-nav__back">← Main website</a>
+      </nav>
+    </div>
+  </header>
+  <main>

@@ -1,0 +1,51 @@
+<%- include('../partials/admin-header') %>
+
+<h1 class="admin-h1">Applications</h1>
+<p class="muted">Every application submitted through the careers site.</p>
+
+<div class="panel" style="margin-top:1.5rem;">
+  <div class="panel__head">
+    <h2><%= applications.length %> application<%= applications.length===1?'':'s' %></h2>
+    <form action="/admin/applications" method="get" style="display:flex;gap:.5rem;align-items:center;">
+      <select name="job" onchange="this.form.submit()" style="width:auto;padding:.5rem .8rem;">
+        <option value="">All roles</option>
+        <% jobs.forEach(function(jb){ %><option value="<%= jb.id %>" <%= jobId===jb.id?'selected':'' %>><%= jb.title %></option><% }) %>
+      </select>
+    </form>
+  </div>
+  <div class="panel__body" style="padding:0;">
+    <% if (applications.length) { %>
+    <table class="table">
+      <thead>
+        <tr><th>Applicant</th><th>Applied for</th><th>Contact</th><th>Right to work</th><th>CV</th><th>Received</th></tr>
+      </thead>
+      <tbody>
+        <% applications.forEach(function(a){ %>
+        <tr>
+          <td>
+            <strong><%= a.name %></strong>
+            <% if (a.message) { %><div class="muted" style="font-size:.85rem;max-width:34ch;margin-top:.3rem;">“<%= a.message %>”</div><% } %>
+          </td>
+          <td><%= a.jobTitle %></td>
+          <td style="font-size:.9rem;">
+            <a href="mailto:<%= a.email %>"><%= a.email %></a>
+            <% if (a.phone) { %><div class="muted"><%= a.phone %></div><% } %>
+          </td>
+          <td><%= a.rightToWork || '—' %></td>
+          <td>
+            <% if (a.cvFilename) { %>
+              <a href="/uploads/<%= a.cvFilename %>" target="_blank" rel="noopener" class="btn btn--sm btn--muted">Download</a>
+            <% } else { %><span class="muted">—</span><% } %>
+          </td>
+          <td class="muted" style="font-size:.85rem;white-space:nowrap;"><%= new Date(a.appliedAt).toLocaleDateString('en-GB') %><br /><%= new Date(a.appliedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } else { %>
+    <div style="padding:2.5rem;text-align:center;" class="muted">No applications yet<% if (jobId) { %> for this role<% } %>.</div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

@@ -1,0 +1,48 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Privacy policy</div>
+    <span class="eyebrow hero__eyebrow">Your privacy</span>
+    <h1>Privacy policy</h1>
+    <p>How <%= SITE.name %> collects, uses and protects your personal information.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="prose" style="max-width:800px;">
+      <p class="muted"><em>Template wording — please have it reviewed by your data-protection adviser before going live. Last updated: <%= year %>.</em></p>
+
+      <h2>1. Who we are</h2>
+      <p><%= SITE.name %> ("we", "us", "our") is the data controller responsible for your personal data. You can contact us at <a href="mailto:<%= SITE.email %>"><%= SITE.email %></a>, by phone on <%= SITE.phone %>, or by post at <%= SITE.address %>.</p>
+
+      <h2>2. The information we collect</h2>
+      <ul>
+        <li><strong>Enquiries:</strong> your name, contact details and the details of your enquiry when you use our contact form or call us.</li>
+        <li><strong>Job applications:</strong> your name, contact details, right-to-work information, cover message and any CV you upload.</li>
+        <li><strong>Prospective &amp; current residents:</strong> health, care-needs and next-of-kin information needed to assess and provide care.</li>
+        <li><strong>Website usage:</strong> basic technical information needed to operate the site securely.</li>
+      </ul>
+
+      <h2>3. How we use your information &amp; our lawful basis</h2>
+      <p>We process your data to respond to enquiries, arrange visits, assess and deliver care, manage recruitment, and meet our legal and regulatory duties. Depending on the activity, our lawful basis is consent, legitimate interests, performance of a contract, legal obligation, or — for health information — the provision of health and social care.</p>
+
+      <h2>4. Sharing your information</h2>
+      <p>We may share information with healthcare professionals involved in your care (GPs, district nurses, hospitals), local authorities and the NHS, our regulators (such as the Care Quality Commission), and trusted service providers who help us run our homes and website. We never sell your data.</p>
+
+      <h2>5. How long we keep it</h2>
+      <p>We keep personal data only as long as necessary for the purpose it was collected and to meet legal and regulatory requirements, after which it is securely deleted or anonymised.</p>
+
+      <h2>6. Your rights</h2>
+      <p>Under UK data protection law you have the right to access, correct, erase, restrict or object to our use of your data, and to data portability. To exercise any of these rights, contact us using the details above.</p>
+
+      <h2>7. Complaints</h2>
+      <p>If you have a concern we can't resolve, you can complain to the Information Commissioner's Office (ICO) at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a>.</p>
+
+      <p style="margin-top:2rem;"><a href="/cookies" class="care-card__link">See our cookie policy →</a></p>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

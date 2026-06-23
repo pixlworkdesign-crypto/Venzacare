@@ -1,0 +1,42 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Accessibility</div>
+    <span class="eyebrow hero__eyebrow">Accessibility</span>
+    <h1>Accessibility statement</h1>
+    <p>We want everyone to be able to use the <%= SITE.name %> website, whatever their needs.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="prose" style="max-width:800px;">
+      <p class="muted"><em>Template wording — review and confirm with an accessibility audit before publishing. Last updated: <%= year %>.</em></p>
+
+      <h2>Our commitment</h2>
+      <p>We are committed to making this website accessible, in line with the Web Content Accessibility Guidelines (WCAG) 2.1 Level AA, and to making care information available to everyone.</p>
+
+      <h2>What we do to help</h2>
+      <ul>
+        <li>Clear, readable text with strong colour contrast</li>
+        <li>Pages that work with a keyboard alone, and with screen readers</li>
+        <li>Descriptive text alternatives for meaningful images</li>
+        <li>A layout that adapts to phones, tablets and desktops, and supports text resizing</li>
+      </ul>
+
+      <h2>Known limitations</h2>
+      <p>Our interactive "find a home" map may be difficult to use with some assistive technologies. The same information — every home's name, location and care types — is always available as a text list on the <a href="/care-homes">Find a home</a> page, and our team is happy to help by phone.</p>
+
+      <h2>Information in other formats</h2>
+      <p>If you need anything from this site in a different format — such as large print, easy-read, or read aloud over the phone — please contact us at <a href="mailto:<%= SITE.email %>"><%= SITE.email %></a> or <%= SITE.phone %> and we'll do our best to help.</p>
+
+      <h2>Feedback &amp; enforcement</h2>
+      <p>If you find a part of this site you can't use, please tell us using the details above so we can put it right. If you're not happy with our response, you can contact the Equality Advisory and Support Service (EASS) at <a href="https://www.equalityadvisoryservice.com" target="_blank" rel="noopener">equalityadvisoryservice.com</a>.</p>
+
+      <p style="margin-top:2rem;"><a href="/contact" class="btn btn--primary">Contact our team</a></p>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

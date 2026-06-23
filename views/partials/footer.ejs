@@ -1,0 +1,88 @@
+  </main>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div>
+          <img src="/images/logo-white.png" alt="Venza Care UK" class="footer__logo" />
+          <p style="max-width: 32ch; font-size: 0.92rem;">Four CQC-regulated care homes in London, Kent and Cambridge — residential, nursing, dementia and end-of-life care.</p>
+          <p style="font-size: 0.9rem;">
+            <%= SITE.address %><br />
+            <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a> ·
+            <a href="mailto:<%= SITE.email %>"><%= SITE.email %></a>
+          </p>
+        </div>
+        <div>
+          <h4>Our care</h4>
+          <a href="/our-care">Residential care</a>
+          <a href="/our-care">Nursing care</a>
+          <a href="/our-care">Dementia care</a>
+          <a href="/our-care">End-of-life care</a>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <a href="/care-homes">Find a care home</a>
+          <a href="/careers" target="_blank" rel="noopener">Careers &amp; jobs</a>
+          <a href="/contact">Contact us</a>
+          <a href="/admin/login">Staff / admin login</a>
+        </div>
+        <div>
+          <h4>Information</h4>
+          <a href="#">CQC ratings</a>
+          <a href="#">Fees &amp; funding</a>
+          <a href="/privacy">Privacy policy</a>
+          <a href="/cookies">Cookie policy</a>
+          <a href="/accessibility">Accessibility</a>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>© <%= year %> Venza Care UK Ltd. Registered in England &amp; Wales. Regulated by the Care Quality Commission.</span>
+        <span>Demo site · placeholder content</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AI assistant -->
+  <button class="venza-chat-btn" id="venzaChatBtn" aria-label="Open chat assistant" aria-expanded="false">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+  <div class="venza-chat" id="venzaChat" aria-hidden="true" aria-live="polite">
+    <div class="venza-chat__head">
+      <div><strong>Venza Care assistant</strong><span>Ask about our homes, care &amp; jobs</span></div>
+      <button class="venza-chat__close" id="venzaChatClose" aria-label="Close chat">&times;</button>
+    </div>
+    <div class="venza-chat__log" id="venzaChatLog"></div>
+    <form class="venza-chat__form" id="venzaChatForm">
+      <input id="venzaChatInput" type="text" autocomplete="off" placeholder="Type your question…" aria-label="Your message" />
+      <button type="submit" aria-label="Send message">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4z"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- Call modal (shown on desktop when a phone link is clicked) -->
+  <div class="call-modal" id="callModal" aria-hidden="true" role="dialog" aria-label="Call us">
+    <div class="call-modal__box">
+      <button class="call-modal__close" id="callModalClose" aria-label="Close">&times;</button>
+      <h3>Call us</h3>
+      <a class="call-modal__num" id="callModalNum" href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a>
+      <button class="btn btn--ghost btn--sm" id="callModalCopy" type="button">Copy number</button>
+      <p class="call-modal__hint">Lines open Mon–Sun, 8am–8pm. On a phone? <a id="callModalTel" href="tel:<%= SITE.phone.replace(/\s/g,'') %>">tap to call</a>, or scan to dial:</p>
+      <img class="call-modal__qr" id="callModalQr" alt="QR code to call us" width="150" height="150" />
+    </div>
+  </div>
+
+  <!-- Sticky call-to-action -->
+  <div class="mobile-cta">
+    <a class="mc-call" href="tel:<%= SITE.phone.replace(/\s/g,'') %>">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
+      Call us
+    </a>
+    <a class="mc-visit" href="/contact">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Book a visit
+    </a>
+  </div>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

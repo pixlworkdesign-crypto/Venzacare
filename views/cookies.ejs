@@ -1,0 +1,40 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Cookie policy</div>
+    <span class="eyebrow hero__eyebrow">Cookies</span>
+    <h1>Cookie policy</h1>
+    <p>How and why <%= SITE.name %> uses cookies and similar technologies on this website.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="prose" style="max-width:800px;">
+      <p class="muted"><em>Template wording — review against the cookies your live site actually sets before publishing. Last updated: <%= year %>.</em></p>
+
+      <h2>What are cookies?</h2>
+      <p>Cookies are small text files stored on your device when you visit a website. They help the site work properly and remember things between pages.</p>
+
+      <h2>Cookies we use</h2>
+      <table class="table" style="margin-top:1rem;">
+        <thead><tr><th>Cookie</th><th>Type</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Session cookie</td><td>Strictly necessary</td><td>Keeps staff securely signed in to the admin area. Set only when an administrator logs in.</td></tr>
+          <tr><td>Map &amp; fonts</td><td>Third-party</td><td>Our "find a home" map (OpenStreetMap) and web fonts (Google Fonts) are loaded from third parties, which may set their own cookies. See their policies for details.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>What we don't use</h2>
+      <p>This site does not currently use advertising or analytics/tracking cookies. If that changes, we will update this policy and ask for your consent where required.</p>
+
+      <h2>Managing cookies</h2>
+      <p>You can control or delete cookies through your browser settings at any time. Blocking strictly necessary cookies may stop parts of the site (such as the admin area) from working.</p>
+
+      <p style="margin-top:2rem;"><a href="/privacy" class="care-card__link">See our privacy policy →</a></p>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,44 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Our care</div>
+    <span class="eyebrow hero__eyebrow">Our care</span>
+    <h1>Care that grows as needs change</h1>
+    <p>From a little help each day to round-the-clock nursing and specialist dementia care, our four homes support people as their needs change. Here's what each kind of care actually means.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <% var care=[
+      {t:'Residential care',filter:'Residential Care',img:'care-residential.jpg',d:'For people who no longer manage easily at home, residential care offers help with everyday things — washing, dressing, meals and medication — in a comfortable home, with a team on hand day and night. You keep your own routines and as much independence as you like.'},
+      {t:'Nursing care',filter:'Nursing Care',img:'care-nursing.jpg',d:'When health needs go beyond day-to-day support, our registered nurses provide care around the clock — for long-term conditions, recovery after a hospital stay, and ongoing clinical needs — working closely with local GPs and community health teams.'},
+      {t:'Dementia care',filter:'Dementia Care',img:'care-dementia.jpg',d:'Our teams are experienced in caring for people living with dementia, in calm, familiar surroundings designed to feel safe. We take time to learn each resident\'s history and routines, so they are known and understood — including on the harder days. At Fieldway in Mitcham, a dedicated floor specialises in dementia care.'},
+      {t:'End-of-life care',filter:'End-of-life Care',img:'care-palliative.jpg',pos:'center',d:'In someone\'s final months, our focus is comfort, dignity and choice. We work closely with your GP, district nurses and family to manage symptoms and make sure no one is alone. End-of-life care is available at Kentford Manor, near Newmarket.'}
+    ];
+    care.forEach(function(c, idx){ %>
+    <div class="split <%= idx % 2 ? 'split--reverse' : '' %>" style="margin-bottom: 3.5rem;">
+      <div class="split__media split__media--bordered has-photo" style="background-image:url('/images/<%= c.img %>'); background-position: <%= c.pos || 'center 22%' %>;"></div>
+      <div>
+        <h2 class="h2" style="font-size:1.9rem;"><%= c.t %></h2>
+        <p class="lead" style="font-size:1.05rem;"><%= c.d %></p>
+        <a href="/care-homes?careType=<%= encodeURIComponent(c.filter) %>" class="btn btn--ghost mt-1">Find <%= c.t.toLowerCase() %> homes</a>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="cta-band" style="background:linear-gradient(120deg,var(--green-800),var(--green-600));">
+      <h2>Not sure which kind of care fits?</h2>
+      <p>Tell us about your situation and we'll talk it through — and point you to the right home, or be honest if we're not the best fit. We reply to every enquiry within one working day.</p>
+      <a href="/contact" class="btn btn--gold">Book a visit</a>
+      <a href="/care-homes" class="btn btn--outline-light">Find a home</a>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

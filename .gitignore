@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Runtime data & uploads — never commit residents'/applicants' personal data
+data/db.json
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Secrets / environment
+.env
+.env.*
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Generated static preview (rebuild with build-static.ps1)
+preview/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/launch.json
