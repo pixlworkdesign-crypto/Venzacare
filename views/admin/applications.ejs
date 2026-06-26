@@ -6,8 +6,8 @@
 <div class="panel" style="margin-top:1.5rem;">
   <div class="panel__head">
     <h2><%= applications.length %> application<%= applications.length===1?'':'s' %></h2>
-    <form action="/admin/applications" method="get" style="display:flex;gap:.5rem;align-items:center;">
-      <select name="job" onchange="this.form.submit()" style="width:auto;padding:.5rem .8rem;">
+    <form action="/admin/applications" method="get" class="admin-filter">
+      <select name="job" onchange="this.form.submit()">
         <option value="">All roles</option>
         <% jobs.forEach(function(jb){ %><option value="<%= jb.id %>" <%= jobId===jb.id?'selected':'' %>><%= jb.title %></option><% }) %>
       </select>
@@ -15,6 +15,7 @@
   </div>
   <div class="panel__body" style="padding:0;">
     <% if (applications.length) { %>
+    <div class="table-wrap">
     <table class="table">
       <thead>
         <tr><th>Applicant</th><th>Applied for</th><th>Contact</th><th>Right to work</th><th>CV</th><th>Received</th></tr>
@@ -28,7 +29,7 @@
           </td>
           <td><%= a.jobTitle %></td>
           <td style="font-size:.9rem;">
-            <a href="mailto:<%= a.email %>"><%= a.email %></a>
+            <% if (a.email) { %><a href="mailto:<%= a.email %>"><%= a.email %></a><% } %>
             <% if (a.phone) { %><div class="muted"><%= a.phone %></div><% } %>
           </td>
           <td><%= a.rightToWork || '—' %></td>
@@ -42,6 +43,7 @@
         <% }) %>
       </tbody>
     </table>
+    </div>
     <% } else { %>
     <div style="padding:2.5rem;text-align:center;" class="muted">No applications yet<% if (jobId) { %> for this role<% } %>.</div>
     <% } %>

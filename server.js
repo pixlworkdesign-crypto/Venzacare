@@ -4,8 +4,8 @@
 
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const express = require('express');
-const session = require('express-session');
 const multer = require('multer');
 const db = require('./db');
 
@@ -23,14 +23,26 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(
-  session({
-    secret: SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 8 }, // 8 hours
-  })
-);
+
+/* ---------- Stateless admin auth (signed cookie — works on serverless hosts) ---------- */
+function signAdminToken() {
+  const payload = 'admin.' + (Date.now() + 1000 * 60 * 60 * 8); // 8-hour expiry
+  const sig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+  return payload + '.' + sig;
+}
+function verifyAdminToken(token) {
+  if (!token || token.split('.').length !== 3) return false;
+  const [who, exp, sig] = token.split('.');
+  const expected = crypto.createHmac('sha256', SESSION_SECRET).update(who + '.' + exp).digest('hex');
+  const a = Buffer.from(sig), b = Buffer.from(expected);
+  if (who !== 'admin' || a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+  return parseInt(exp, 10) > Date.now();
+}
+function readCookie(req, name) {
+  const m = (req.headers.cookie || '').match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+function isAdmin(req) { return verifyAdminToken(readCookie(req, 'vc_admin')); }
 
 // Shared locals available to every view
 app.use((req, res, next) => {
@@ -350,26 +362,33 @@ app.post('/api/chat', async (req, res) => {
    ============================================================= */
 
 function requireAuth(req, res, next) {
-  if (req.session && req.session.admin) return next();
+  if (isAdmin(req)) return next();
   res.redirect('/admin/login');
 }
 
 app.get('/admin/login', (req, res) => {
-  if (req.session && req.session.admin) return res.redirect('/admin');
+  if (isAdmin(req)) return res.redirect('/admin');
   res.render('admin/login', { error: null });
 });
 
 app.post('/admin/login', (req, res) => {
   const { username, password } = req.body;
   if (username === ADMIN_USER && password === ADMIN_PASS) {
-    req.session.admin = true;
+    res.cookie('vc_admin', signAdminToken(), {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: !!process.env.VERCEL,
+      maxAge: 1000 * 60 * 60 * 8,
+      path: '/',
+    });
     return res.redirect('/admin');
   }
   res.render('admin/login', { error: 'Incorrect username or password.' });
 });
 
 app.post('/admin/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/admin/login'));
+  res.clearCookie('vc_admin', { path: '/' });
+  res.redirect('/admin/login');
 });
 
 // Dashboard

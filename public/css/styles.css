@@ -840,3 +840,19 @@ textarea { resize: vertical; min-height: 120px; }
 .careers-footer__links a:hover { color: #fff; }
 .careers-footer__bottom { border-top: 1px solid rgba(255,255,255,0.15); margin-top: 2rem; padding-top: 1.2rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; font-size: 0.85rem; }
 .careers-footer__bottom a { color: var(--gold-400); }
+
+/* =========================================================
+   Admin polish — responsive tables & topbar
+   ========================================================= */
+.table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.admin-topbar .brand:hover { color: #fff; }
+.panel__head h2 { white-space: nowrap; }
+.admin-filter { display: flex; gap: 0.5rem; align-items: center; }
+.admin-filter select { width: auto; min-width: 160px; padding: 0.5rem 0.8rem; }
+@media (max-width: 760px) {
+  .admin-topbar__inner { height: auto; flex-wrap: wrap; gap: 0.55rem 1.1rem; padding: 0.7rem 0; }
+  .admin-topbar nav { margin-left: 0 !important; flex-wrap: wrap; gap: 0.9rem !important; }
+  .admin-topbar .spacer { display: none; }
+  .admin-main { margin-top: 1.2rem; }
+  .panel__head { flex-wrap: wrap; }
+}
