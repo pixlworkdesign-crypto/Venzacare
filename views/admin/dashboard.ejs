@@ -17,8 +17,7 @@
 
 <div class="panel">
   <div class="panel__head">
-    <h2>Vacancies</h2>
-    <a href="/admin/jobs/new" class="btn btn--sm btn--muted">+ New</a>
+    <h2>Vacancies <span class="panel__count"><%= jobs.length %></span></h2>
   </div>
   <div class="panel__body" style="padding:0;">
     <% if (jobs.length) { %>
@@ -46,7 +45,6 @@
           <td class="muted" style="font-size:.85rem;"><%= new Date(job.postedAt).toLocaleDateString('en-GB') %></td>
           <td>
             <div class="row-actions">
-              <a href="/careers/<%= job.id %>" target="_blank" rel="noopener" class="btn btn--sm btn--muted">View</a>
               <a href="/admin/jobs/<%= job.id %>/edit" class="btn btn--sm btn--ghost">Edit</a>
               <form action="/admin/jobs/<%= job.id %>/toggle" method="post" class="inline-form">
                 <button class="btn btn--sm btn--muted"><%= job.status === 'open' ? 'Close' : 'Reopen' %></button>

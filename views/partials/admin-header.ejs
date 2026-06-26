@@ -12,20 +12,19 @@
 <body class="admin-body page">
   <header class="admin-topbar">
     <div class="admin-topbar__inner">
-      <a href="/admin" class="brand" style="gap:0.6rem;color:#fff;">
+      <a href="/admin" class="admin-brand">
         <img src="/images/logo-white.png" alt="Venza Care" class="admin-logo" />
-        <span style="font-weight:400;opacity:.7;font-family:var(--font-body);font-size:.8rem;">Backoffice</span>
+        <span>Admin</span>
       </a>
-      <nav style="display:flex;gap:1.3rem;align-items:center;margin-left:1.5rem;">
+      <nav class="admin-nav">
         <a href="/admin" class="<%= currentPath === '/admin' ? 'is-active' : '' %>">Dashboard</a>
-        <a href="/admin/jobs/new" class="<%= currentPath === '/admin/jobs/new' ? 'is-active' : '' %>">Post a job</a>
         <a href="/admin/applications" class="<%= currentPath.startsWith('/admin/applications') ? 'is-active' : '' %>">Applications</a>
         <a href="/admin/messages" class="<%= currentPath === '/admin/messages' ? 'is-active' : '' %>">Enquiries</a>
       </nav>
       <div class="spacer"></div>
-      <a href="/" target="_blank" rel="noopener" style="font-size:.88rem;">View site ↗</a>
+      <a href="/" target="_blank" rel="noopener" class="admin-topbar__view">View site ↗</a>
       <form action="/admin/logout" method="post" class="inline-form">
-        <button type="submit" class="btn btn--sm" style="background:rgba(255,255,255,.15);color:#fff;">Sign out</button>
+        <button type="submit" class="btn btn--sm admin-signout">Sign out</button>
       </form>
     </div>
   </header>
