@@ -5,7 +5,7 @@
   <div class="hero__inner">
     <span class="eyebrow hero__eyebrow">Residential · Nursing · Dementia · End-of-life care</span>
     <h1>The care home you'd choose for your own family</h1>
-    <p class="hero__lead">Four care homes in London, Kent and Cambridge — offering residential, nursing and dementia care, all registered and inspected by the Care Quality Commission.</p>
+    <p class="hero__lead">Four care homes across London, Kent and Cambridge, where every day is built around the person — not the routine.</p>
     <div class="hero__cta">
       <a href="/care-homes" class="btn btn--gold">Find a care home</a>
       <a href="/careers" class="btn btn--outline-light">Explore careers</a>
@@ -54,40 +54,24 @@
 </div>
 
 
-<!-- LIFE ENRICHMENT SPLIT -->
-<section class="section section--alt">
+<!-- ABOUT + LIFE (merged) -->
+<section class="section section--alt about-split">
   <div class="container">
     <div class="split">
-      <div class="split__media split__media--bordered has-photo" style="background-image:url('/images/life.jpg');"></div>
+      <div class="split__media split__media--bordered has-photo" style="background-image:url('/images/about.jpg');"></div>
       <div>
-        <span class="eyebrow">Life in our homes</span>
-        <h2 class="h2">There's more to the day than care</h2>
-        <p class="lead">Good days are made of small things — something to do, a proper meal, time outdoors and a visit from the people who matter. Each home runs its own programme of activities shaped around what residents actually enjoy.</p>
+        <span class="eyebrow">About Venza Care</span>
+        <h2 class="h2">Care that starts with getting to know you</h2>
+        <p class="lead">Across our four homes, around 300 people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. Our carers and nurses take time to learn the little things: a grandchild's name, a favourite song, the routine that makes a day feel right.</p>
         <ul style="list-style:none;padding:0;margin:1.5rem 0;display:grid;gap:0.8rem;">
-          <% ['A regular programme of activities and outings','Freshly prepared meals, with special diets catered for','Comfortable lounges and gardens to enjoy','Family and friends always welcome'].forEach(function(p){ %>
+          <% ['A regular programme of activities and outings','Freshly prepared meals, with special diets catered for','Comfortable lounges and gardens to enjoy','Residential, nursing, dementia and respite care'].forEach(function(p){ %>
           <li style="display:flex;gap:0.7rem;align-items:flex-start;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#20a7bc" stroke-width="2.2" style="flex:none;margin-top:2px"><path d="M20 6 9 17l-5-5"/></svg>
             <span><%= p %></span>
           </li>
           <% }) %>
         </ul>
-        <a href="/our-care" class="btn btn--primary">More about life with us</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ABOUT -->
-<section class="section section--alt about-split">
-  <div class="container">
-    <div class="split split--reverse">
-      <div class="split__media split__media--bordered has-photo" style="background-image:url('/images/about.jpg');"></div>
-      <div>
-        <span class="eyebrow">About Venza Care</span>
-        <h2 class="h2">Care that starts with getting to know you</h2>
-        <p class="lead">Across our four homes in London, Kent and Cambridge, around 300 people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. We offer residential, nursing, dementia and end-of-life care, but it always begins with the person, never the task.</p>
-        <p>Our carers and nurses take time to learn the little things — the name of a grandchild, a favourite song, the routine that makes a day feel right. Every home is registered with and inspected by the Care Quality Commission.</p>
-        <div class="hero__cta" style="margin-top:1.5rem;">
+        <div class="hero__cta">
           <a href="/our-care" class="btn btn--primary">Our approach to care</a>
           <a href="/care-homes" class="btn btn--ghost">Find a home</a>
         </div>
@@ -163,12 +147,11 @@
       </div>
       <% }) %>
     </div>
-    <p class="muted" style="text-align:center;margin-top:2rem;">Reviews from residents and their families will appear here.</p>
   </div>
 </section>
 
 <!-- REGULATION / TRUST -->
-<section class="section section--alt" style="padding-top:0;">
+<section class="section section--alt">
   <div class="container">
     <div class="section-head center"><h2 class="h2" style="font-size:1.6rem;">Regulated, inspected and open about it</h2></div>
     <div class="awards">
