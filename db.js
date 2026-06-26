@@ -16,7 +16,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, 'data');
+// /tmp is the only writable directory on read-only serverless hosts (e.g. Vercel).
+const DATA_DIR = path.join(process.env.VERCEL ? '/tmp' : __dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 /* ---------- Site-wide settings ---------- */
@@ -306,7 +307,12 @@ function load() {
 }
 
 function save() {
-  fs.writeFileSync(DB_FILE, JSON.stringify(store, null, 2));
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(DB_FILE, JSON.stringify(store, null, 2));
+  } catch (err) {
+    // Read-only filesystem (e.g. a serverless instance) — keep data in memory only.
+  }
 }
 
 function uid(prefix) {

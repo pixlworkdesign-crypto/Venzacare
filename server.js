@@ -42,8 +42,11 @@ app.use((req, res, next) => {
 });
 
 /* ---------- CV uploads ---------- */
-const UPLOAD_DIR = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// On read-only serverless hosts (e.g. Vercel) only /tmp is writable.
+const WRITABLE_BASE = process.env.VERCEL ? '/tmp' : __dirname;
+const UPLOAD_DIR = path.join(WRITABLE_BASE, 'public', 'uploads');
+try { if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true }); } catch (e) { /* read-only fs */ }
+app.use('/uploads', express.static(UPLOAD_DIR));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
@@ -449,8 +452,14 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something went wrong.');
 });
 
-app.listen(PORT, () => {
-  console.log(`\n  Venza Care UK running:`);
-  console.log(`  → Public site:  http://localhost:${PORT}`);
-  console.log(`  → Admin login:  http://localhost:${PORT}/admin/login  (${ADMIN_USER} / ${ADMIN_PASS})\n`);
-});
+// Local dev / Render: run a listening server. On Vercel the app is exported
+// below and invoked as a serverless function, so we must NOT call listen there.
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n  Venza Care UK running:`);
+    console.log(`  → Public site:  http://localhost:${PORT}`);
+    console.log(`  → Admin login:  http://localhost:${PORT}/admin/login  (${ADMIN_USER} / ${ADMIN_PASS})\n`);
+  });
+}
+
+module.exports = app;
