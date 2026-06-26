@@ -477,11 +477,14 @@ textarea { resize: vertical; min-height: 120px; }
   /* Stack the call-to-action buttons full-width instead of a ragged inline row */
   .cta-band .btn { display: flex; width: 100%; margin: 0.5rem 0 0; justify-content: center; }
   .cta-band .btn:first-of-type { margin-top: 0; }
-  /* Tighter, cleaner trust bar */
-  .trustbar__inner { gap: 0.7rem 1.4rem; justify-content: flex-start; }
-  .trustbar__item { font-size: 0.85rem; }
-  /* Single-column stats so the numbers don't get cramped */
+  /* Trust bar as a tidy 2x2 grid instead of a ragged wrapped row */
+  .trustbar__inner { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem 1rem; padding: 0.95rem 0; }
+  .trustbar__item { font-size: 0.82rem; align-items: flex-start; }
+  /* Keep stats in a neat 2x2 */
   .stats { grid-template-columns: 1fr 1fr; gap: 1.5rem 1rem; }
+  /* A touch more breathing room inside cards and the finder */
+  .finder { padding: 1.35rem; }
+  .guide-card { padding: 1.25rem; }
 }
 
 /* =========================================================
