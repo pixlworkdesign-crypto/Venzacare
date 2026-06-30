@@ -270,6 +270,7 @@ textarea { resize: vertical; min-height: 120px; }
 
 /* ---------- Stats ---------- */
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+.stats--3 { grid-template-columns: repeat(3, 1fr); }
 .stat { text-align: center; }
 .stat__num { font-family: var(--font-display); font-size: clamp(2.2rem, 4vw, 3rem); color: var(--gold-400); line-height: 1; }
 .section--green .stat__num { color: var(--gold-400); }
