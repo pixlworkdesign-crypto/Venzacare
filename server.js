@@ -20,12 +20,16 @@ const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || (IS_PROD ? '' : 'venza2026');
 const SESSION_SECRET = process.env.SESSION_SECRET || (IS_PROD ? '' : 'venza-dev-secret-change-me');
 
-if (IS_PROD && (!ADMIN_PASS || !SESSION_SECRET)) {
+/* If they're missing in production the public site stays up — it's the shop
+   window and shouldn't go dark over an admin setting — but the backoffice is
+   sealed shut rather than left on a password anyone can read in the repo. */
+const ADMIN_DISABLED = IS_PROD && (!ADMIN_PASS || !SESSION_SECRET);
+if (ADMIN_DISABLED) {
   console.error(
-    '\n  REFUSING TO START: set ADMIN_PASS and SESSION_SECRET in the environment.\n' +
-    '  (Vercel → Settings → Environment Variables, then redeploy.)\n'
+    '\n  ADMIN DISABLED: ADMIN_PASS and/or SESSION_SECRET are not set.\n' +
+    '  The public site is running, but nobody can sign in to /admin.\n' +
+    '  Set them in Vercel → Settings → Environment Variables, then redeploy.\n'
   );
-  throw new Error('ADMIN_PASS and SESSION_SECRET are required in production');
 }
 
 /* Wrap an async route so a rejected promise becomes a normal Express error
@@ -379,17 +383,26 @@ app.post('/api/chat', async (req, res) => {
    ADMIN BACKOFFICE
    ============================================================= */
 
+function adminUnavailable(res) {
+  res.status(503).render('admin/login', {
+    error: 'The backoffice is not configured yet. Set ADMIN_PASS and SESSION_SECRET in the hosting environment, then redeploy.',
+  });
+}
+
 function requireAuth(req, res, next) {
+  if (ADMIN_DISABLED) return adminUnavailable(res);
   if (isAdmin(req)) return next();
   res.redirect('/admin/login');
 }
 
 app.get('/admin/login', (req, res) => {
+  if (ADMIN_DISABLED) return adminUnavailable(res);
   if (isAdmin(req)) return res.redirect('/admin');
   res.render('admin/login', { error: null });
 });
 
 app.post('/admin/login', (req, res) => {
+  if (ADMIN_DISABLED) return adminUnavailable(res);
   const { username, password } = req.body;
   if (username === ADMIN_USER && password === ADMIN_PASS) {
     res.cookie('vc_admin', signAdminToken(), {
