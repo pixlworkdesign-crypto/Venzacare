@@ -1,14 +1,14 @@
 # Dependencies
 node_modules/
 
-# Runtime data & uploads — never commit residents'/applicants' personal data
-data/db.json
-public/uploads/*
-!public/uploads/.gitkeep
+# Runtime data & uploads — never commit residents'/applicants' personal data.
+# In production these live in Supabase; locally they land in data/.
+data/
 
 # Secrets / environment
 .env
 .env.*
+!.env.example
 *.local
 
 # Logs

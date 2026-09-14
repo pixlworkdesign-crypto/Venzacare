@@ -69,8 +69,13 @@
     </div>
     <% } else { %>
     <div class="empty-state">
+      <% if (q || service || location) { %>
       <h3>No roles match your search</h3>
       <p>Try clearing your filters, or <a href="/contact">register your interest</a> and we'll be in touch when something suitable comes up.</p>
+      <% } else { %>
+      <h3>No vacancies at the moment</h3>
+      <p>We're not advertising any roles right now, but that changes often. <a href="/contact">Send us your details</a> and we'll get in touch as soon as something suitable comes up.</p>
+      <% } %>
     </div>
     <% } %>
   </div>

@@ -35,7 +35,7 @@
           <td><%= a.rightToWork || '—' %></td>
           <td>
             <% if (a.cvFilename) { %>
-              <a href="/uploads/<%= a.cvFilename %>" target="_blank" rel="noopener" class="btn btn--sm btn--muted">Download</a>
+              <a href="/admin/applications/<%= a.id %>/cv" target="_blank" rel="noopener" class="btn btn--sm btn--muted">Download</a>
             <% } else { %><span class="muted">—</span><% } %>
           </td>
           <td class="muted" style="font-size:.85rem;white-space:nowrap;"><%= new Date(a.appliedAt).toLocaleDateString('en-GB') %><br /><%= new Date(a.appliedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) %></td>

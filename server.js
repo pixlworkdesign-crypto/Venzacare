@@ -3,17 +3,34 @@
    ============================================================= */
 
 const path = require('path');
-const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
 const db = require('./db');
+const storage = require('./storage');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const IS_PROD = !!(process.env.VERCEL || process.env.NODE_ENV === 'production');
+
+/* The admin credentials and session secret MUST come from the environment in
+   production. This repository is public, so a hardcoded fallback would be a
+   published password — refuse to start rather than run with a known one. */
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'venza2026';
-const SESSION_SECRET = process.env.SESSION_SECRET || 'venza-dev-secret-change-me';
+const ADMIN_PASS = process.env.ADMIN_PASS || (IS_PROD ? '' : 'venza2026');
+const SESSION_SECRET = process.env.SESSION_SECRET || (IS_PROD ? '' : 'venza-dev-secret-change-me');
+
+if (IS_PROD && (!ADMIN_PASS || !SESSION_SECRET)) {
+  console.error(
+    '\n  REFUSING TO START: set ADMIN_PASS and SESSION_SECRET in the environment.\n' +
+    '  (Vercel → Settings → Environment Variables, then redeploy.)\n'
+  );
+  throw new Error('ADMIN_PASS and SESSION_SECRET are required in production');
+}
+
+/* Wrap an async route so a rejected promise becomes a normal Express error
+   instead of an unhandled rejection that hangs the request. */
+const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 /* ---------- View engine ---------- */
 app.set('view engine', 'ejs');
@@ -45,31 +62,21 @@ function readCookie(req, name) {
 function isAdmin(req) { return verifyAdminToken(readCookie(req, 'vc_admin')); }
 
 // Shared locals available to every view
-app.use((req, res, next) => {
-  res.locals.SITE = db.SITE;
+app.use(wrap(async (req, res, next) => {
+  res.locals.SITE = await db.settings();
   res.locals.year = new Date().getFullYear();
   res.locals.currentPath = req.path;
   res.locals.title = '';
   next();
-});
+}));
 
 /* ---------- CV uploads ---------- */
-// On read-only serverless hosts (e.g. Vercel) only /tmp is writable.
-const WRITABLE_BASE = process.env.VERCEL ? '/tmp' : __dirname;
-const UPLOAD_DIR = path.join(WRITABLE_BASE, 'public', 'uploads');
-try { if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true }); } catch (e) { /* read-only fs */ }
-app.use('/uploads', express.static(UPLOAD_DIR));
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const safe = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-    cb(null, Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '-' + safe);
-  },
-});
+// Files are held in memory just long enough to hand them to storage.js, which
+// puts them in a private bucket. They are deliberately NOT served statically:
+// CVs are personal data and are only reachable via /admin/applications/:id/cv.
 const ALLOWED = ['.pdf', '.doc', '.docx', '.rtf', '.txt', '.odt'];
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -82,15 +89,15 @@ const upload = multer({
    ============================================================= */
 
 // Homepage
-app.get('/', (req, res) => {
-  const featuredJobs = db.openJobs().filter((j) => j.featured).slice(0, 3);
+app.get('/', wrap(async (req, res) => {
+  const openJobs = await db.openJobs();
   res.render('index', {
-    homes: db.homes(),
-    jobs: featuredJobs,
-    openCount: db.openJobs().length,
-    stats: db.siteStats(),
+    homes: await db.homes(),
+    jobs: openJobs.filter((j) => j.featured).slice(0, 3),
+    openCount: openJobs.length,
+    stats: await db.siteStats(),
   });
-});
+}));
 
 // Our care
 app.get('/our-care', (req, res) => {
@@ -98,37 +105,38 @@ app.get('/our-care', (req, res) => {
 });
 
 // Find a home (directory + filters)
-app.get('/care-homes', (req, res) => {
+app.get('/care-homes', wrap(async (req, res) => {
   const q = (req.query.q || '').toString();
   const region = (req.query.region || '').toString();
   const careType = (req.query.careType || '').toString();
   res.render('care-homes', {
     title: 'Find a care home',
-    homes: db.filterHomes({ q, region, careType }),
+    homes: await db.filterHomes({ q, region, careType }),
     q,
     region,
     careType,
   });
-});
+}));
 
 // Individual home
-app.get('/care-homes/:id', (req, res) => {
-  const home = db.home(req.params.id);
+app.get('/care-homes/:id', wrap(async (req, res) => {
+  const home = await db.home(req.params.id);
   if (!home) return notFound(res);
   res.render('home', {
     title: home.name,
     home,
-    jobs: db.jobsForHome(home.id),
+    jobs: await db.jobsForHome(home.id),
   });
-});
+}));
 
 // Careers (filterable jobs board)
-app.get('/careers', (req, res) => {
+app.get('/careers', wrap(async (req, res) => {
   const q = (req.query.q || '').toString().trim().toLowerCase();
   const service = (req.query.service || '').toString();
   const location = (req.query.location || '').toString();
 
-  let jobs = db.openJobs();
+  const allOpen = await db.openJobs();
+  let jobs = allOpen;
   if (q) {
     jobs = jobs.filter(
       (j) =>
@@ -140,29 +148,29 @@ app.get('/careers', (req, res) => {
   if (service) jobs = jobs.filter((j) => j.service === service);
   if (location) jobs = jobs.filter((j) => j.location === location);
 
-  const services = [...new Set(db.openJobs().map((j) => j.service).filter(Boolean))].sort();
+  const services = [...new Set(allOpen.map((j) => j.service).filter(Boolean))].sort();
 
   res.render('careers', {
     title: 'Careers',
     jobs,
     services,
-    locations: db.jobLocations(),
+    locations: await db.jobLocations(),
     q: req.query.q || '',
     service,
     location,
   });
-});
+}));
 
 // Single job + application form
-app.get('/careers/:id', (req, res) => {
-  const job = db.job(req.params.id);
+app.get('/careers/:id', wrap(async (req, res) => {
+  const job = await db.job(req.params.id);
   if (!job || job.status !== 'open') return notFound(res);
   res.render('job', { title: job.title, job, form: {}, error: null });
-});
+}));
 
 // Submit application
-app.post('/careers/:id/apply', upload.single('cv'), (req, res) => {
-  const job = db.job(req.params.id);
+app.post('/careers/:id/apply', upload.single('cv'), wrap(async (req, res) => {
+  const job = await db.job(req.params.id);
   if (!job || job.status !== 'open') return notFound(res);
 
   const { name, email, phone, rightToWork, message } = req.body;
@@ -175,7 +183,9 @@ app.post('/careers/:id/apply', upload.single('cv'), (req, res) => {
     });
   }
 
-  db.addApplication({
+  const cv = await storage.saveCv(req.file);
+
+  await db.addApplication({
     jobId: job.id,
     jobTitle: job.title,
     name,
@@ -183,44 +193,51 @@ app.post('/careers/:id/apply', upload.single('cv'), (req, res) => {
     phone,
     rightToWork,
     message,
-    cvFilename: req.file ? req.file.filename : '',
+    cvFilename: cv.filename,
+    cvPath: cv.key,
   });
 
   res.render('apply-success', { title: 'Application received', job });
-});
+}));
 
 // Contact
-function contactLocals(extra) {
-  return Object.assign({ title: 'Contact us', sent: false, form: {}, callbackSent: false, cbForm: {}, homes: db.homes() }, extra);
+async function contactLocals(extra) {
+  return Object.assign(
+    { title: 'Contact us', sent: false, form: {}, callbackSent: false, cbForm: {}, homes: await db.homes() },
+    extra
+  );
 }
 
-app.get('/contact', (req, res) => {
-  res.render('contact', contactLocals());
-});
+app.get('/contact', wrap(async (req, res) => {
+  res.render('contact', await contactLocals());
+}));
 
-app.post('/contact', (req, res) => {
+app.post('/contact', wrap(async (req, res) => {
   const { name, email, phone, subject, message } = req.body;
   if (name && email && message) {
-    db.addMessage({ name, email, phone, subject, message });
-    return res.render('contact', contactLocals({ sent: true }));
+    await db.addMessage({ name, email, phone, subject, message });
+    return res.render('contact', await contactLocals({ sent: true }));
   }
-  res.render('contact', contactLocals({ form: req.body }));
-});
+  res.render('contact', await contactLocals({ form: req.body }));
+}));
 
 // Request a callback
-app.post('/callback', (req, res) => {
+app.post('/callback', wrap(async (req, res) => {
   const { name, phone, time, home } = req.body;
   if (name && phone) {
-    db.addMessage({
+    await db.addMessage({
+      kind: 'callback',
       name,
       phone,
       subject: 'Callback request',
+      bestTime: time || 'Anytime',
+      home: home || '',
       message: `Please call me back. Best time: ${time || 'Anytime'}.` + (home ? ` Home of interest: ${home}.` : ''),
     });
-    return res.render('contact', contactLocals({ callbackSent: true }));
+    return res.render('contact', await contactLocals({ callbackSent: true }));
   }
-  res.render('contact', contactLocals({ cbForm: req.body }));
-});
+  res.render('contact', await contactLocals({ cbForm: req.body }));
+}));
 
 // Legal / policy pages
 app.get('/privacy', (req, res) => {
@@ -241,8 +258,8 @@ const CHAT_MODEL = process.env.CHAT_MODEL || 'claude-opus-4-8';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 
 // Compile a knowledge base from the site's own data (homes, jobs, care, contact)
-function buildKnowledge() {
-  const S = db.SITE;
+async function buildKnowledge() {
+  const S = await db.settings();
   const lines = [];
   lines.push(`# ${S.name} — website information`);
   lines.push(`Phone: ${S.phone} | Email: ${S.email} | Head office: ${S.address}`);
@@ -256,7 +273,7 @@ function buildKnowledge() {
   lines.push(`- End-of-life care: gentle, dignified palliative care working with GPs and family.`);
 
   lines.push(`\n## Our care homes`);
-  db.homes().forEach((h) => {
+  (await db.homes()).forEach((h) => {
     const cqc = (h.cqc === 'Good' || h.cqc === 'Outstanding') ? `CQC ${h.cqc}` : 'CQC registered';
     lines.push(
       `- ${h.name} (${h.town}, ${h.postcode}, ${h.region}): ${h.beds} beds, ${cqc}. ` +
@@ -266,7 +283,7 @@ function buildKnowledge() {
     );
   });
 
-  const jobs = db.openJobs();
+  const jobs = await db.openJobs();
   lines.push(`\n## Current job vacancies (${jobs.length} open)`);
   if (jobs.length) {
     jobs.forEach((j) => {
@@ -288,6 +305,7 @@ function buildKnowledge() {
 
 app.post('/api/chat', async (req, res) => {
   try {
+    const SITE = await db.settings();
     const incoming = Array.isArray(req.body && req.body.messages) ? req.body.messages : [];
     // sanitise to {role, content} text turns, cap history length
     const history = incoming
@@ -303,17 +321,17 @@ app.post('/api/chat', async (req, res) => {
       return res.json({
         reply:
           "The assistant isn't switched on yet — it needs an Anthropic API key. " +
-          `In the meantime, call us on ${db.SITE.phone} or send an enquiry via the contact page.`,
+          `In the meantime, call us on ${SITE.phone} or send an enquiry via the contact page.`,
       });
     }
 
     const system =
-      `You are the friendly online assistant for ${db.SITE.name}, a UK care-home group. ` +
+      `You are the friendly online assistant for ${SITE.name}, a UK care-home group. ` +
       `Answer questions ONLY using the information below, which is everything published on this website. ` +
-      `If the answer isn't in this information, say you don't have that detail and invite the person to call ${db.SITE.phone} or use the contact page — do not guess or invent homes, prices, names or facts. ` +
+      `If the answer isn't in this information, say you don't have that detail and invite the person to call ${SITE.phone} or use the contact page — do not guess or invent homes, prices, names or facts. ` +
       `Be warm, concise and reassuring (families researching care are often anxious). Use British English. ` +
       `When relevant, point people to the right page (e.g. /care-homes, /careers, /contact).\n\n` +
-      buildKnowledge();
+      (await buildKnowledge());
 
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -341,7 +359,7 @@ app.post('/api/chat', async (req, res) => {
     const data = await r.json();
     if (data.stop_reason === 'refusal') {
       return res.json({
-        reply: `I'm not able to help with that one. For anything about our care or homes, call ${db.SITE.phone} and our team will be glad to help.`,
+        reply: `I'm not able to help with that one. For anything about our care or homes, call ${SITE.phone} and our team will be glad to help.`,
       });
     }
     const reply = (data.content || [])
@@ -392,14 +410,14 @@ app.post('/admin/logout', (req, res) => {
 });
 
 // Dashboard
-app.get('/admin', requireAuth, (req, res) => {
+app.get('/admin', requireAuth, wrap(async (req, res) => {
   res.render('admin/dashboard', {
     title: 'Dashboard',
-    stats: db.stats(),
-    jobs: db.jobs(),
-    counts: db.applicationCounts(),
+    stats: await db.stats(),
+    jobs: await db.jobs(),
+    counts: await db.applicationCounts(),
   });
-});
+}));
 
 // New job form
 app.get('/admin/jobs/new', requireAuth, (req, res) => {
@@ -407,51 +425,66 @@ app.get('/admin/jobs/new', requireAuth, (req, res) => {
 });
 
 // Create job
-app.post('/admin/jobs', requireAuth, (req, res) => {
-  db.createJob(req.body);
+app.post('/admin/jobs', requireAuth, wrap(async (req, res) => {
+  await db.createJob(req.body);
   res.redirect('/admin');
-});
+}));
 
 // Edit job form
-app.get('/admin/jobs/:id/edit', requireAuth, (req, res) => {
-  const job = db.job(req.params.id);
+app.get('/admin/jobs/:id/edit', requireAuth, wrap(async (req, res) => {
+  const job = await db.job(req.params.id);
   if (!job) return res.redirect('/admin');
   res.render('admin/job-form', { title: 'Edit vacancy', mode: 'edit', job });
-});
+}));
 
 // Update job
-app.post('/admin/jobs/:id', requireAuth, (req, res) => {
-  db.updateJob(req.params.id, req.body);
+app.post('/admin/jobs/:id', requireAuth, wrap(async (req, res) => {
+  await db.updateJob(req.params.id, req.body);
   res.redirect('/admin');
-});
+}));
 
 // Toggle open/closed
-app.post('/admin/jobs/:id/toggle', requireAuth, (req, res) => {
-  db.toggleJob(req.params.id);
+app.post('/admin/jobs/:id/toggle', requireAuth, wrap(async (req, res) => {
+  await db.toggleJob(req.params.id);
   res.redirect('/admin');
-});
+}));
 
 // Delete job
-app.post('/admin/jobs/:id/delete', requireAuth, (req, res) => {
-  db.deleteJob(req.params.id);
+app.post('/admin/jobs/:id/delete', requireAuth, wrap(async (req, res) => {
+  await db.deleteJob(req.params.id);
   res.redirect('/admin');
-});
+}));
 
 // Applications
-app.get('/admin/applications', requireAuth, (req, res) => {
+app.get('/admin/applications', requireAuth, wrap(async (req, res) => {
   const jobId = (req.query.job || '').toString();
   res.render('admin/applications', {
     title: 'Applications',
-    applications: db.applications(jobId),
-    jobs: db.jobs(),
+    applications: await db.applications(jobId),
+    jobs: await db.jobs(),
     jobId,
   });
-});
+}));
+
+/* CV download — the only way to reach an applicant's CV. Admin-only, and the
+   underlying file is never served statically. */
+app.get('/admin/applications/:id/cv', requireAuth, wrap(async (req, res) => {
+  const all = await db.applications();
+  const application = all.find((a) => a.id === req.params.id);
+  if (!application || !application.cvPath) return notFound(res);
+
+  const signed = await storage.cvDownloadUrl(application.cvPath);
+  if (signed) return res.redirect(signed);
+
+  const local = storage.localCvPath(application.cvPath);
+  if (!local) return notFound(res);
+  res.download(local, application.cvFilename || 'cv');
+}));
 
 // Enquiries
-app.get('/admin/messages', requireAuth, (req, res) => {
-  res.render('admin/messages', { title: 'Enquiries', messages: db.messages() });
-});
+app.get('/admin/messages', requireAuth, wrap(async (req, res) => {
+  res.render('admin/messages', { title: 'Enquiries', messages: await db.messages() });
+}));
 
 /* =============================================================
    404 + errors

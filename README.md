@@ -24,7 +24,6 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 ## Run it
 
 ```bash
-cd venza-care-uk
 npm install
 npm start
 ```
@@ -33,9 +32,56 @@ Then open:
 - Public site → http://localhost:3000
 - Admin backoffice → http://localhost:3000/admin/login
 
-**Demo admin login:** `admin` / `venza2026`
+**Local admin login:** `admin` / `venza2026` — development only. In production
+these must be set in the environment; the app refuses to start otherwise.
 
-### Configuration (optional)
+With no `DATABASE_URL` set, the app runs on a local JSON file and seeds the four
+care homes from `db.js` so you have something to look at. No vacancies are
+seeded — post them through the admin.
+
+## Production setup (Supabase)
+
+The site runs on Vercel, where the filesystem is read-only and wiped between
+requests. Anything the app saves — vacancies, applications, enquiries, CVs —
+must therefore live outside the container. That's what Supabase is for.
+
+**1. Create the Supabase project**
+
+Sign up at supabase.com and create a project. Then:
+
+- **Project Settings → Database → Connection string → Transaction pooler**
+  Copy it; this is `DATABASE_URL`. Put your database password into the URL where
+  it says `[YOUR-PASSWORD]`.
+- **Project Settings → API** — copy the Project URL (`SUPABASE_URL`) and the
+  `service_role` key (`SUPABASE_SERVICE_ROLE_KEY`). The service role key bypasses
+  row-level security, so it is server-side only — never put it in client code.
+- **Storage → New bucket** — create one named `cvs` and leave it **private**.
+  Applicants' CVs go here and are only reachable through short-lived signed links
+  generated for a signed-in admin.
+
+**2. Create the tables**
+
+```bash
+DATABASE_URL="postgresql://..." npm run migrate
+```
+
+This creates the schema (`sql/schema.sql`), seeds site settings, and copies the
+care homes across. It is safe to re-run: nothing is dropped, and homes you've
+since edited in the admin are left alone.
+
+**3. Set the environment variables in Vercel**
+
+Settings → Environment Variables, then redeploy. See `.env.example` for the full
+list. At minimum:
+
+| Variable | Why |
+|---|---|
+| `ADMIN_USER`, `ADMIN_PASS` | Admin sign-in. **Required** — the app won't boot without a password, because this repo is public |
+| `SESSION_SECRET` | Signs the admin session cookie. Long and random |
+| `DATABASE_URL` | Supabase Postgres. Without it, data is lost on every cold start |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | CV storage |
+
+### Other optional settings
 
 Set environment variables to override defaults:
 
