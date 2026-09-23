@@ -30,6 +30,21 @@ const SESSION_SECRET = env('SESSION_SECRET') || (IS_PROD ? '' : 'venza-dev-secre
    window and shouldn't go dark over an admin setting — but the backoffice is
    sealed shut rather than left on a password anyone can read in the repo. */
 const ADMIN_DISABLED = IS_PROD && (!ADMIN_PASS || !SESSION_SECRET);
+
+/* Say exactly what's missing, and which Vercel environment this deployment is
+   — variables scoped to "Production" are invisible to Preview deployments,
+   which is the usual reason sign-in is off on a *.vercel.app link. */
+const MISSING_ADMIN_VARS = [!ADMIN_PASS && 'ADMIN_PASS', !SESSION_SECRET && 'SESSION_SECRET'].filter(Boolean);
+const DEPLOY_ENV = process.env.VERCEL_ENV || (process.env.VERCEL ? 'unknown' : 'local');
+function adminSetupHint() {
+  const missing = MISSING_ADMIN_VARS.join(' and ');
+  const where = DEPLOY_ENV === 'preview'
+    ? ` This is a Preview deployment: in Vercel → Settings → Environment Variables, edit ${missing} and tick "Preview" as well as "Production" — or sign in on your main (production) web address instead.`
+    : DEPLOY_ENV === 'production'
+      ? ` This is the Production deployment: check ${missing} ${MISSING_ADMIN_VARS.length > 1 ? 'are' : 'is'} set for "Production" in this Vercel project and not blank, then redeploy.`
+      : ` Set ${missing} in the hosting environment, then redeploy.`;
+  return `Sign-in is switched off because ${missing} ${MISSING_ADMIN_VARS.length > 1 ? 'are' : 'is'} not set on this deployment.` + where;
+}
 if (ADMIN_DISABLED) {
   console.error(
     '\n  ADMIN DISABLED: ADMIN_PASS and/or SESSION_SECRET are not set.\n' +
@@ -462,7 +477,8 @@ app.get('/api/health', wrap(async (req, res) => {
   res.status(h.ok ? 200 : 503).json({
     ok: h.ok,
     database: h.backend === 'postgres' ? 'Supabase / Postgres' : 'local file (not persistent)',
-    adminSignIn: ADMIN_DISABLED ? 'disabled — ADMIN_PASS and/or SESSION_SECRET not set' : 'enabled',
+    deployment: DEPLOY_ENV,
+    adminSignIn: ADMIN_DISABLED ? 'disabled — ' + MISSING_ADMIN_VARS.join(' and ') + ' not set on this deployment' : 'enabled',
     problems: h.problems,
   });
 }));
@@ -618,7 +634,7 @@ app.post('/api/chat', async (req, res) => {
 
 function adminUnavailable(res) {
   res.status(503).render('admin/login', {
-    error: 'The backoffice is not configured yet. Set ADMIN_PASS and SESSION_SECRET in the hosting environment, then redeploy.',
+    error: adminSetupHint(),
   });
 }
 
