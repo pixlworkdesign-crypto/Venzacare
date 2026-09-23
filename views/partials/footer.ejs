@@ -7,7 +7,7 @@
           <p style="max-width: 32ch; font-size: 0.92rem;">CQC-regulated care homes in London, Kent and Cambridge — residential, nursing, dementia and end-of-life care.</p>
           <p style="font-size: 0.9rem;">
             <%= SITE.address %><br />
-            <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a><br />
+            <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a>
             <a href="mailto:<%= SITE.email %>"><%= SITE.email %></a>
           </p>
         </div>
@@ -41,6 +41,10 @@
           <span class="site-credit__logo"><img src="/images/pixelworks-design.png" alt="PixelWorks Design" /></span>
         </a>
         <span>© <%= year %> Venza Care UK Ltd. Registered in England &amp; Wales. Regulated by the Care Quality Commission.</span>
+        <a href="/admin/login" class="footer__staff" rel="nofollow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          Staff login
+        </a>
       </div>
     </div>
   </footer>

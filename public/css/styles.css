@@ -1158,3 +1158,7 @@ a.contact-list__value:hover { color: var(--green-500); }
   .apply-form { grid-template-columns: 1fr; }
   .apply-form__submit .btn { width: 100%; min-width: 0; }
 }
+
+/* Discreet staff sign-in link in the footer's bottom bar */
+.footer__bottom .footer__staff { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.75rem; border: 1px solid rgba(255,255,255,0.25); border-radius: 999px; font-size: 0.8rem; }
+.footer__bottom .footer__staff:hover { border-color: var(--gold-400); }
