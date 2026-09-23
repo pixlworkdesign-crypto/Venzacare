@@ -5,24 +5,31 @@
     <div class="crumbs"><a href="/">Home</a> › Our care</div>
     <span class="eyebrow hero__eyebrow">Our care</span>
     <h1>Care that grows as needs change</h1>
-    <p>From a little help each day to round-the-clock nursing and specialist dementia care, our homes support people as their needs change. Here's what each kind of care actually means.</p>
+    <p>From a little help each day or a short respite stay to round-the-clock nursing and specialist dementia care, our homes support people as their needs change. Here's what each kind of care actually means.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-    <% var care=[
+    <% function homesWith(type) {
+         return homes.filter(function(h){ return h.careTypes.indexOf(type) > -1; }).map(function(h){ return h.name + ' (' + h.town + ')'; });
+       }
+       function listNames(a) { return a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a.join(''); }
+       var care=[
       {t:'Residential care',filter:'Residential Care',img:'care-residential.jpg',d:'For people who no longer manage easily at home, residential care offers help with everyday things — washing, dressing, meals and medication — in a comfortable home, with a team on hand day and night. You keep your own routines and as much independence as you like.'},
       {t:'Nursing care',filter:'Nursing Care',img:'care-nursing.jpg',d:'When health needs go beyond day-to-day support, our registered nurses provide care around the clock — for long-term conditions, recovery after a hospital stay, and ongoing clinical needs — working closely with local GPs and community health teams.'},
       {t:'Dementia care',filter:'Dementia Care',img:'care-dementia.jpg',d:'Our teams are experienced in caring for people living with dementia, in calm, familiar surroundings designed to feel safe. We take time to learn each resident\'s history and routines, so they are known and understood — including on the harder days. At Fieldway in Mitcham, a dedicated floor specialises in dementia care.'},
-      {t:'End-of-life care',filter:'End-of-life Care',img:'care-palliative.jpg',pos:'center',d:'In someone\'s final months, our focus is comfort, dignity and choice. We work closely with your GP, district nurses and family to manage symptoms and make sure no one is alone. End-of-life care is available at Kentford Manor, near Newmarket.'}
+      {t:'Respite care',filter:'Respite Care',img:'life.jpg',pos:'center',d:'A short stay — to recover after a hospital visit, to give a family carer a break, or simply to try a home before deciding. Respite guests get exactly the same care, meals and activities as everyone else, for as long or short a stay as you need, subject to a room being free.'},
+      {t:'End-of-life care',filter:'End-of-life Care',img:'care-palliative.jpg',pos:'center',d:'In someone\'s final months, our focus is comfort, dignity and choice. We work closely with your GP, district nurses and family to manage symptoms and make sure no one is alone.'}
     ];
     care.forEach(function(c, idx){ %>
-    <div class="split <%= idx % 2 ? 'split--reverse' : '' %>" style="margin-bottom: 3.5rem;">
+    <% var where = homesWith(c.filter); var anchor = c.t.toLowerCase().replace(/[^a-z]+/g, '-'); %>
+    <div class="split <%= idx % 2 ? 'split--reverse' : '' %>" id="<%= anchor %>" style="margin-bottom: 3.5rem;scroll-margin-top:96px;">
       <div class="split__media split__media--bordered has-photo" style="background-image:url('/images/<%= c.img %>'); background-position: <%= c.pos || 'center 22%' %>;"></div>
       <div>
         <h2 class="h2" style="font-size:1.9rem;"><%= c.t %></h2>
         <p class="lead" style="font-size:1.05rem;"><%= c.d %></p>
+        <% if (where.length) { %><p class="muted" style="margin-top:-.4rem;"><strong style="color:var(--green-800)">Available at:</strong> <%= where.length === homes.length ? 'all our homes — ' + listNames(where) : listNames(where) %>.</p><% } %>
         <a href="/care-homes?careType=<%= encodeURIComponent(c.filter) %>" class="btn btn--ghost mt-1">Find <%= c.t.toLowerCase() %> homes</a>
       </div>
     </div>

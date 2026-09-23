@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
+  <meta name="robots" content="noindex" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign in · Venza Care UK Admin</title>
@@ -28,7 +29,7 @@
         </div>
         <button type="submit" class="btn btn--primary btn--block">Sign in</button>
       </form>
-      <p class="hint mt-2" style="text-align:center;">Demo login → <strong>admin</strong> / <strong>venza2026</strong></p>
+      <% if (typeof showDemo !== 'undefined' && showDemo) { %><p class="hint mt-2" style="text-align:center;">Local development login → <strong>admin</strong> / <strong>venza2026</strong></p><% } %>
     </div>
   </div>
 </body>

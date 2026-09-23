@@ -1,0 +1,117 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Fees &amp; funding</div>
+    <span class="eyebrow hero__eyebrow">Fees &amp; funding</span>
+    <h1>Clear prices, no surprises</h1>
+    <p>What care costs at each of our homes, exactly what's included, and the help available to pay for it — in plain English.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Weekly fees</span>
+      <h2 class="h2">Prices at each home</h2>
+      <p class="lead">These are the lowest weekly fees for each type of care. Your exact fee depends on the care needed and the room you choose, and we confirm it in writing after a free assessment — before you commit to anything.</p>
+    </div>
+
+    <div class="fee-table-wrap">
+      <table class="table fee-table fee-table--all">
+        <thead>
+          <tr>
+            <th scope="col">Home</th>
+            <% FEE_ROWS.forEach(function(r){ %><th scope="col"><%= r.label.replace(' (per week)', '') %></th><% }) %>
+          </tr>
+        </thead>
+        <tbody>
+          <% homes.forEach(function(h){ var f = h.details.fees; %>
+          <tr>
+            <th scope="row"><a href="/care-homes/<%= h.id %>#fees"><%= h.name %></a><span class="muted fee-town"><%= h.town %></span></th>
+            <% FEE_ROWS.forEach(function(r){ %>
+            <td data-label="<%= r.label %>"><% if (f[r.key]) { %><span>from <strong><%= gbp(f[r.key]) %></strong></span><% } else if (h.careTypes.some(function(c){ return c.toLowerCase().indexOf(r.key) === 0; })) { %><span class="muted">Call us</span><% } else { %><span class="muted">—</span><% } %></td>
+            <% }) %>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted fee-note">Prices are per week. Nursing fees state whether NHS-funded nursing care (FNC) is included — see the home's page. Where a price isn't shown, call <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a> and we'll tell you the current fee straight away.</p>
+
+    <div class="included-grid" style="margin-top:2.5rem;">
+      <div class="care-panel">
+        <h3>What the weekly fee includes</h3>
+        <ul class="tick-list">
+          <% INCLUDED.forEach(function(i){ %><li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><%= i %></span></li><% }) %>
+        </ul>
+      </div>
+      <div class="care-panel">
+        <h3>Optional extras</h3>
+        <p class="muted" style="margin-top:0;">Only if you choose them, charged at cost and itemised on your invoice:</p>
+        <ul class="plain-list">
+          <% EXTRAS.forEach(function(i){ %><li><%= i %></li><% }) %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow">Paying for care</span>
+      <h2 class="h2">The help you may be entitled to</h2>
+      <p class="lead" style="margin-inline:auto;">Most families don't know about all of these. We're happy to talk any of them through — or download our free guide.</p>
+    </div>
+    <div class="care-grid funding-grid">
+      <% [
+        {t:'Paying for yourself', d:'If your savings and assets are above the council limit, you arrange and pay for care directly. You can still ask the council for a free care-needs assessment, and usually claim Attendance Allowance, which is not means-tested.'},
+        {t:'Council funding', d:'If your savings and assets are below the upper limit, your local council may pay some or all of the fee after a financial assessment. A family member may be able to pay a “top-up” if the home costs more than the council rate.'},
+        {t:'NHS-funded nursing care (FNC)', d:'If you need nursing care, the NHS pays a fixed weekly amount directly to the home towards the nursing part of your care — whoever pays the rest.'},
+        {t:'NHS Continuing Healthcare', d:'If your needs are mainly health needs, the NHS may pay the full cost of your care. Ask for a CHC checklist assessment — we can help you request one.'},
+        {t:'Deferred payment', d:'If your money is tied up in your home, the council may pay your fees now and recover them later, usually when the home is sold — so you don’t have to sell in a hurry.'},
+        {t:'Independent advice', d:'A specialist later-life financial adviser (look for SOLLA accreditation) can explain options such as care-fee annuities. Age UK and your council can also help, free.'}
+      ].forEach(function(c){ %>
+      <div class="care-card">
+        <div class="care-card__body">
+          <h3 style="font-size:1.15rem;"><%= c.t %></h3>
+          <p style="margin:0;"><%= c.d %></p>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <p style="text-align:center;margin-top:2rem;"><a class="btn btn--primary" href="/guides/understanding-fees-and-funding.pdf" target="_blank" rel="noopener">Download our free fees &amp; funding guide (PDF)</a></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:860px;">
+    <div class="section-head">
+      <span class="eyebrow">Our terms, up front</span>
+      <h2 class="h2">Deposits, fee reviews and other questions</h2>
+    </div>
+    <div class="faq-list">
+      <% faqs.forEach(function(f){ %>
+      <details class="faq">
+        <summary><%= f.q %></summary>
+        <p><%= f.a %></p>
+      </details>
+      <% }) %>
+    </div>
+    <p class="muted" style="margin-top:1.5rem;">You'll get our full terms and conditions to read before anything is signed. If you'd like a copy now, <a href="/contact">just ask</a>.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="cta-band" style="background:linear-gradient(120deg,var(--green-800),var(--green-600));">
+      <h2>Want to talk costs through?</h2>
+      <p>Our team can tell you the exact fee for your situation, check which funding you may qualify for, and send you everything in writing.</p>
+      <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>" class="btn btn--gold">Call <%= SITE.phone %></a>
+      <a href="/contact#callback" class="btn btn--outline-light">Request a callback</a>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

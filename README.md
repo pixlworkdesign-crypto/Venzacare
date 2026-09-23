@@ -12,7 +12,11 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 - **Find a home** — searchable/filterable care-home directory + individual home pages
 - **Careers** — filterable jobs board pulling live from the backoffice
 - **Job detail + application form** — with optional CV upload
-- **Contact** — enquiry form
+- **Contact** — enquiry form and callback requests
+- **Fees & funding** — weekly prices per home, what's included, extras, deposits and funding help
+- **CQC ratings** — every home's rating with links to the reports (and the CQC widget when a location ID is set)
+- **FAQs** — common questions plus a "what to bring" checklist
+- **Book a visit** — a form on every home page
 
 **Admin backoffice** (`/admin`)
 - Secure login
@@ -24,7 +28,6 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 ## Run it
 
 ```bash
-cd venza-care-uk
 npm install
 npm start
 ```
@@ -33,9 +36,90 @@ Then open:
 - Public site → http://localhost:3000
 - Admin backoffice → http://localhost:3000/admin/login
 
-**Demo admin login:** `admin` / `venza2026`
+**Local admin login:** `admin` / `venza2026` — development only. In production
+these must be set in the environment; the app refuses to start otherwise.
 
-### Configuration (optional)
+With no `DATABASE_URL` set, the app runs on a local JSON file and seeds the four
+care homes from `db.js` so you have something to look at. No vacancies are
+seeded — post them through the admin.
+
+## Production setup (Supabase)
+
+The site runs on Vercel, where the filesystem is read-only and wiped between
+requests. Anything the app saves — vacancies, applications, enquiries, CVs —
+must therefore live outside the container. That's what Supabase is for.
+
+**1. Create the Supabase project**
+
+Sign up at supabase.com and create a project. Then:
+
+- **Project Settings → Database → Connection string → Transaction pooler**
+  Copy it; this is `DATABASE_URL`. Put your database password into the URL where
+  it says `[YOUR-PASSWORD]`.
+- **Project Settings → API** — copy the Project URL (`SUPABASE_URL`) and the
+  `service_role` key (`SUPABASE_SERVICE_ROLE_KEY`). The service role key bypasses
+  row-level security, so it is server-side only — never put it in client code.
+- **Storage → New bucket** — create one named `cvs` and leave it **private**.
+  Applicants' CVs go here and are only reachable through short-lived signed links
+  generated for a signed-in admin.
+
+**2. Create the tables**
+
+```bash
+DATABASE_URL="postgresql://..." npm run migrate
+```
+
+This creates the schema (`sql/schema.sql`), seeds site settings, and copies the
+care homes across. It is safe to re-run: nothing is dropped, and homes you've
+since edited in the admin are left alone.
+
+**3. Set the environment variables in Vercel**
+
+Settings → Environment Variables, then redeploy. See `.env.example` for the full
+list. At minimum:
+
+| Variable | Why |
+|---|---|
+| `ADMIN_USER`, `ADMIN_PASS` | Admin sign-in. **Required** — without them the public site runs but `/admin` is switched off, because this repo is public |
+| `SESSION_SECRET` | Signs the admin session cookie. Long and random |
+| `DATABASE_URL` | Supabase Postgres. Without it, data is lost on every cold start |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | CV storage |
+
+| `SITE_URL` | The live address, e.g. `https://www.venzacare.co.uk` — used for canonical links, the sitemap and social previews |
+
+**4. Check it worked**
+
+Open `/api/health` on the live site. It says whether the database is connected
+and, if not, what's wrong in plain English. The admin dashboard shows the same
+warning at the top.
+
+### "My password isn't working" — checklist
+
+- **The admin password is `ADMIN_PASS`, not your Supabase password.** Supabase's
+  database password only goes inside `DATABASE_URL`. You sign in to `/admin` with
+  `ADMIN_USER` / `ADMIN_PASS` from Vercel's environment variables.
+- **Redeploy after changing environment variables.** Vercel only picks up new
+  values on the next deployment.
+- **Make sure the Supabase code is what's deployed.** If Vercel deploys `main`,
+  this branch has to be merged first.
+- **Use the Transaction pooler string** (host `…pooler.supabase.com`, port
+  `6543`, user `postgres.<project-ref>`). The direct `db.<ref>.supabase.co` host
+  is IPv6-only and Vercel can't reach it.
+- **URL-encode special characters in the database password** — `@` → `%40`,
+  `#` → `%23`, `/` → `%2F`, `?` → `%3F`, `%` → `%25` — or reset it in Supabase to
+  letters and numbers only.
+- **Run the migration** (step 2). Without the tables, the site falls back to the
+  built-in homes and nothing saves.
+
+### Content to confirm before going live
+
+- Fee terms in `content.js` (what's included, extras, deposits, fee reviews,
+  fees after death) are typical CMA-compliant wording, **not** confirmed policy.
+  They must match your residents' contract.
+- Fees, availability, CQC ratings and location IDs, managers and review links are
+  entered per home in **Admin → Homes**. Blank fields are simply hidden.
+
+### Other optional settings
 
 Set environment variables to override defaults:
 

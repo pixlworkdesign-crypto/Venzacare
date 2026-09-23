@@ -9,50 +9,102 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section contact-section">
   <div class="container">
-    <div class="job-detail">
-      <div>
+    <div class="contact-grid">
+      <div class="contact-panel">
         <% if (sent) { %>
-        <div class="alert alert--success" style="font-size:1rem;padding:1.2rem 1.4rem;">
+        <div class="alert alert--success" style="font-size:1rem;padding:1.2rem 1.4rem;margin-bottom:1.5rem;">
           <strong>Thank you — your message has been sent.</strong><br />Our team will be in touch within one working day, often sooner.
         </div>
         <% } %>
-        <h2 style="margin-top:0;">Send us a message</h2>
-        <p class="muted">Fill in the form and we’ll get back to you, usually within one working day.</p>
-        <form action="/contact" method="post" style="max-width:560px;">
-          <div class="admin-form">
-            <div class="grid-2">
-              <div class="field"><label for="name">Your name *</label><input type="text" id="name" name="name" required value="<%= form.name||'' %>" /></div>
-              <div class="field"><label for="email">Email *</label><input type="email" id="email" name="email" required value="<%= form.email||'' %>" /></div>
+        <span class="eyebrow">Send us a message</span>
+        <h2 class="contact-panel__title">How can we help?</h2>
+        <p class="contact-panel__intro">Fill in the form and we’ll get back to you, usually within one working day.</p>
+
+        <form action="/contact" method="post" class="contact-form">
+          <div class="grid-2">
+            <div class="field"><label for="name">Your name *</label><input type="text" id="name" name="name" required value="<%= form.name||'' %>" /></div>
+            <div class="field"><label for="email">Email *</label><input type="email" id="email" name="email" required value="<%= form.email||'' %>" /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="phone">Phone</label><input type="tel" id="phone" name="phone" value="<%= form.phone||'' %>" /></div>
+            <div class="field"><label for="subject">Subject</label>
+              <select id="subject" name="subject">
+                <option>General enquiry</option>
+                <option>Arranging care</option>
+                <option>Book a visit</option>
+                <option>Fees &amp; funding</option>
+                <option>Careers</option>
+              </select>
             </div>
-            <div class="grid-2">
-              <div class="field"><label for="phone">Phone</label><input type="tel" id="phone" name="phone" value="<%= form.phone||'' %>" /></div>
-              <div class="field"><label for="subject">Subject</label>
-                <select id="subject" name="subject">
-                  <option>General enquiry</option>
-                  <option>Arranging care</option>
-                  <option>Book a visit</option>
-                  <option>Fees &amp; funding</option>
-                  <option>Careers</option>
-                </select>
-              </div>
-            </div>
-            <div class="field"><label for="message">Message *</label><textarea id="message" name="message" required><%= form.message||'' %></textarea></div>
+          </div>
+          <div class="field"><label for="message">Message *</label><textarea id="message" name="message" required placeholder="Tell us a little about who the care is for and what you’d like to know."><%= form.message||'' %></textarea></div>
+          <div class="contact-form__foot">
             <button type="submit" class="btn btn--primary">Send message</button>
+            <span class="contact-form__note">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              We’ll only use your details to reply to this enquiry.
+            </span>
           </div>
         </form>
       </div>
 
-      <aside class="apply-card">
-        <h3>Get in touch</h3>
-        <ul class="job-facts">
-          <li><span>Call us</span><span><a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a></span></li>
-          <li><span>Email</span><span><a href="mailto:<%= SITE.email %>"><%= SITE.email %></a></span></li>
-          <li><span>Lines open</span><span>Mon–Sun, 8am–8pm</span></li>
-        </ul>
-        <p class="muted" style="font-size:0.92rem;"><strong style="color:var(--green-800)">Head office</strong><br /><%= SITE.address %></p>
-        <a href="/care-homes" class="btn btn--ghost btn--block">Find your nearest home</a>
+      <aside class="contact-aside">
+        <div class="contact-card">
+          <h3 class="contact-card__title">Get in touch</h3>
+          <p class="contact-card__sub">Our enquiry team is here seven days a week.</p>
+
+          <ul class="contact-list">
+            <li class="contact-list__item">
+              <span class="contact-list__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </span>
+              <span class="contact-list__body">
+                <span class="contact-list__label">Call us</span>
+                <a class="contact-list__value" href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a>
+              </span>
+            </li>
+            <li class="contact-list__item">
+              <span class="contact-list__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+              </span>
+              <span class="contact-list__body">
+                <span class="contact-list__label">Email</span>
+                <a class="contact-list__value contact-list__value--break" href="mailto:<%= SITE.email %>"><%= SITE.email %></a>
+              </span>
+            </li>
+            <li class="contact-list__item">
+              <span class="contact-list__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </span>
+              <span class="contact-list__body">
+                <span class="contact-list__label">Lines open</span>
+                <span class="contact-list__value">Mon–Sun, 8am–8pm</span>
+              </span>
+            </li>
+            <li class="contact-list__item">
+              <span class="contact-list__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </span>
+              <span class="contact-list__body">
+                <span class="contact-list__label">Head office</span>
+                <span class="contact-list__value contact-list__value--soft"><%= SITE.address %></span>
+              </span>
+            </li>
+          </ul>
+
+          <a href="/care-homes" class="btn btn--ghost btn--block">Find your nearest home</a>
+        </div>
+
+        <div class="contact-next">
+          <h4>What happens next</h4>
+          <ol class="contact-next__list">
+            <li><span>1</span>We read your enquiry and match it to the right home or team.</li>
+            <li><span>2</span>Someone calls or emails you back, usually within one working day.</li>
+            <li><span>3</span>If it helps, we arrange a visit so you can see a home for yourself.</li>
+          </ol>
+        </div>
       </aside>
     </div>
   </div>
@@ -61,7 +113,7 @@
 <!-- Request a callback -->
 <section class="section section--alt" id="callback">
   <div class="container">
-    <div style="max-width:640px;margin-inline:auto;text-align:center;">
+    <div class="callback-wrap">
       <% if (callbackSent) { %>
       <div class="alert alert--success" style="font-size:1rem;padding:1.2rem 1.4rem;text-align:left;">
         <strong>Thank you — your callback request is in.</strong><br />A member of our team will call you back, usually the same working day.
@@ -69,8 +121,8 @@
       <% } %>
       <span class="eyebrow">Prefer us to call you?</span>
       <h2 class="h2">Request a callback</h2>
-      <p class="lead" style="margin-inline:auto;">Leave your number and a good time, and a friendly member of our team will call you back — no obligation.</p>
-      <form action="/callback" method="post" class="admin-form" style="text-align:left;margin-top:1.5rem;">
+      <p class="lead callback-wrap__lead">Leave your number and a good time, and a friendly member of our team will call you back — no obligation.</p>
+      <form action="/callback" method="post" class="callback-form">
         <div class="grid-2">
           <div class="field"><label for="cb-name">Your name *</label><input type="text" id="cb-name" name="name" required value="<%= cbForm.name||'' %>" /></div>
           <div class="field"><label for="cb-phone">Phone number *</label><input type="tel" id="cb-phone" name="phone" required value="<%= cbForm.phone||'' %>" /></div>
@@ -83,7 +135,7 @@
             <select id="cb-home" name="home"><option value="">Any / not sure</option><% homes.forEach(function(h){ %><option><%= h.name %></option><% }) %></select>
           </div>
         </div>
-        <button type="submit" class="btn btn--primary">Request my callback</button>
+        <button type="submit" class="btn btn--primary btn--block">Request my callback</button>
       </form>
     </div>
   </div>
