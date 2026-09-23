@@ -1,0 +1,63 @@
+<%- include('partials/careers-header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/careers">Careers</a> › Contact HR</div>
+    <span class="eyebrow hero__eyebrow">Recruitment team</span>
+    <h1>Talk to our recruitment team</h1>
+    <p>Got a question about a role, pay, training or sponsorship? Or can't see the right job yet? Send us a message and we'll reply within two working days.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="job-detail">
+      <div>
+        <% if (sent) { %>
+        <div class="alert alert--success" role="status" style="font-size:1rem;padding:1.2rem 1.4rem;">
+          <strong>Thank you — your message is with our recruitment team.</strong><br />We'll get back to you by email within two working days. In the meantime, <a href="/careers">see the latest vacancies</a>.
+        </div>
+        <% } else { %>
+        <% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
+        <form action="/careers/contact" method="post" class="admin-form" style="max-width:620px;">
+          <div class="grid-2">
+            <div class="field"><label for="c-name">Your name *</label><input type="text" id="c-name" name="name" required autocomplete="name" value="<%= form.name || '' %>" /></div>
+            <div class="field"><label for="c-email">Email *</label><input type="email" id="c-email" name="email" required autocomplete="email" value="<%= form.email || '' %>" /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="c-phone">Phone</label><input type="tel" id="c-phone" name="phone" autocomplete="tel" value="<%= form.phone || '' %>" /></div>
+            <div class="field"><label for="c-topic">What's it about?</label>
+              <select id="c-topic" name="topic">
+                <% ['General question','Register my interest','A job I applied for','Training & qualifications','Visa sponsorship'].forEach(function(t){ %><option <%= form.topic === t ? 'selected' : '' %>><%= t %></option><% }) %>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="c-role">Role you're interested in</label><input type="text" id="c-role" name="role" placeholder="e.g. Care Assistant, nights" value="<%= form.role || '' %>" /></div>
+            <div class="field"><label for="c-home">Preferred home</label>
+              <select id="c-home" name="home"><option value="">Any / not sure</option><% homes.forEach(function(h){ %><option <%= form.home === h.name ? 'selected' : '' %>><%= h.name %></option><% }) %></select>
+            </div>
+          </div>
+          <div class="field"><label for="c-message">Message *</label><textarea id="c-message" name="message" required rows="5"><%= form.message || '' %></textarea></div>
+          <div class="hp" aria-hidden="true"><label for="c-website">Leave this empty</label><input type="text" id="c-website" name="website" tabindex="-1" autocomplete="off" /></div>
+          <button type="submit" class="btn btn--primary">Send to recruitment</button>
+          <p class="hint mt-1">We'll only use your details to reply to you. <a href="/privacy">Privacy policy</a></p>
+        </form>
+        <% } %>
+      </div>
+
+      <aside class="apply-card">
+        <h3>Other ways to reach us</h3>
+        <ul class="job-facts">
+          <li><span>Call</span><span><a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a></span></li>
+          <li><span>Email</span><span><a href="mailto:<%= SITE.hrEmail || SITE.email %>"><%= SITE.hrEmail || SITE.email %></a></span></li>
+          <li><span>Lines open</span><span>Mon–Sun, 8am–8pm</span></li>
+        </ul>
+        <p class="muted" style="font-size:.92rem;">Looking for care for a relative rather than a job? <a href="/contact">Contact our care team</a> instead.</p>
+        <a href="/careers" class="btn btn--ghost btn--block">See all vacancies</a>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/careers-footer') %>

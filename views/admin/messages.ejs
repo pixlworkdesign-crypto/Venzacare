@@ -1,7 +1,7 @@
 <%- include('../partials/admin-header') %>
 
 <h1 class="admin-h1">Enquiries</h1>
-<p class="muted">Messages sent through the contact form.</p>
+<p class="muted">Messages, callback requests and visit bookings from the website.</p>
 
 <div class="panel" style="margin-top:1.5rem;">
   <div class="panel__head"><h2><%= messages.length %> enquir<%= messages.length===1?'y':'ies' %></h2></div>
@@ -9,7 +9,7 @@
     <% if (messages.length) { %>
     <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th></tr></thead>
+      <thead><tr><th>From</th><th>Type</th><th>Subject</th><th>Message</th><th>Received</th></tr></thead>
       <tbody>
         <% messages.forEach(function(m){ %>
         <tr>
@@ -20,7 +20,8 @@
               <% if (m.phone) { %><% if (m.email) { %><br /><% } %><%= m.phone %><% } %>
             </div>
           </td>
-          <td><%= m.subject || '—' %></td>
+          <td><span class="badge <%= m.kind === 'visit' ? 'badge--featured' : (m.kind === 'callback' ? 'badge--open' : 'badge--service') %>"><%= { visit: 'Visit', callback: 'Callback', enquiry: 'Enquiry' }[m.kind] || 'Enquiry' %></span></td>
+          <td><%= m.subject || '—' %><% if (m.home) { %><div class="muted" style="font-size:.85rem;"><%= m.home %></div><% } %><% if (m.bestTime) { %><div class="muted" style="font-size:.85rem;">When: <%= m.bestTime %></div><% } %></td>
           <td style="max-width:42ch;"><%= m.message %></td>
           <td class="muted" style="font-size:.85rem;white-space:nowrap;"><%= new Date(m.createdAt).toLocaleDateString('en-GB') %></td>
         </tr>

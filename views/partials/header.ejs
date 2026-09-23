@@ -3,8 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= title ? title + ' · ' : '' %><%= SITE.name %></title>
-  <meta name="description" content="Venza Care UK runs CQC-regulated care homes in London, Kent and Cambridge — residential, nursing, dementia and end-of-life care. Find a home or a job in care." />
+  <% var pageTitle = (title ? title + ' · ' : '') + SITE.name;
+     var pageDesc = description || 'Venza Care UK runs CQC-regulated care homes in London, Kent and Cambridgeshire — residential, nursing, dementia, respite and end-of-life care.'; %>
+  <title><%= pageTitle %></title>
+  <meta name="description" content="<%= pageDesc %>" />
+  <link rel="canonical" href="<%= canonical %>" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="<%= SITE.name %>" />
+  <meta property="og:title" content="<%= pageTitle %>" />
+  <meta property="og:description" content="<%= pageDesc %>" />
+  <meta property="og:url" content="<%= canonical %>" />
+  <meta property="og:image" content="<%= baseUrl %>/images/<%= (typeof home !== 'undefined' && home && home.photo) ? home.photo : 'hero-home.jpg' %>" />
+  <meta property="og:locale" content="en_GB" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="theme-color" content="#0d4f5c" />
+  <% if (jsonLd) { %><script type="application/ld+json"><%- ldScript(jsonLd) %></script><% } %>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -12,6 +25,7 @@
   <link rel="icon" type="image/png" href="/images/logo.png" />
 </head>
 <body class="page">
+  <a class="skip-link" href="#main">Skip to main content</a>
   <header class="nav">
     <div class="nav__inner">
       <a href="/" class="brand" aria-label="Venza Care UK home">
@@ -20,6 +34,8 @@
       <nav class="nav__links" id="navlinks">
         <a href="/our-care" class="<%= currentPath === '/our-care' ? 'is-active' : '' %>">Our care</a>
         <a href="/care-homes" class="<%= currentPath.startsWith('/care-homes') ? 'is-active' : '' %>">Our homes</a>
+        <a href="/fees-and-funding" class="<%= currentPath === '/fees-and-funding' ? 'is-active' : '' %>">Fees &amp; funding</a>
+        <a href="/cqc-ratings" class="<%= currentPath === '/cqc-ratings' ? 'is-active' : '' %>">CQC ratings</a>
         <a href="/contact" class="<%= currentPath === '/contact' ? 'is-active' : '' %>">Contact</a>
       </nav>
       <div class="nav__cta">
@@ -29,9 +45,9 @@
         </a>
         <a href="/contact" class="btn btn--primary btn--sm">Book a visit</a>
       </div>
-      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <button class="nav-toggle" aria-label="Menu" aria-controls="navlinks" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
   </header>
-  <main>
+  <main id="main">

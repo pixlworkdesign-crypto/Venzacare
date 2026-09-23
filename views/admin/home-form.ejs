@@ -1,0 +1,109 @@
+<%- include('../partials/admin-header') %>
+<% var d = home.details; function sel(a,b){ return a===b ? 'selected' : ''; } %>
+
+<div class="crumbs" style="color:var(--muted);margin-bottom:.5rem;"><a href="/admin/homes">Homes</a> › <%= home.name %></div>
+<h1 class="admin-h1"><%= home.name %></h1>
+<p class="muted">Anything left blank is simply hidden on the website — nothing is made up.</p>
+
+<form action="/admin/homes/<%= home.id %>" method="post" class="admin-form">
+
+  <div class="panel" style="margin-top:1.5rem;">
+    <div class="panel__head"><h2>Basics</h2></div>
+    <div class="panel__body">
+      <div class="grid-2">
+        <div class="field"><label for="name">Home name</label><input type="text" id="name" name="name" value="<%= home.name %>" /></div>
+        <div class="field"><label for="phone">Direct phone number for this home</label><input type="tel" id="phone" name="phone" value="<%= d.phone %>" placeholder="Leave blank to use <%= SITE.phone %>" /></div>
+      </div>
+      <div class="field"><label for="blurb">Short description</label><textarea id="blurb" name="blurb" rows="3"><%= home.blurb %></textarea></div>
+      <div class="grid-2">
+        <div class="field"><label for="beds">Beds</label><input type="number" id="beds" name="beds" min="1" value="<%= home.beds %>" /></div>
+        <div class="field">
+          <span class="label">Types of care offered</span>
+          <div class="check-grid">
+            <% careTypes.forEach(function(c){ %><label><input type="checkbox" name="careTypes" value="<%= c %>" <%= home.careTypes.indexOf(c) > -1 ? 'checked' : '' %> /> <%= c %></label><% }) %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Availability</h2></div>
+    <div class="panel__body">
+      <div class="grid-2">
+        <div class="field"><label for="availability">Status shown on the website</label>
+          <select id="availability" name="availability">
+            <option value="" <%= sel(d.availability,'') %>>Don't show</option>
+            <option value="available" <%= sel(d.availability,'available') %>>Rooms available now</option>
+            <option value="limited" <%= sel(d.availability,'limited') %>>Limited availability</option>
+            <option value="waitlist" <%= sel(d.availability,'waitlist') %>>Waiting list</option>
+          </select>
+        </div>
+        <div class="field"><label for="availabilityNote">Short note (optional)</label><input type="text" id="availabilityNote" name="availabilityNote" value="<%= d.availabilityNote %>" placeholder="e.g. Two en-suite rooms free from October" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Weekly fees ("from" prices)</h2></div>
+    <div class="panel__body">
+      <p class="muted" style="margin-top:0;">Consumer law (CMA guidance) expects care homes to show an indication of weekly fees on their website. Enter the lowest weekly fee for each type of care, in pounds.</p>
+      <div class="grid-2">
+        <div class="field"><label for="feeResidential">Residential care £/week</label><input type="text" inputmode="numeric" id="feeResidential" name="feeResidential" value="<%= d.fees.residential || '' %>" /></div>
+        <div class="field"><label for="feeNursing">Nursing care £/week</label><input type="text" inputmode="numeric" id="feeNursing" name="feeNursing" value="<%= d.fees.nursing || '' %>" /></div>
+        <div class="field"><label for="feeDementia">Dementia care £/week</label><input type="text" inputmode="numeric" id="feeDementia" name="feeDementia" value="<%= d.fees.dementia || '' %>" /></div>
+        <div class="field"><label for="feeRespite">Respite £/week</label><input type="text" inputmode="numeric" id="feeRespite" name="feeRespite" value="<%= d.fees.respite || '' %>" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="feesUpdated">Prices correct as of</label><input type="text" id="feesUpdated" name="feesUpdated" value="<%= d.feesUpdated %>" placeholder="e.g. September 2026" /></div>
+        <div class="field"><label for="feesNote">Note shown under the prices</label><input type="text" id="feesNote" name="feesNote" value="<%= d.feesNote %>" placeholder="e.g. Nursing fee shown before NHS-funded nursing care (FNC)" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>CQC rating</h2></div>
+    <div class="panel__body">
+      <p class="muted" style="margin-top:0;">The law requires the current rating to be shown, whatever it is, within 21 days of a new report. Adding the CQC location ID also shows the CQC's own widget, which updates itself.</p>
+      <div class="grid-2">
+        <div class="field"><label for="cqc">Overall rating</label>
+          <select id="cqc" name="cqc">
+            <% ['Outstanding','Good','Requires improvement','Inadequate','Registered'].forEach(function(r){ %><option value="<%= r %>" <%= sel(home.cqc, r) %>><%= r === 'Registered' ? 'Not yet rated' : r %></option><% }) %>
+          </select>
+        </div>
+        <div class="field"><label for="cqcRatedOn">Date of latest report</label><input type="text" id="cqcRatedOn" name="cqcRatedOn" value="<%= d.cqcRatedOn %>" placeholder="e.g. 12 March 2026" /></div>
+      </div>
+      <div class="field"><label for="cqcLocationId">CQC location ID</label><input type="text" id="cqcLocationId" name="cqcLocationId" value="<%= d.cqcLocationId %>" placeholder="e.g. 1-123456789" /><span class="hint">Find it in the address of the home's page on cqc.org.uk: cqc.org.uk/location/<strong>1-123456789</strong></span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Home manager</h2></div>
+    <div class="panel__body">
+      <div class="grid-2">
+        <div class="field"><label for="managerName">Name</label><input type="text" id="managerName" name="managerName" value="<%= d.managerName %>" /></div>
+        <div class="field"><label for="managerPhoto">Photo address (optional)</label><input type="text" id="managerPhoto" name="managerPhoto" value="<%= d.managerPhoto %>" placeholder="/images/managers/jane.webp" /></div>
+      </div>
+      <div class="field"><label for="managerBio">A few words from or about them</label><textarea id="managerBio" name="managerBio" rows="3"><%= d.managerBio %></textarea></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Reviews &amp; getting here</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="carehomeUrl">carehome.co.uk page</label><input type="url" id="carehomeUrl" name="carehomeUrl" value="<%= d.carehomeUrl %>" placeholder="https://www.carehome.co.uk/carehome.cfm/searchazref/…" /></div>
+      <div class="grid-2">
+        <div class="field"><label for="reviewScore">Review score (out of 10)</label><input type="text" id="reviewScore" name="reviewScore" value="<%= d.reviewScore %>" placeholder="e.g. 9.6" /></div>
+        <div class="field"><label for="reviewCount">Number of reviews</label><input type="text" id="reviewCount" name="reviewCount" value="<%= d.reviewCount %>" placeholder="e.g. 42" /></div>
+      </div>
+      <div class="field"><label for="parking">Parking &amp; directions note</label><textarea id="parking" name="parking" rows="2" placeholder="e.g. Free visitor parking on site. 5 minutes' walk from East Croydon station."><%= d.parking %></textarea></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:.8rem;margin:1.5rem 0 3rem;">
+    <button type="submit" class="btn btn--primary">Save changes</button>
+    <a href="/admin/homes" class="btn btn--muted">Cancel</a>
+  </div>
+</form>
+
+<%- include('../partials/admin-footer') %>

@@ -1,0 +1,35 @@
+<%- include('../partials/admin-header') %>
+
+<h1 class="admin-h1">Homes</h1>
+<p class="muted">Keep fees, availability, CQC ratings and manager details up to date — changes go live on the website within 30 seconds.</p>
+
+<% if (saved) { %><div class="alert alert--success" role="status">Saved. The public page will show the change within 30 seconds.</div><% } %>
+
+<div class="panel" style="margin-top:1.5rem;">
+  <div class="panel__body" style="padding:0;">
+    <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Home</th><th>CQC</th><th>Availability</th><th>Fees from</th><th>What's missing</th><th></th></tr></thead>
+      <tbody>
+        <% homes.forEach(function(h){ var d = h.details; var from = fromPrice(h);
+             var missing = [];
+             if (!from) missing.push('fees');
+             if (!d.cqcLocationId) missing.push('CQC location ID');
+             if (!d.managerName) missing.push('manager');
+             if (!d.availability) missing.push('availability'); %>
+        <tr>
+          <td><strong><%= h.name %></strong><div class="muted" style="font-size:.85rem;"><%= h.town %> · <%= h.postcode %></div></td>
+          <td><%= cqcLabel(h) %></td>
+          <td><%= { available: 'Rooms available', limited: 'Limited', waitlist: 'Waiting list' }[d.availability] || '—' %></td>
+          <td><%= from ? gbp(from) + '/wk' : '—' %></td>
+          <td class="muted" style="font-size:.85rem;"><%= missing.length ? missing.join(', ') : 'Nothing — all set' %></td>
+          <td><div class="row-actions"><a class="btn btn--sm btn--ghost" href="/admin/homes/<%= h.id %>/edit">Edit</a><a class="btn btn--sm btn--muted" href="/care-homes/<%= h.id %>" target="_blank" rel="noopener">View ↗</a></div></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

@@ -8,6 +8,18 @@
   <a href="/admin/jobs/new" class="btn btn--primary">+ Post a new job</a>
 </div>
 
+<% if (health && (!health.ok || health.problems.length)) { %>
+<div class="alert alert--error" role="alert" style="margin-top:1.5rem;">
+  <strong>Website setup needs attention<%= health.backend === 'postgres' ? ' (Supabase database)' : '' %></strong>
+  <ul style="margin:.5rem 0 0;padding-left:1.2rem;">
+    <% health.problems.forEach(function(p){ %><li><%= p %></li><% }) %>
+    <% if (!health.ok && !health.problems.length) { %><li>Database error: <%= health.error %></li><% } %>
+  </ul>
+</div>
+<% } else if (health) { %>
+<p class="muted" style="margin:1rem 0 0;font-size:.9rem;">● Database: <%= health.backend === 'postgres' ? 'connected to Supabase' : 'local file (development)' %></p>
+<% } %>
+
 <div class="stat-cards">
   <div class="stat-card"><div class="n"><%= stats.open %></div><div class="l">Live vacancies</div></div>
   <div class="stat-card"><div class="n"><%= stats.closed %></div><div class="l">Closed vacancies</div></div>
