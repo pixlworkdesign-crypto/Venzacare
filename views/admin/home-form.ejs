@@ -1,0 +1,168 @@
+<%- include('../partials/admin-header') %>
+<%
+  var h = home || {};
+  var action = mode === 'edit' ? '/admin/homes/' + h.id : '/admin/homes';
+  var cqcOptions = ['Outstanding', 'Good', 'Requires improvement', 'Inadequate', 'Registered'];
+  var chosenCare = h.careTypes || [];
+  var specialismsText = Array.isArray(h.specialisms) ? h.specialisms.join('\n') : (h.specialisms || '');
+%>
+
+<div class="crumbs" style="color:var(--muted);margin-bottom:.5rem;">
+  <a href="/admin">Dashboard</a> › <a href="/admin/homes">Care homes</a> › <%= mode === 'edit' ? 'Edit' : 'Add a home' %>
+</div>
+<h1 class="admin-h1"><%= mode === 'edit' ? 'Edit ' + (h.name || 'home') : 'Add a care home' %></h1>
+<p class="muted">Everything here shows on the home's own page and in the <a href="/care-homes" target="_blank" rel="noopener">Find a home</a> directory.</p>
+
+<% if (error) { %>
+<div class="alert alert--error" style="margin-top:1.25rem;"><%= error %></div>
+<% } %>
+
+<div class="panel panel--form" style="margin-top:1.5rem;">
+  <div class="panel__body">
+    <form action="<%= action %>" method="post" class="admin-form" enctype="multipart/form-data">
+
+      <h2 class="form-section">The basics</h2>
+
+      <div class="field">
+        <label for="name">Name of the home *</label>
+        <input type="text" id="name" name="name" required value="<%= h.name || '' %>" placeholder="e.g. Albany Lodge" />
+        <% if (mode === 'edit') { %>
+        <span class="hint">The web address stays <code>/care-homes/<%= h.id %></code> even if you rename it, so existing links keep working.</span>
+        <% } else { %>
+        <span class="hint">This sets the home's web address, so pick the name you'll stick with.</span>
+        <% } %>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="town">Town *</label>
+          <input type="text" id="town" name="town" required value="<%= h.town || '' %>" placeholder="e.g. Croydon" />
+        </div>
+        <div class="field">
+          <label for="postcode">Postcode</label>
+          <input type="text" id="postcode" name="postcode" value="<%= h.postcode || '' %>" placeholder="e.g. CR0 2BZ" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="region">Region</label>
+          <input type="text" id="region" name="region" value="<%= h.region || '' %>" placeholder="e.g. London" />
+          <span class="hint">Used by the region filter on Find a home. Reuse an existing region name to group homes together.</span>
+        </div>
+        <div class="field">
+          <label for="beds">Number of beds</label>
+          <input type="number" id="beds" name="beds" min="0" max="500" value="<%= h.beds != null ? h.beds : '' %>" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="cqc">CQC rating</label>
+          <select id="cqc" name="cqc">
+            <% cqcOptions.forEach(function(c){ %>
+            <option value="<%= c %>" <%= (h.cqc || 'Registered') === c ? 'selected' : '' %>><%= c %></option>
+            <% }) %>
+          </select>
+          <span class="hint">Only publish a rating the CQC has actually given this home.</span>
+        </div>
+        <div class="field">
+          <label for="sortOrder">Order on the site</label>
+          <input type="number" id="sortOrder" name="sortOrder" value="<%= h.sortOrder != null ? h.sortOrder : 0 %>" />
+          <span class="hint">Lower numbers come first. Leave at 0 to sort by name.</span>
+        </div>
+      </div>
+
+      <h2 class="form-section">Care offered</h2>
+
+      <div class="field">
+        <label>Types of care <span class="hint" style="display:inline;font-weight:400;">— tick everything this home provides</span></label>
+        <div class="check-grid">
+          <% careTypes.forEach(function(c){ %>
+          <label class="check">
+            <input type="checkbox" name="careTypes" value="<%= c %>" <%= chosenCare.indexOf(c) !== -1 ? 'checked' : '' %> />
+            <span><%= c %></span>
+          </label>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="specialisms">Specialisms</label>
+        <textarea id="specialisms" name="specialisms" rows="7" placeholder="One per line, e.g.&#10;Parkinson's disease&#10;Stroke recovery"><%= specialismsText %></textarea>
+        <span class="hint">One per line. These appear as tags on the home's page.</span>
+      </div>
+
+      <div class="field">
+        <label for="dementiaNote">Note about dementia care</label>
+        <textarea id="dementiaNote" name="dementiaNote" rows="3" placeholder="e.g. Residential and nursing dementia care, for people living with mild to moderate dementia."><%= h.dementiaNote || '' %></textarea>
+      </div>
+
+      <h2 class="form-section">Description</h2>
+
+      <div class="field">
+        <label for="blurb">About this home</label>
+        <textarea id="blurb" name="blurb" rows="4" placeholder="A couple of warm sentences about what makes this home what it is."><%= h.blurb || '' %></textarea>
+        <span class="hint">Shown on the directory card and at the top of the home's page.</span>
+      </div>
+
+      <h2 class="form-section">Photos</h2>
+
+      <div class="field">
+        <label for="photoFile">Main photo</label>
+        <% if (h.photo) { %>
+        <div class="photo-current">
+          <span class="photo-current__img" style="background-image:url('<%= photoUrl(h.photo) %>');"></span>
+          <span class="muted" style="font-size:.86rem;">Currently in use. Choosing a new file below replaces it.</span>
+        </div>
+        <input type="hidden" name="photo" value="<%= h.photo %>" />
+        <% } %>
+        <input type="file" id="photoFile" name="photoFile" accept="image/*" />
+        <span class="hint">A wide exterior shot works best. JPG, PNG or WebP, up to 6 MB.</span>
+      </div>
+
+      <div class="field">
+        <label>Gallery</label>
+        <% if (h.gallery && h.gallery.length) { %>
+        <div class="gallery-manage">
+          <% h.gallery.forEach(function(g, i){ %>
+          <label class="gallery-manage__item">
+            <span class="gallery-manage__img" style="background-image:url('<%= photoUrl(g) %>');"></span>
+            <span class="gallery-manage__keep">
+              <input type="checkbox" name="keepGallery" value="<%= g %>" checked />
+              Keep
+            </span>
+          </label>
+          <% }) %>
+        </div>
+        <span class="hint">Untick a photo to remove it when you save.</span>
+        <% } else { %>
+        <p class="muted" style="margin:0 0 .6rem;font-size:.9rem;">No gallery photos yet.</p>
+        <% } %>
+        <input type="file" id="galleryFiles" name="galleryFiles" accept="image/*" multiple style="margin-top:.6rem;" />
+        <span class="hint">Pick several at once to add them. Up to 12 at a time.</span>
+      </div>
+
+      <h2 class="form-section">Map position</h2>
+      <p class="muted" style="margin-top:0;font-size:.9rem;">Optional — this places the home's pin on the map. Find the numbers by right-clicking the spot in Google Maps and choosing the coordinates it shows.</p>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="lat">Latitude</label>
+          <input type="text" inputmode="decimal" id="lat" name="lat" value="<%= h.lat != null ? h.lat : '' %>" placeholder="51.3727" />
+        </div>
+        <div class="field">
+          <label for="lng">Longitude</label>
+          <input type="text" inputmode="decimal" id="lng" name="lng" value="<%= h.lng != null ? h.lng : '' %>" placeholder="-0.1099" />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary"><%= mode === 'edit' ? 'Save changes' : 'Add this home' %></button>
+        <a href="/admin/homes" class="btn btn--muted">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

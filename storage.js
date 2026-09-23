@@ -20,12 +20,15 @@ const path = require('path');
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const CV_BUCKET = process.env.SUPABASE_CV_BUCKET || 'cvs';
+const PHOTO_BUCKET = process.env.SUPABASE_PHOTO_BUCKET || 'home-photos';
 
 const useSupabase = !!(SUPABASE_URL && SUPABASE_KEY);
 
-// Local fallback lives outside public/ on purpose — see header.
+// CVs live outside public/ on purpose — see header. Home photos are meant to
+// be seen, so those go under public/ and are served like any other image.
 const LOCAL_BASE = process.env.VERCEL ? '/tmp' : __dirname;
 const LOCAL_DIR = path.join(LOCAL_BASE, 'data', 'uploads');
+const PHOTO_DIR = path.join(LOCAL_BASE, 'public', 'images', 'uploads');
 
 let client = null;
 function supabase() {
@@ -74,10 +77,42 @@ async function cvDownloadUrl(key, seconds = 120) {
   return data.signedUrl;
 }
 
+/* Home photos — public, unlike CVs. Returns a URL the site can render
+   directly, whether that's a Supabase public URL or a local /images path. */
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'];
+
+async function savePhoto(file) {
+  if (!file || !file.buffer) return '';
+  if (file.mimetype && PHOTO_TYPES.indexOf(file.mimetype) === -1) {
+    throw new Error('That file is not an image. Use a JPG, PNG or WebP.');
+  }
+  const key = safeName(file.originalname);
+
+  if (useSupabase) {
+    const { error } = await supabase()
+      .storage
+      .from(PHOTO_BUCKET)
+      .upload(key, file.buffer, { contentType: file.mimetype || 'image/jpeg', upsert: false });
+    if (error) throw new Error('Photo upload failed: ' + error.message);
+    const { data } = supabase().storage.from(PHOTO_BUCKET).getPublicUrl(key);
+    return data.publicUrl;
+  }
+
+  fs.mkdirSync(PHOTO_DIR, { recursive: true });
+  fs.writeFileSync(path.join(PHOTO_DIR, key), file.buffer);
+  return '/images/uploads/' + key;
+}
+
 function localCvPath(key) {
   if (!key) return null;
   const full = path.join(LOCAL_DIR, path.basename(key));
   return fs.existsSync(full) ? full : null;
 }
 
-module.exports = { saveCv, cvDownloadUrl, localCvPath, backendKind: useSupabase ? 'supabase' : 'local' };
+module.exports = {
+  saveCv,
+  cvDownloadUrl,
+  localCvPath,
+  savePhoto,
+  backendKind: useSupabase ? 'supabase' : 'local',
+};

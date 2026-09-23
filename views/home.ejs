@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 
-<section class="page-hero<%= home.photo ? ' has-photo' : '' %>"<% if (home.photo) { %> style="background-color: var(--green-800); background-image: linear-gradient(90deg, rgba(13,79,92,0.96) 0%, rgba(13,79,92,0.72) 30%, rgba(13,79,92,0.15) 52%, rgba(13,79,92,0) 66%), url('/images/<%= home.photo %>'); background-repeat: no-repeat, no-repeat; background-position: center, right center; background-size: cover, contain;"<% } %>>
+<section class="page-hero<%= home.photo ? ' has-photo' : '' %>"<% if (home.photo) { %> style="background-color: var(--green-800); background-image: linear-gradient(90deg, rgba(13,79,92,0.96) 0%, rgba(13,79,92,0.72) 30%, rgba(13,79,92,0.15) 52%, rgba(13,79,92,0) 66%), url('<%= photoUrl(home.photo) %>'); background-repeat: no-repeat, no-repeat; background-position: center, right center; background-size: cover, contain;"<% } %>>
   <div class="container">
     <div class="crumbs"><a href="/">Home</a> › <a href="/care-homes">Find a home</a> › <%= home.name %></div>
     <% if (home.cqc === 'Good' || home.cqc === 'Outstanding') { %>
@@ -80,7 +80,7 @@
       <h2 class="h2" style="font-size:1.6rem;">A look around <%= home.name %></h2>
       <div class="gallery-grid">
         <% home.gallery.forEach(function(g, gi){ %>
-        <button type="button" class="gallery-item" data-full="/images/<%= g %>" aria-label="View photo <%= gi+1 %>" style="background-image:url('/images/<%= g %>');"></button>
+        <button type="button" class="gallery-item" data-full="<%= photoUrl(g) %>" aria-label="View photo <%= gi+1 %>" style="background-image:url('<%= photoUrl(g) %>');"></button>
         <% }) %>
       </div>
     </div>

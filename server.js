@@ -69,6 +69,12 @@ function isAdmin(req) { return verifyAdminToken(readCookie(req, 'vc_admin')); }
 app.use(wrap(async (req, res, next) => {
   res.locals.SITE = await db.settings();
   res.locals.year = new Date().getFullYear();
+  /* Home photos are either bundled with the site ("albany/exterior.webp") or
+     uploaded through the admin (a full URL, or /images/uploads/...). */
+  res.locals.photoUrl = function (p) {
+    if (!p) return '';
+    return /^(https?:)?\/\//.test(p) || p.charAt(0) === '/' ? p : '/images/' + p;
+  };
   res.locals.currentPath = req.path;
   res.locals.title = '';
   next();
@@ -85,6 +91,16 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     cb(null, ALLOWED.includes(ext));
+  },
+});
+
+/* ---------- Home photo uploads (admin) ---------- */
+const IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif'];
+const photoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 6 * 1024 * 1024, files: 13 }, // one exterior + up to 12 gallery
+  fileFilter: (req, file, cb) => {
+    cb(null, IMAGE_EXT.includes(path.extname(file.originalname).toLowerCase()));
   },
 });
 
@@ -116,6 +132,8 @@ app.get('/care-homes', wrap(async (req, res) => {
   res.render('care-homes', {
     title: 'Find a care home',
     homes: await db.filterHomes({ q, region, careType }),
+    regions: await db.regions(),
+    careTypes: db.CARE_TYPES,
     q,
     region,
     careType,
@@ -466,6 +484,155 @@ app.post('/admin/jobs/:id/toggle', requireAuth, wrap(async (req, res) => {
 app.post('/admin/jobs/:id/delete', requireAuth, wrap(async (req, res) => {
   await db.deleteJob(req.params.id);
   res.redirect('/admin');
+}));
+
+/* ---------- Care homes ---------- */
+
+app.get('/admin/homes', requireAuth, wrap(async (req, res) => {
+  const homes = await db.homes();
+  const jobs = await db.jobs();
+  const jobCounts = {};
+  jobs.forEach((j) => { if (j.homeId) jobCounts[j.homeId] = (jobCounts[j.homeId] || 0) + 1; });
+  res.render('admin/homes', { title: 'Care homes', homes, jobCounts });
+}));
+
+app.get('/admin/homes/new', requireAuth, wrap(async (req, res) => {
+  res.render('admin/home-form', {
+    title: 'Add a home',
+    mode: 'new',
+    home: {},
+    careTypes: db.CARE_TYPES,
+    error: null,
+  });
+}));
+
+app.get('/admin/homes/:id/edit', requireAuth, wrap(async (req, res) => {
+  const home = await db.home(req.params.id);
+  if (!home) return res.redirect('/admin/homes');
+  res.render('admin/home-form', {
+    title: 'Edit ' + home.name,
+    mode: 'edit',
+    home,
+    careTypes: db.CARE_TYPES,
+    error: null,
+  });
+}));
+
+/* Turn a home into the URL-safe id used in /care-homes/<id>. */
+function slugify(name) {
+  return String(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'home';
+}
+
+const homePhotoFields = photoUpload.fields([
+  { name: 'photoFile', maxCount: 1 },
+  { name: 'galleryFiles', maxCount: 12 },
+]);
+
+async function saveHomeFromForm(req, existing) {
+  const body = req.body;
+  const files = req.files || {};
+
+  const photoFile = (files.photoFile || [])[0];
+  const galleryFiles = files.galleryFiles || [];
+
+  // Uploading a new exterior shot replaces the old one; otherwise keep what's there.
+  const photo = photoFile ? await storage.savePhoto(photoFile) : (body.photo || '').trim();
+
+  // New gallery images are added to the ones kept via the checkboxes on the form.
+  const kept = [].concat(body.keepGallery || []).filter(Boolean);
+  const added = [];
+  for (const f of galleryFiles) added.push(await storage.savePhoto(f));
+
+  const careTypes = [].concat(body.careTypes || []).filter(Boolean);
+
+  return db.saveHome({
+    id: existing ? existing.id : slugify(body.name),
+    name: (body.name || '').trim(),
+    town: (body.town || '').trim(),
+    postcode: (body.postcode || '').trim(),
+    region: (body.region || '').trim(),
+    lat: body.lat === '' ? null : Number(body.lat),
+    lng: body.lng === '' ? null : Number(body.lng),
+    beds: body.beds === '' ? null : parseInt(body.beds, 10),
+    cqc: body.cqc || 'Registered',
+    careTypes,
+    specialisms: body.specialisms,
+    blurb: (body.blurb || '').trim(),
+    dementiaNote: (body.dementiaNote || '').trim(),
+    photo,
+    gallery: kept.concat(added),
+    sortOrder: body.sortOrder === '' ? 0 : parseInt(body.sortOrder, 10) || 0,
+  });
+}
+
+app.post('/admin/homes', requireAuth, homePhotoFields, wrap(async (req, res) => {
+  if (!req.body.name || !req.body.town) {
+    return res.status(400).render('admin/home-form', {
+      title: 'Add a home',
+      mode: 'new',
+      home: req.body,
+      careTypes: db.CARE_TYPES,
+      error: 'A home needs at least a name and a town.',
+    });
+  }
+  const existing = await db.home(slugify(req.body.name));
+  if (existing) {
+    return res.status(400).render('admin/home-form', {
+      title: 'Add a home',
+      mode: 'new',
+      home: req.body,
+      careTypes: db.CARE_TYPES,
+      error: 'There is already a home called ' + existing.name + '. Edit that one, or use a different name.',
+    });
+  }
+  await saveHomeFromForm(req, null);
+  res.redirect('/admin/homes');
+}));
+
+app.post('/admin/homes/:id', requireAuth, homePhotoFields, wrap(async (req, res) => {
+  const existing = await db.home(req.params.id);
+  if (!existing) return res.redirect('/admin/homes');
+  if (!req.body.name || !req.body.town) {
+    return res.status(400).render('admin/home-form', {
+      title: 'Edit ' + existing.name,
+      mode: 'edit',
+      home: Object.assign({}, existing, req.body),
+      careTypes: db.CARE_TYPES,
+      error: 'A home needs at least a name and a town.',
+    });
+  }
+  await saveHomeFromForm(req, existing);
+  res.redirect('/admin/homes');
+}));
+
+app.post('/admin/homes/:id/delete', requireAuth, wrap(async (req, res) => {
+  const home = await db.home(req.params.id);
+  if (!home) return res.redirect('/admin/homes');
+
+  // Deleting a home would leave its vacancies pointing at nothing, so say so
+  // rather than quietly orphaning them.
+  const attached = (await db.jobs()).filter((j) => j.homeId === home.id);
+  if (attached.length) {
+    const homes = await db.homes();
+    const jobs = await db.jobs();
+    const jobCounts = {};
+    jobs.forEach((j) => { if (j.homeId) jobCounts[j.homeId] = (jobCounts[j.homeId] || 0) + 1; });
+    return res.status(400).render('admin/homes', {
+      title: 'Care homes',
+      homes,
+      jobCounts,
+      error:
+        home.name + ' still has ' + attached.length + ' vacanc' + (attached.length === 1 ? 'y' : 'ies') +
+        ' attached. Move or delete those first.',
+    });
+  }
+
+  await db.removeHome(home.id);
+  res.redirect('/admin/homes');
 }));
 
 // Applications

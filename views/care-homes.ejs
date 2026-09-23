@@ -25,14 +25,14 @@
           <label for="region">Region</label>
           <select id="region" name="region">
             <option value="">All regions</option>
-            <% SITE.regions.forEach(function(r){ %><option value="<%= r %>" <%= region===r?'selected':'' %>><%= r %></option><% }) %>
+            <% regions.forEach(function(r){ %><option value="<%= r %>" <%= region===r?'selected':'' %>><%= r %></option><% }) %>
           </select>
         </div>
         <div class="field">
           <label for="careType">Type of care</label>
           <select id="careType" name="careType">
             <option value="">Any care</option>
-            <% ['Residential Care','Nursing Care','Dementia Care','Respite Care','End-of-life Care'].forEach(function(c){ %><option value="<%= c %>" <%= careType===c?'selected':'' %>><%= c %></option><% }) %>
+            <% careTypes.forEach(function(c){ %><option value="<%= c %>" <%= careType===c?'selected':'' %>><%= c %></option><% }) %>
           </select>
         </div>
         <button type="submit" class="btn btn--primary">Search</button>
@@ -60,7 +60,7 @@
          data-region="<%= h.region %>"
          data-care="<%= h.careTypes.join('|') %>"
          data-lat="<%= h.lat %>" data-lng="<%= h.lng %>">
-        <div class="home-card__media<%= h.photo ? ' has-photo' : '' %>"<% if (h.photo) { %> style="background-image:url('/images/<%= h.photo %>'); background-repeat:no-repeat; background-position:center; background-size:cover;"<% } %>>
+        <div class="home-card__media<%= h.photo ? ' has-photo' : '' %>"<% if (h.photo) { %> style="background-image:url('<%= photoUrl(h.photo) %>'); background-repeat:no-repeat; background-position:center; background-size:cover;"<% } %>>
           <% if (h.cqc === 'Good' || h.cqc === 'Outstanding') { %>
           <span class="home-card__rating <%= h.cqc === 'Outstanding' ? 'is-outstanding' : '' %>">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/></svg>

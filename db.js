@@ -105,6 +105,16 @@ const DEFAULT_HOMES = [
   },
 ];
 
+/* The care types a home can be tagged with. A fixed vocabulary rather than
+   free text, so the filters on /care-homes stay tidy. */
+const CARE_TYPES = [
+  'Residential Care',
+  'Nursing Care',
+  'Dementia Care',
+  'Respite Care',
+  'End-of-life Care',
+];
+
 /* ---------- Small helpers ---------- */
 function uid(prefix) {
   return prefix + '-' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
@@ -582,6 +592,16 @@ async function removeHome(id) {
   clearCache();
 }
 
+/* The regions we actually have homes in, so adding a home somewhere new shows
+   up in the filters without anyone editing a list. */
+async function regions() {
+  const list = await homes();
+  const found = [...new Set(list.map((h) => h.region).filter(Boolean))].sort();
+  if (found.length) return found;
+  const site = await settings();
+  return site.regions || [];
+}
+
 async function filterHomes({ q = '', region = '', careType = '' } = {}) {
   const needle = q.trim().toLowerCase();
   const flat = (s) => (s || '').toLowerCase().replace(/\s/g, '');
@@ -713,10 +733,11 @@ async function stats() { return backend.counts(); }
 module.exports = {
   DEFAULT_SITE,
   DEFAULT_HOMES,
+  CARE_TYPES,
   backendKind: backend.kind,
 
   settings, saveSettings,
-  homes, home, saveHome, removeHome, filterHomes, siteStats,
+  homes, home, saveHome, removeHome, filterHomes, regions, siteStats,
   jobs, openJobs, job, jobsForHome, jobLocations, createJob, updateJob, toggleJob, deleteJob,
   applications, applicationCounts, addApplication,
   messages, addMessage,

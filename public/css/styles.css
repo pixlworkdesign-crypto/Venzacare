@@ -1004,3 +1004,93 @@ a.contact-list__value:hover { color: var(--green-500); }
   .contact-form__foot { align-items: flex-start; }
   .contact-form__foot .btn { width: 100%; justify-content: center; }
 }
+
+/* =========================================================
+   Admin — care homes manager
+   ========================================================= */
+.form-section {
+  font-size: 1rem; color: var(--green-900); margin: 2rem 0 0.2rem;
+  padding-top: 1.2rem; border-top: 1px solid var(--line);
+}
+.admin-form .form-section:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+
+.form-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.8rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
+
+/* Tick-list of care types */
+.check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem 1rem; }
+.check {
+  display: flex; align-items: center; gap: 0.55rem;
+  background: var(--cream); border: 1px solid var(--line); border-radius: 10px;
+  padding: 0.6rem 0.8rem; font-size: 0.92rem; cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.check:hover { border-color: var(--sage-300); }
+.check:has(input:checked) { background: var(--sage-100); border-color: var(--green-500); }
+.check input { width: 16px; height: 16px; accent-color: var(--green-700); flex: none; margin: 0; }
+
+/* Current main photo, shown above the file picker */
+.photo-current { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.7rem; }
+.photo-current__img {
+  width: 108px; height: 68px; border-radius: 10px; flex: none;
+  background-size: cover; background-position: center; border: 1px solid var(--line);
+}
+
+/* Gallery, each photo with a keep/remove tick */
+.gallery-manage { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 0.7rem; margin-bottom: 0.6rem; }
+.gallery-manage__item { display: flex; flex-direction: column; gap: 0.4rem; cursor: pointer; }
+.gallery-manage__img {
+  width: 100%; aspect-ratio: 4 / 3; max-width: 100%; border-radius: 10px;
+  background-size: cover; background-position: center; border: 1px solid var(--line);
+  transition: opacity 0.15s ease;
+}
+.gallery-manage__keep { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--muted); }
+.gallery-manage__keep input { width: 15px; height: 15px; accent-color: var(--green-700); margin: 0; }
+.gallery-manage__item:has(input:not(:checked)) .gallery-manage__img { opacity: 0.35; }
+.gallery-manage__item:has(input:not(:checked)) .gallery-manage__keep { color: var(--gold-600); }
+
+/* Thumbnail in the homes table */
+.home-row { display: flex; align-items: center; gap: 0.75rem; }
+.home-row__thumb {
+  width: 52px; height: 40px; border-radius: 8px; flex: none;
+  background: var(--sage-100); background-size: cover; background-position: center;
+  border: 1px solid var(--line);
+}
+
+input[type="file"] {
+  font-size: 0.9rem; padding: 0.55rem; background: var(--cream);
+  border: 1.5px dashed var(--line); cursor: pointer;
+}
+input[type="file"]::file-selector-button {
+  font-family: inherit; font-size: 0.86rem; font-weight: 600;
+  background: var(--green-700); color: #fff; border: 0; border-radius: 8px;
+  padding: 0.4rem 0.8rem; margin-right: 0.7rem; cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { background: var(--green-800); }
+
+@media (max-width: 560px) {
+  .check-grid { grid-template-columns: 1fr; }
+  .form-actions .btn { flex: 1; justify-content: center; }
+}
+
+/* Homes table — fixed columns so the care-type tags can't crowd the figures */
+.homes-table { table-layout: fixed; min-width: 900px; }
+.homes-table th, .homes-table td { vertical-align: middle; }
+.homes-table th:nth-child(1), .homes-table td:nth-child(1) { width: 24%; }
+.homes-table th:nth-child(2), .homes-table td:nth-child(2) { width: 17%; }
+.homes-table th:nth-child(3), .homes-table td:nth-child(3) { width: 26%; }
+.homes-table th:nth-child(4), .homes-table td:nth-child(4) { width: 7%; }
+.homes-table th:nth-child(5), .homes-table td:nth-child(5) { width: 11%; }
+.homes-table th:nth-child(6), .homes-table td:nth-child(6) { width: 6%; }
+.homes-table th:nth-child(7), .homes-table td:nth-child(7) { width: 9%; }
+.homes-table .num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 1.1rem; }
+.homes-table .row-actions { justify-content: flex-end; flex-wrap: nowrap; }
+
+.mini-chips { display: flex; flex-wrap: wrap; gap: 0.28rem; }
+.mini-chip {
+  font-size: 0.74rem; font-weight: 600; line-height: 1.5;
+  background: var(--sage-100); color: var(--green-800);
+  border-radius: 5px; padding: 0.08rem 0.4rem; white-space: nowrap;
+}
+
+/* Form panels track the form's own width rather than stretching the screen */
+.panel--form { max-width: 860px; }
