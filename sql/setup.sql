@@ -93,6 +93,26 @@ create table if not exists messages (
 );
 create index if not exists messages_created_idx on messages (created_at desc);
 
+create table if not exists admin_users (
+  id            text primary key,
+  email         text not null unique,
+  name          text not null default '',
+  password_hash text not null,
+  role          text not null default 'staff' check (role in ('owner','staff')),
+  created_at    timestamptz not null default now(),
+  last_login_at timestamptz
+);
+
+-- Who changed what, so an account can be held to account.
+create table if not exists audit_log (
+  id         bigserial primary key,
+  actor      text not null default '',
+  action     text not null,
+  detail     text not null default '',
+  created_at timestamptz not null default now()
+);
+create index if not exists audit_log_created_idx on audit_log (created_at desc);
+
 -- ---------- Site settings ----------
 insert into settings (key, value) values ('site', '{"name":"Venza Care UK","phone":"0800 470 1925","email":"enquiries@venzacare.co.uk","address":"Venza Care UK Ltd, 1 Croydon Gateway, Croydon CR0 2AB","regions":["London","Kent","Cambridgeshire"]}'::jsonb) on conflict (key) do nothing;
 

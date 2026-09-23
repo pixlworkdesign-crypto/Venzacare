@@ -1132,3 +1132,23 @@ tr.is-unread > td:first-child { box-shadow: inset 3px 0 0 var(--gold-400); }
 @media (max-width: 760px) {
   .status-form { min-width: 160px; }
 }
+
+/* Data-request screen */
+.record-list { list-style: none; padding: 0; margin: 0 0 1.5rem; display: grid; gap: 0.4rem; }
+.record-list li {
+  background: var(--cream); border: 1px solid var(--line); border-radius: 9px;
+  padding: 0.6rem 0.8rem; font-size: 0.92rem;
+}
+.danger-zone {
+  margin-top: 1.75rem; padding: 1.25rem 1.4rem;
+  background: #fdf3f2; border: 1px solid #edcac5; border-radius: var(--radius);
+}
+.danger-zone h3 { margin: 0 0 0.4rem; font-size: 1rem; color: #8d3d33; }
+.danger-zone p { margin: 0 0 1rem; font-size: 0.91rem; color: var(--muted); }
+
+.admin-topbar__who {
+  font-size: 0.85rem; color: var(--sage-100); font-weight: 600;
+  padding: 0.3rem 0.7rem; border-radius: 999px; background: rgba(255,255,255,0.12);
+  margin-right: 0.5rem; white-space: nowrap;
+}
+.admin-topbar__who:hover { background: rgba(255,255,255,0.22); color: #fff; }

@@ -214,6 +214,16 @@ function createPgBackend(connectionString) {
     appliedAt: r.applied_at,
   });
 
+  const toUser = (r) => ({
+    id: r.id,
+    email: r.email,
+    name: r.name,
+    passwordHash: r.password_hash,
+    role: r.role,
+    createdAt: r.created_at,
+    lastLoginAt: r.last_login_at,
+  });
+
   const toMessage = (r) => ({
     id: r.id,
     kind: r.kind,
@@ -375,6 +385,71 @@ function createPgBackend(connectionString) {
       return toMessage(rows[0]);
     },
 
+    async allUsers() {
+      const { rows } = await q('select * from admin_users order by created_at');
+      return rows.map(toUser);
+    },
+    async userByEmail(email) {
+      const { rows } = await q('select * from admin_users where lower(email) = lower($1)', [email]);
+      return rows.length ? toUser(rows[0]) : null;
+    },
+    async userById(id) {
+      const { rows } = await q('select * from admin_users where id = $1', [id]);
+      return rows.length ? toUser(rows[0]) : null;
+    },
+    async insertUser(u) {
+      const { rows } = await q(
+        `insert into admin_users (id, email, name, password_hash, role)
+         values ($1,$2,$3,$4,$5) returning *`,
+        [u.id, u.email, u.name || '', u.passwordHash, u.role || 'staff']
+      );
+      return toUser(rows[0]);
+    },
+    async updateUserPassword(id, passwordHash) {
+      await q('update admin_users set password_hash = $2 where id = $1', [id, passwordHash]);
+    },
+    async touchUserLogin(id) {
+      await q('update admin_users set last_login_at = now() where id = $1', [id]);
+    },
+    async deleteUser(id) {
+      await q('delete from admin_users where id = $1', [id]);
+    },
+
+    async addAudit(entry) {
+      await q('insert into audit_log (actor, action, detail) values ($1,$2,$3)',
+        [entry.actor || '', entry.action, entry.detail || '']);
+    },
+    async recentAudit(limit) {
+      const { rows } = await q('select * from audit_log order by created_at desc limit $1', [limit]);
+      return rows.map((r) => ({
+        id: r.id, actor: r.actor, action: r.action, detail: r.detail, createdAt: r.created_at,
+      }));
+    },
+
+    /* Everything held about one person, matched on the email they gave. */
+    async findPersonData(email) {
+      const apps = await q('select * from applications where lower(email) = lower($1) order by applied_at desc', [email]);
+      const msgs = await q('select * from messages where lower(email) = lower($1) order by created_at desc', [email]);
+      return { applications: apps.rows.map(toApplication), messages: msgs.rows.map(toMessage) };
+    },
+    async deletePersonData(email) {
+      const apps = await q('delete from applications where lower(email) = lower($1) returning cv_path', [email]);
+      const msgs = await q('delete from messages where lower(email) = lower($1) returning id', [email]);
+      return {
+        applications: apps.rowCount,
+        messages: msgs.rowCount,
+        cvPaths: apps.rows.map((r) => r.cv_path).filter(Boolean),
+      };
+    },
+    /* Applications older than the retention period, for the automatic sweep. */
+    async expireApplications(days) {
+      const { rows, rowCount } = await q(
+        `delete from applications where applied_at < now() - ($1 || ' days')::interval returning cv_path`,
+        [String(days)]
+      );
+      return { count: rowCount, cvPaths: rows.map((r) => r.cv_path).filter(Boolean) };
+    },
+
     async counts() {
       const { rows } = await q(`
         select
@@ -412,13 +487,13 @@ function createFileBackend() {
   const DATA_DIR = path.join(process.env.VERCEL ? '/tmp' : __dirname, 'data');
   const DB_FILE = path.join(DATA_DIR, 'db.json');
 
-  let store = { settings: null, homes: [], jobs: [], applications: [], messages: [] };
+  let store = { settings: null, homes: [], jobs: [], applications: [], messages: [], users: [], audit: [] };
 
   try {
     if (fs.existsSync(DB_FILE)) {
       const parsed = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
       store = Object.assign(store, parsed);
-      ['homes', 'jobs', 'applications', 'messages'].forEach((k) => {
+      ['homes', 'jobs', 'applications', 'messages', 'users', 'audit'].forEach((k) => {
         if (!Array.isArray(store[k])) store[k] = [];
       });
     }
@@ -556,6 +631,76 @@ function createFileBackend() {
       store.messages.push(msg);
       save();
       return msg;
+    },
+
+    async allUsers() { return (store.users || []).slice(); },
+    async userByEmail(email) {
+      return (store.users || []).find((u) => u.email.toLowerCase() === String(email).toLowerCase()) || null;
+    },
+    async userById(id) { return (store.users || []).find((u) => u.id === id) || null; },
+    async insertUser(u) {
+      store.users = store.users || [];
+      const user = {
+        id: u.id, email: u.email, name: u.name || '', passwordHash: u.passwordHash,
+        role: u.role || 'staff', createdAt: new Date(), lastLoginAt: null,
+      };
+      store.users.push(user);
+      save();
+      return user;
+    },
+    async updateUserPassword(id, passwordHash) {
+      const u = byId(store.users || [], id);
+      if (u) { u.passwordHash = passwordHash; save(); }
+    },
+    async touchUserLogin(id) {
+      const u = byId(store.users || [], id);
+      if (u) { u.lastLoginAt = new Date(); save(); }
+    },
+    async deleteUser(id) {
+      store.users = (store.users || []).filter((u) => u.id !== id);
+      save();
+    },
+
+    async addAudit(entry) {
+      store.audit = store.audit || [];
+      store.audit.push({
+        id: store.audit.length + 1,
+        actor: entry.actor || '', action: entry.action, detail: entry.detail || '',
+        createdAt: new Date(),
+      });
+      if (store.audit.length > 500) store.audit = store.audit.slice(-500);
+      save();
+    },
+    async recentAudit(limit) {
+      return (store.audit || []).slice().reverse().slice(0, limit);
+    },
+
+    async findPersonData(email) {
+      const match = (x) => (x.email || '').toLowerCase() === String(email).toLowerCase();
+      return {
+        applications: store.applications.filter(match),
+        messages: store.messages.filter(match),
+      };
+    },
+    async deletePersonData(email) {
+      const match = (x) => (x.email || '').toLowerCase() === String(email).toLowerCase();
+      const apps = store.applications.filter(match);
+      const msgs = store.messages.filter(match);
+      store.applications = store.applications.filter((a) => !match(a));
+      store.messages = store.messages.filter((m) => !match(m));
+      save();
+      return {
+        applications: apps.length,
+        messages: msgs.length,
+        cvPaths: apps.map((a) => a.cvPath).filter(Boolean),
+      };
+    },
+    async expireApplications(days) {
+      const cutoff = Date.now() - days * 86400000;
+      const old = store.applications.filter((a) => new Date(a.appliedAt).getTime() < cutoff);
+      store.applications = store.applications.filter((a) => new Date(a.appliedAt).getTime() >= cutoff);
+      if (old.length) save();
+      return { count: old.length, cvPaths: old.map((a) => a.cvPath).filter(Boolean) };
     },
 
     async counts() {
@@ -815,6 +960,66 @@ async function addMessage(data) {
   });
 }
 
+/* ---------- Admin accounts ---------- */
+const auth = require('./auth.js');
+
+async function users() { return backend.allUsers(); }
+async function userByEmail(email) { return backend.userByEmail(email); }
+async function userById(id) { return backend.userById(id); }
+
+async function createUser({ email, name, password, role }) {
+  const clean = String(email || '').trim().toLowerCase();
+  if (!clean || clean.indexOf('@') === -1) throw new Error('That does not look like an email address.');
+  if (await backend.userByEmail(clean)) throw new Error('Someone already has an account with that email.');
+  const problem = auth.passwordProblem(password);
+  if (problem) throw new Error(problem);
+  return backend.insertUser({
+    id: uid('user'),
+    email: clean,
+    name: String(name || '').trim(),
+    passwordHash: auth.hashPassword(password),
+    role: role === 'owner' ? 'owner' : 'staff',
+  });
+}
+
+async function setUserPassword(id, password) {
+  const problem = auth.passwordProblem(password);
+  if (problem) throw new Error(problem);
+  await backend.updateUserPassword(id, auth.hashPassword(password));
+}
+
+/* Returns the user on success, null otherwise. Deliberately gives the caller
+   no way to tell an unknown email from a wrong password. */
+async function authenticate(email, password) {
+  const user = await backend.userByEmail(String(email || '').trim());
+  if (!user) {
+    // Still spend the time hashing, so a missing account isn't faster to probe.
+    auth.verifyPassword(String(password || ''), 'scrypt$00$00');
+    return null;
+  }
+  if (!auth.verifyPassword(password, user.passwordHash)) return null;
+  await backend.touchUserLogin(user.id);
+  return user;
+}
+
+async function deleteUser(id) { return backend.deleteUser(id); }
+
+/* ---------- Audit trail ---------- */
+async function audit(actor, action, detail) {
+  try {
+    await backend.addAudit({ actor, action, detail });
+  } catch (err) {
+    // A missing audit entry must never fail the action it was recording.
+    console.error('[db] could not write audit entry:', err.message);
+  }
+}
+async function recentAudit(limit = 50) { return backend.recentAudit(limit); }
+
+/* ---------- Data protection ---------- */
+async function findPersonData(email) { return backend.findPersonData(email); }
+async function deletePersonData(email) { return backend.deletePersonData(email); }
+async function expireApplications(days) { return backend.expireApplications(days); }
+
 /* ---------- Dashboard ---------- */
 async function stats() { return backend.counts(); }
 
@@ -831,6 +1036,9 @@ module.exports = {
   jobs, openJobs, job, jobsForHome, jobLocations, createJob, updateJob, toggleJob, deleteJob,
   applications, application, applicationCounts, addApplication, setApplicationStatus,
   messages, message, addMessage, setMessageStatus,
+  users, userByEmail, userById, createUser, setUserPassword, authenticate, deleteUser,
+  audit, recentAudit,
+  findPersonData, deletePersonData, expireApplications,
   stats,
   close: () => backend.close(),
 };

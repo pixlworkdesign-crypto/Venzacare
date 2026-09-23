@@ -21,8 +21,15 @@
         <a href="/admin/homes" class="<%= currentPath.startsWith('/admin/homes') ? 'is-active' : '' %>">Care homes</a>
         <a href="/admin/applications" class="<%= currentPath.startsWith('/admin/applications') ? 'is-active' : '' %>">Applications</a>
         <a href="/admin/messages" class="<%= currentPath === '/admin/messages' ? 'is-active' : '' %>">Enquiries</a>
+        <% if (typeof adminRole !== 'undefined' && adminRole === 'owner') { %>
+        <a href="/admin/users" class="<%= currentPath.startsWith('/admin/users') ? 'is-active' : '' %>">Accounts</a>
+        <a href="/admin/data" class="<%= currentPath.startsWith('/admin/data') ? 'is-active' : '' %>">Data requests</a>
+        <% } %>
       </nav>
       <div class="spacer"></div>
+      <% if (typeof adminLabel !== 'undefined' && adminLabel) { %>
+      <a href="/admin/password" class="admin-topbar__who" title="Change your password"><%= adminLabel %></a>
+      <% } %>
       <a href="/" target="_blank" rel="noopener" class="admin-topbar__view">View site ↗</a>
       <form action="/admin/logout" method="post" class="inline-form">
         <button type="submit" class="btn btn--sm admin-signout">Sign out</button>

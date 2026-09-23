@@ -1,0 +1,110 @@
+<%- include('../partials/admin-header') %>
+
+<h1 class="admin-h1">Data requests</h1>
+<p class="muted">
+  If someone asks what you hold about them, or asks you to delete it, this is where you do it.
+  Search by the email address they used on the website.
+</p>
+
+<% if (notice) { %><div class="alert alert--success" style="margin-top:1.25rem;"><%= notice %></div><% } %>
+
+<div class="panel panel--form" style="margin-top:1.5rem;">
+  <div class="panel__body">
+    <form action="/admin/data" method="get" class="admin-form" style="margin:0;">
+      <div class="field" style="margin-bottom:.9rem;">
+        <label for="email">Their email address</label>
+        <input type="email" id="email" name="email" value="<%= email %>" required placeholder="someone@example.com" />
+      </div>
+      <button type="submit" class="btn btn--primary">Search</button>
+    </form>
+  </div>
+</div>
+
+<% if (found) { %>
+<%
+  var total = found.applications.length + found.messages.length;
+%>
+<div class="panel" style="margin-top:1.5rem;">
+  <div class="panel__head">
+    <h2>
+      <%= total %> record<%= total===1?'':'s' %> for <%= email %>
+    </h2>
+    <% if (total) { %>
+    <a class="btn btn--sm btn--ghost" href="/admin/data/export?email=<%= encodeURIComponent(email) %>">Download everything</a>
+    <% } %>
+  </div>
+
+  <div class="panel__body">
+    <% if (!total) { %>
+      <p class="muted" style="margin:0;">Nothing held about that email address. You can tell them so with confidence.</p>
+    <% } else { %>
+      <h3 style="font-size:1rem;margin-top:0;">Applications (<%= found.applications.length %>)</h3>
+      <% if (found.applications.length) { %>
+      <ul class="record-list">
+        <% found.applications.forEach(function(a){ %>
+        <li>
+          <strong><%= a.jobTitle || 'Application' %></strong>
+          <span class="muted">— <%= new Date(a.appliedAt).toLocaleDateString('en-GB') %><% if (a.cvFilename) { %>, CV attached<% } %></span>
+        </li>
+        <% }) %>
+      </ul>
+      <% } else { %><p class="muted" style="margin-top:0;">None.</p><% } %>
+
+      <h3 style="font-size:1rem;">Enquiries and callbacks (<%= found.messages.length %>)</h3>
+      <% if (found.messages.length) { %>
+      <ul class="record-list">
+        <% found.messages.forEach(function(m){ %>
+        <li>
+          <strong><%= m.kind === 'callback' ? 'Callback request' : (m.subject || 'Enquiry') %></strong>
+          <span class="muted">— <%= new Date(m.createdAt).toLocaleDateString('en-GB') %></span>
+        </li>
+        <% }) %>
+      </ul>
+      <% } else { %><p class="muted" style="margin-top:0;">None.</p><% } %>
+
+      <div class="danger-zone">
+        <h3>Delete everything about this person</h3>
+        <p>
+          Removes every application and enquiry above, and deletes their CV files.
+          This cannot be undone, and it cannot be partially undone — so check the list first.
+        </p>
+        <form action="/admin/data/delete" method="post"
+              onsubmit="return confirm('Permanently delete all <%= total %> record(s) for <%= email %>? This cannot be undone.');">
+          <input type="hidden" name="email" value="<%= email %>" />
+          <button type="submit" class="btn btn--danger">Delete all <%= total %> record<%= total===1?'':'s' %></button>
+        </form>
+      </div>
+    <% } %>
+  </div>
+</div>
+<% } %>
+
+<div class="panel" style="margin-top:1.5rem;">
+  <div class="panel__head"><h2>Automatic clear-out</h2></div>
+  <div class="panel__body">
+    <% if (retentionDays > 0) { %>
+    <p style="margin-top:0;">
+      Applications are deleted automatically once they're
+      <strong><%= retentionDays %> days</strong> old (about <%= Math.round(retentionDays / 30) %> months),
+      along with the CVs attached to them. Enquiries are kept.
+    </p>
+    <p class="muted" style="font-size:.9rem;">
+      Change this with the <code>RETENTION_DAYS</code> setting in your hosting environment,
+      or set it to 0 to keep applications indefinitely — though you'd then need a reason to,
+      if anyone asked.
+    </p>
+    <form action="/admin/data/sweep" method="post"
+          onsubmit="return confirm('Delete every application older than <%= retentionDays %> days, and their CVs? This cannot be undone.');">
+      <button type="submit" class="btn btn--sm btn--ghost">Run the clear-out now</button>
+    </form>
+    <% } else { %>
+    <p style="margin:0;">
+      Automatic deletion is <strong>switched off</strong>, so applications and CVs are kept until
+      someone removes them by hand. Set <code>RETENTION_DAYS</code> in your hosting environment to
+      turn it back on.
+    </p>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

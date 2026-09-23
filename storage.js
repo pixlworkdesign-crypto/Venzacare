@@ -103,6 +103,28 @@ async function savePhoto(file) {
   return '/images/uploads/' + key;
 }
 
+/* Remove a CV for good — used when someone asks to be forgotten, and by the
+   retention sweep. Missing files are not an error: the goal is that it's gone. */
+async function deleteCv(key) {
+  if (!key) return true;
+  if (useSupabase) {
+    const { error } = await supabase().storage.from(CV_BUCKET).remove([key]);
+    if (error) {
+      console.error('[storage] could not delete CV:', error.message);
+      return false;
+    }
+    return true;
+  }
+  try {
+    const full = path.join(LOCAL_DIR, path.basename(key));
+    if (fs.existsSync(full)) fs.unlinkSync(full);
+    return true;
+  } catch (err) {
+    console.error('[storage] could not delete CV:', err.message);
+    return false;
+  }
+}
+
 function localCvPath(key) {
   if (!key) return null;
   const full = path.join(LOCAL_DIR, path.basename(key));
@@ -112,6 +134,7 @@ function localCvPath(key) {
 module.exports = {
   saveCv,
   cvDownloadUrl,
+  deleteCv,
   localCvPath,
   savePhoto,
   backendKind: useSupabase ? 'supabase' : 'local',

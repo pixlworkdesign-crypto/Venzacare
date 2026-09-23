@@ -37,6 +37,30 @@ if (ADMIN_DISABLED) {
    instead of an unhandled rejection that hangs the request. */
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
+/* How long applications are kept before being deleted automatically. Applicant
+   data is personal data, and keeping it indefinitely is not defensible. Set
+   RETENTION_DAYS=0 to switch the sweep off. */
+const RETENTION_DAYS = process.env.RETENTION_DAYS === undefined ? 365 : parseInt(process.env.RETENTION_DAYS, 10);
+
+/* There is no cron on a serverless host, so the sweep runs opportunistically
+   when an admin page is loaded — at most once a day per running instance. */
+let lastSweep = 0;
+async function runRetentionSweep(actor) {
+  if (!RETENTION_DAYS || RETENTION_DAYS < 1) return;
+  if (Date.now() - lastSweep < 24 * 60 * 60 * 1000) return;
+  lastSweep = Date.now();
+  try {
+    const removed = await db.expireApplications(RETENTION_DAYS);
+    if (removed.count) {
+      for (const key of removed.cvPaths) await storage.deleteCv(key);
+      await db.audit(actor || 'system', 'retention sweep', removed.count + ' application(s) past ' + RETENTION_DAYS + ' days');
+      console.log('[retention] removed', removed.count, 'application(s) older than', RETENTION_DAYS, 'days');
+    }
+  } catch (err) {
+    console.error('[retention] sweep failed:', err.message);
+  }
+}
+
 /* Links in alert emails need the full address, not a site-relative path. */
 const SITE_URL = (process.env.SITE_URL || '').replace(/\/$/, '');
 const absolute = (req, pathname) =>
@@ -52,24 +76,40 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* ---------- Stateless admin auth (signed cookie — works on serverless hosts) ---------- */
-function signAdminToken() {
-  const payload = 'admin.' + (Date.now() + 1000 * 60 * 60 * 8); // 8-hour expiry
+function signAdminToken(who) {
+  const payload = (who || 'admin') + '.' + (Date.now() + 1000 * 60 * 60 * 8); // 8-hour expiry
   const sig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
   return payload + '.' + sig;
 }
-function verifyAdminToken(token) {
-  if (!token || token.split('.').length !== 3) return false;
-  const [who, exp, sig] = token.split('.');
+
+/* Returns who the cookie says is signed in, or null. The signature is checked
+   before anything in the token is believed. */
+function readAdminToken(token) {
+  if (!token) return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [who, exp, sig] = parts;
   const expected = crypto.createHmac('sha256', SESSION_SECRET).update(who + '.' + exp).digest('hex');
   const a = Buffer.from(sig), b = Buffer.from(expected);
-  if (who !== 'admin' || a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
-  return parseInt(exp, 10) > Date.now();
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  if (!(parseInt(exp, 10) > Date.now())) return null;
+  return who;
 }
+function verifyAdminToken(token) { return readAdminToken(token) !== null; }
 function readCookie(req, name) {
   const m = (req.headers.cookie || '').match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
   return m ? decodeURIComponent(m[1]) : null;
 }
 function isAdmin(req) { return verifyAdminToken(readCookie(req, 'vc_admin')); }
+function adminIdentity(req) { return readAdminToken(readCookie(req, 'vc_admin')); }
+
+/* The account behind the session, when signing in used one. The environment
+   login (used to bootstrap the first account) has no database record. */
+async function currentUser(req) {
+  const who = adminIdentity(req);
+  if (!who || who === 'admin') return null;
+  return db.userById(who);
+}
 
 // Shared locals available to every view
 app.use(wrap(async (req, res, next) => {
@@ -451,8 +491,25 @@ function adminUnavailable(res) {
 
 function requireAuth(req, res, next) {
   if (ADMIN_DISABLED) return adminUnavailable(res);
-  if (isAdmin(req)) return next();
-  res.redirect('/admin/login');
+  if (!isAdmin(req)) return res.redirect('/admin/login');
+  Promise.resolve(currentUser(req))
+    .then((user) => {
+      req.adminUser = user;
+      // Signing in through the environment login grants owner-level access.
+      req.adminRole = user ? user.role : 'owner';
+      req.adminLabel = user ? (user.name || user.email) : ADMIN_USER;
+      res.locals.adminUser = user;
+      res.locals.adminRole = req.adminRole;
+      res.locals.adminLabel = req.adminLabel;
+      next();
+    })
+    .catch(next);
+}
+
+/* Adding and removing colleagues is for owners only. */
+function requireOwner(req, res, next) {
+  if (req.adminRole === 'owner') return next();
+  res.status(403).render('admin/forbidden', { title: 'Not allowed' });
 }
 
 app.get('/admin/login', (req, res) => {
@@ -461,21 +518,39 @@ app.get('/admin/login', (req, res) => {
   res.render('admin/login', { error: null });
 });
 
-app.post('/admin/login', (req, res) => {
+function startSession(res, who) {
+  res.cookie('vc_admin', signAdminToken(who), {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: !!process.env.VERCEL,
+    maxAge: 1000 * 60 * 60 * 8,
+    path: '/',
+  });
+}
+
+app.post('/admin/login', wrap(async (req, res) => {
   if (ADMIN_DISABLED) return adminUnavailable(res);
   const { username, password } = req.body;
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    res.cookie('vc_admin', signAdminToken(), {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: !!process.env.VERCEL,
-      maxAge: 1000 * 60 * 60 * 8,
-      path: '/',
-    });
+
+  // Staff accounts first.
+  const user = await db.authenticate(username, password);
+  if (user) {
+    startSession(res, user.id);
+    await db.audit(user.email, 'signed in', '');
     return res.redirect('/admin');
   }
-  res.render('admin/login', { error: 'Incorrect username or password.' });
-});
+
+  /* The environment login still works, so there's a way in before any accounts
+     exist — and a way back in if someone locks themselves out. */
+  if (ADMIN_PASS && username === ADMIN_USER && password === ADMIN_PASS) {
+    startSession(res, 'admin');
+    await db.audit(ADMIN_USER, 'signed in', 'using the environment login');
+    return res.redirect('/admin');
+  }
+
+  await db.audit(String(username || '').slice(0, 120), 'failed sign-in', '');
+  res.status(401).render('admin/login', { error: 'Those details were not recognised.' });
+}));
 
 app.post('/admin/logout', (req, res) => {
   res.clearCookie('vc_admin', { path: '/' });
@@ -484,6 +559,7 @@ app.post('/admin/logout', (req, res) => {
 
 // Dashboard
 app.get('/admin', requireAuth, wrap(async (req, res) => {
+  runRetentionSweep(req.adminLabel); // deliberately not awaited
   res.render('admin/dashboard', {
     title: 'Dashboard',
     stats: await db.stats(),
@@ -526,6 +602,141 @@ app.post('/admin/jobs/:id/toggle', requireAuth, wrap(async (req, res) => {
 app.post('/admin/jobs/:id/delete', requireAuth, wrap(async (req, res) => {
   await db.deleteJob(req.params.id);
   res.redirect('/admin');
+}));
+
+/* ---------- Staff accounts ---------- */
+
+app.get('/admin/users', requireAuth, requireOwner, wrap(async (req, res) => {
+  res.render('admin/users', {
+    title: 'Staff accounts',
+    users: await db.users(),
+    audit: await db.recentAudit(25),
+    error: null,
+    notice: req.query.added ? 'Account created.' : null,
+  });
+}));
+
+app.post('/admin/users', requireAuth, requireOwner, wrap(async (req, res) => {
+  try {
+    const user = await db.createUser({
+      email: req.body.email,
+      name: req.body.name,
+      password: req.body.password,
+      role: req.body.role,
+    });
+    await db.audit(req.adminLabel, 'created an account', user.email);
+    return res.redirect('/admin/users?added=1');
+  } catch (err) {
+    return res.status(400).render('admin/users', {
+      title: 'Staff accounts',
+      users: await db.users(),
+      audit: await db.recentAudit(25),
+      error: err.message,
+      notice: null,
+    });
+  }
+}));
+
+app.post('/admin/users/:id/delete', requireAuth, requireOwner, wrap(async (req, res) => {
+  const user = await db.userById(req.params.id);
+  if (!user) return res.redirect('/admin/users');
+
+  // Don't let the last owner be removed — that would lock everyone out.
+  const owners = (await db.users()).filter((u) => u.role === 'owner');
+  if (user.role === 'owner' && owners.length <= 1) {
+    return res.status(400).render('admin/users', {
+      title: 'Staff accounts',
+      users: await db.users(),
+      audit: await db.recentAudit(25),
+      error: 'That is the only owner account. Make someone else an owner first.',
+      notice: null,
+    });
+  }
+
+  await db.deleteUser(user.id);
+  await db.audit(req.adminLabel, 'removed an account', user.email);
+  res.redirect('/admin/users');
+}));
+
+/* Changing your own password — available to everyone, owner or not. */
+app.get('/admin/password', requireAuth, wrap(async (req, res) => {
+  res.render('admin/password', { title: 'Change password', error: null, notice: null });
+}));
+
+app.post('/admin/password', requireAuth, wrap(async (req, res) => {
+  const render = (extra) => res.render('admin/password', Object.assign({ title: 'Change password', error: null, notice: null }, extra));
+
+  if (!req.adminUser) {
+    return res.status(400).render('admin/password', {
+      title: 'Change password',
+      error: 'You are signed in with the environment login, which has no password stored here. Change ADMIN_PASS in the hosting settings instead.',
+      notice: null,
+    });
+  }
+  if (!(await db.authenticate(req.adminUser.email, req.body.current))) {
+    return res.status(400).render('admin/password', { title: 'Change password', error: 'Your current password was not correct.', notice: null });
+  }
+  if (req.body.next !== req.body.confirm) {
+    return res.status(400).render('admin/password', { title: 'Change password', error: 'The two new passwords do not match.', notice: null });
+  }
+  try {
+    await db.setUserPassword(req.adminUser.id, req.body.next);
+    await db.audit(req.adminLabel, 'changed their password', '');
+    return render({ notice: 'Password changed.' });
+  } catch (err) {
+    return res.status(400).render('admin/password', { title: 'Change password', error: err.message, notice: null });
+  }
+}));
+
+/* ---------- Data protection ---------- */
+
+app.get('/admin/data', requireAuth, requireOwner, wrap(async (req, res) => {
+  const email = (req.query.email || '').toString().trim();
+  const found = email ? await db.findPersonData(email) : null;
+  res.render('admin/data', {
+    title: 'Data requests',
+    email,
+    found,
+    retentionDays: RETENTION_DAYS,
+    notice: req.query.deleted
+      ? 'Deleted ' + req.query.deleted + ' record(s). Nothing about that person remains.'
+      : req.query.swept !== undefined
+        ? (req.query.swept === '0'
+            ? 'Nothing was old enough to remove.'
+            : 'Cleared out ' + req.query.swept + ' application(s) past the retention period.')
+        : null,
+  });
+}));
+
+/* A subject access request: everything held about one person, as a file. */
+app.get('/admin/data/export', requireAuth, requireOwner, wrap(async (req, res) => {
+  const email = (req.query.email || '').toString().trim();
+  if (!email) return res.redirect('/admin/data');
+  const found = await db.findPersonData(email);
+  await db.audit(req.adminLabel, 'exported personal data', email);
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="venza-data-' + email.replace(/[^a-z0-9.@-]/gi, '_') + '.json"');
+  res.send(JSON.stringify({ email, exportedAt: new Date().toISOString(), ...found }, null, 2));
+}));
+
+/* The automatic sweep runs at most once a day per instance, so this is the way
+   to make it happen now — and to prove to yourself that it works. */
+app.post('/admin/data/sweep', requireAuth, requireOwner, wrap(async (req, res) => {
+  if (!RETENTION_DAYS || RETENTION_DAYS < 1) return res.redirect('/admin/data');
+  const removed = await db.expireApplications(RETENTION_DAYS);
+  for (const key of removed.cvPaths) await storage.deleteCv(key);
+  lastSweep = Date.now();
+  await db.audit(req.adminLabel, 'ran the clear-out', removed.count + ' application(s) past ' + RETENTION_DAYS + ' days');
+  res.redirect('/admin/data?swept=' + removed.count);
+}));
+
+app.post('/admin/data/delete', requireAuth, requireOwner, wrap(async (req, res) => {
+  const email = (req.body.email || '').toString().trim();
+  if (!email) return res.redirect('/admin/data');
+  const removed = await db.deletePersonData(email);
+  for (const key of removed.cvPaths) await storage.deleteCv(key);
+  await db.audit(req.adminLabel, 'deleted personal data', email + ' — ' + removed.applications + ' application(s), ' + removed.messages + ' message(s)');
+  res.redirect('/admin/data?deleted=' + (removed.applications + removed.messages));
 }));
 
 /* ---------- Care homes ---------- */
