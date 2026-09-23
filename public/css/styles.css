@@ -1094,3 +1094,41 @@ input[type="file"]::file-selector-button:hover { background: var(--green-800); }
 
 /* Form panels track the form's own width rather than stretching the screen */
 .panel--form { max-width: 860px; }
+
+/* =========================================================
+   Admin — statuses, notes and the enquiry inbox
+   ========================================================= */
+.status-form { display: flex; flex-direction: column; gap: 0.4rem; min-width: 190px; }
+.status-form textarea { font-size: 0.84rem; padding: 0.45rem 0.55rem; min-height: 0; border-radius: 9px; }
+.status-form .btn { align-self: flex-start; }
+
+/* The status control carries its own state, so a row reads at a glance */
+.status-select {
+  font-size: 0.85rem; font-weight: 600; padding: 0.4rem 0.6rem;
+  border-radius: 9px; border-width: 1.5px;
+}
+.status-select--new         { background: var(--gold-100); border-color: var(--gold-400); color: var(--gold-600); }
+.status-select--shortlisted,
+.status-select--contacted   { background: var(--sage-100); border-color: var(--sage-300); color: var(--green-800); }
+.status-select--interviewed { background: #e8eefb; border-color: #b9caee; color: #2f4d8c; }
+.status-select--offered     { background: #e6f3ee; border-color: #a8d5c2; color: #1f6d4e; }
+.status-select--hired,
+.status-select--closed      { background: var(--green-800); border-color: var(--green-800); color: #fff; }
+.status-select--rejected    { background: #f7eceb; border-color: #e2bdb8; color: #8d3d33; }
+
+/* An untouched row gets a quiet marker down its left edge */
+tr.is-unread > td:first-child { box-shadow: inset 3px 0 0 var(--gold-400); }
+
+.kind-tag {
+  display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em;
+  text-transform: uppercase; padding: 0.15rem 0.45rem; border-radius: 5px;
+  background: var(--sage-100); color: var(--green-800);
+}
+.kind-tag--callback { background: var(--gold-100); color: var(--gold-600); }
+
+.applications-table td, .messages-table td { vertical-align: top; }
+.admin-filter { flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  .status-form { min-width: 160px; }
+}

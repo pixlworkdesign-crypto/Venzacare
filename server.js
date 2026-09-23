@@ -8,6 +8,7 @@ const express = require('express');
 const multer = require('multer');
 const db = require('./db');
 const storage = require('./storage');
+const mailer = require('./mailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +36,11 @@ if (ADMIN_DISABLED) {
 /* Wrap an async route so a rejected promise becomes a normal Express error
    instead of an unhandled rejection that hangs the request. */
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+/* Links in alert emails need the full address, not a site-relative path. */
+const SITE_URL = (process.env.SITE_URL || '').replace(/\/$/, '');
+const absolute = (req, pathname) =>
+  (SITE_URL || req.protocol + '://' + req.get('host')) + pathname;
 
 /* ---------- View engine ---------- */
 app.set('view engine', 'ejs');
@@ -207,7 +213,7 @@ app.post('/careers/:id/apply', upload.single('cv'), wrap(async (req, res) => {
 
   const cv = await storage.saveCv(req.file);
 
-  await db.addApplication({
+  const application = await db.addApplication({
     jobId: job.id,
     jobTitle: job.title,
     name,
@@ -217,6 +223,23 @@ app.post('/careers/:id/apply', upload.single('cv'), wrap(async (req, res) => {
     message,
     cvFilename: cv.filename,
     cvPath: cv.key,
+  });
+
+  // The CV link needs an admin sign-in, so the file itself never travels by email.
+  mailer.sendQuietly({
+    subject: 'New application: ' + job.title + ' — ' + name,
+    heading: 'New job application',
+    replyTo: email,
+    rows: [
+      ['Role', job.title],
+      ['Applicant', name],
+      ['Email', email],
+      ['Phone', phone],
+      ['Right to work', rightToWork],
+      ['CV', cv.filename ? 'Attached — open in the backoffice' : 'None supplied'],
+    ],
+    body: message,
+    link: { label: 'Open in the backoffice', url: absolute(req, '/admin/applications#' + application.id) },
   });
 
   res.render('apply-success', { title: 'Application received', job });
@@ -238,6 +261,14 @@ app.post('/contact', wrap(async (req, res) => {
   const { name, email, phone, subject, message } = req.body;
   if (name && email && message) {
     await db.addMessage({ name, email, phone, subject, message });
+    mailer.sendQuietly({
+      subject: 'New enquiry: ' + (subject || 'General enquiry') + ' — ' + name,
+      heading: 'New website enquiry',
+      replyTo: email,
+      rows: [['Name', name], ['Email', email], ['Phone', phone], ['Subject', subject]],
+      body: message,
+      link: { label: 'Open in the backoffice', url: absolute(req, '/admin/messages') },
+    });
     return res.render('contact', await contactLocals({ sent: true }));
   }
   res.render('contact', await contactLocals({ form: req.body }));
@@ -255,6 +286,17 @@ app.post('/callback', wrap(async (req, res) => {
       bestTime: time || 'Anytime',
       home: home || '',
       message: `Please call me back. Best time: ${time || 'Anytime'}.` + (home ? ` Home of interest: ${home}.` : ''),
+    });
+    mailer.sendQuietly({
+      subject: 'Callback request — ' + name,
+      heading: 'Someone would like a call back',
+      rows: [
+        ['Name', name],
+        ['Phone', phone],
+        ['Best time to call', time || 'Anytime'],
+        ['Home of interest', home],
+      ],
+      link: { label: 'Open in the backoffice', url: absolute(req, '/admin/messages') },
     });
     return res.render('contact', await contactLocals({ callbackSent: true }));
   }
@@ -638,12 +680,23 @@ app.post('/admin/homes/:id/delete', requireAuth, wrap(async (req, res) => {
 // Applications
 app.get('/admin/applications', requireAuth, wrap(async (req, res) => {
   const jobId = (req.query.job || '').toString();
+  const status = (req.query.status || '').toString();
+  let applications = await db.applications(jobId);
+  if (status) applications = applications.filter((a) => (a.status || 'new') === status);
   res.render('admin/applications', {
     title: 'Applications',
-    applications: await db.applications(jobId),
+    applications,
     jobs: await db.jobs(),
+    statuses: db.APPLICATION_STATUSES,
     jobId,
+    status,
   });
+}));
+
+app.post('/admin/applications/:id/status', requireAuth, wrap(async (req, res) => {
+  await db.setApplicationStatus(req.params.id, req.body.status, req.body.notes);
+  const back = '/admin/applications' + (req.body.back ? '?' + req.body.back : '');
+  res.redirect(back + '#' + req.params.id);
 }));
 
 /* CV download — the only way to reach an applicant's CV. Admin-only, and the
@@ -663,7 +716,24 @@ app.get('/admin/applications/:id/cv', requireAuth, wrap(async (req, res) => {
 
 // Enquiries
 app.get('/admin/messages', requireAuth, wrap(async (req, res) => {
-  res.render('admin/messages', { title: 'Enquiries', messages: await db.messages() });
+  const kind = (req.query.kind || '').toString();
+  const status = (req.query.status || '').toString();
+  let messages = await db.messages();
+  if (kind) messages = messages.filter((m) => (m.kind || 'enquiry') === kind);
+  if (status) messages = messages.filter((m) => (m.status || 'new') === status);
+  res.render('admin/messages', {
+    title: 'Enquiries',
+    messages,
+    statuses: db.MESSAGE_STATUSES,
+    kind,
+    status,
+  });
+}));
+
+app.post('/admin/messages/:id/status', requireAuth, wrap(async (req, res) => {
+  await db.setMessageStatus(req.params.id, req.body.status, req.body.notes);
+  const back = '/admin/messages' + (req.body.back ? '?' + req.body.back : '');
+  res.redirect(back + '#' + req.params.id);
 }));
 
 /* =============================================================

@@ -1,51 +1,88 @@
 <%- include('../partials/admin-header') %>
+<%
+  var backQuery = [];
+  if (jobId) backQuery.push('job=' + encodeURIComponent(jobId));
+  if (status) backQuery.push('status=' + encodeURIComponent(status));
+  var back = backQuery.join('&');
+  var newCount = applications.filter(function(a){ return (a.status || 'new') === 'new'; }).length;
+%>
 
 <h1 class="admin-h1">Applications</h1>
-<p class="muted">Every application submitted through the careers site.</p>
+<p class="muted">Every application submitted through the careers site<% if (newCount) { %> — <strong style="color:var(--green-800)"><%= newCount %></strong> still to look at<% } %>.</p>
 
 <div class="panel" style="margin-top:1.5rem;">
   <div class="panel__head">
     <h2><%= applications.length %> application<%= applications.length===1?'':'s' %></h2>
     <form action="/admin/applications" method="get" class="admin-filter">
-      <select name="job" onchange="this.form.submit()">
+      <select name="job" onchange="this.form.submit()" aria-label="Filter by role">
         <option value="">All roles</option>
         <% jobs.forEach(function(jb){ %><option value="<%= jb.id %>" <%= jobId===jb.id?'selected':'' %>><%= jb.title %></option><% }) %>
       </select>
+      <select name="status" onchange="this.form.submit()" aria-label="Filter by status">
+        <option value="">Any status</option>
+        <% statuses.forEach(function(st){ %><option value="<%= st.value %>" <%= status===st.value?'selected':'' %>><%= st.label %></option><% }) %>
+      </select>
+      <% if (jobId || status) { %><a href="/admin/applications" class="btn btn--sm btn--muted">Clear</a><% } %>
     </form>
   </div>
+
   <div class="panel__body" style="padding:0;">
     <% if (applications.length) { %>
     <div class="table-wrap">
-    <table class="table">
+    <table class="table applications-table">
       <thead>
-        <tr><th>Applicant</th><th>Applied for</th><th>Contact</th><th>Right to work</th><th>CV</th><th>Received</th></tr>
+        <tr>
+          <th>Applicant</th>
+          <th>Applied for</th>
+          <th>Contact</th>
+          <th>CV</th>
+          <th>Received</th>
+          <th>Progress</th>
+        </tr>
       </thead>
       <tbody>
-        <% applications.forEach(function(a){ %>
-        <tr>
+        <% applications.forEach(function(a){ var st = a.status || 'new'; %>
+        <tr id="<%= a.id %>" class="<%= st === 'new' ? 'is-unread' : '' %>">
           <td>
             <strong><%= a.name %></strong>
-            <% if (a.message) { %><div class="muted" style="font-size:.85rem;max-width:34ch;margin-top:.3rem;">“<%= a.message %>”</div><% } %>
+            <% if (a.rightToWork) { %><div class="muted" style="font-size:.82rem;">Right to work: <%= a.rightToWork %></div><% } %>
+            <% if (a.message) { %><div class="muted" style="font-size:.85rem;max-width:32ch;margin-top:.35rem;">“<%= a.message %>”</div><% } %>
           </td>
           <td><%= a.jobTitle %></td>
           <td style="font-size:.9rem;">
             <% if (a.email) { %><a href="mailto:<%= a.email %>"><%= a.email %></a><% } %>
             <% if (a.phone) { %><div class="muted"><%= a.phone %></div><% } %>
           </td>
-          <td><%= a.rightToWork || '—' %></td>
           <td>
             <% if (a.cvFilename) { %>
               <a href="/admin/applications/<%= a.id %>/cv" target="_blank" rel="noopener" class="btn btn--sm btn--muted">Download</a>
             <% } else { %><span class="muted">—</span><% } %>
           </td>
-          <td class="muted" style="font-size:.85rem;white-space:nowrap;"><%= new Date(a.appliedAt).toLocaleDateString('en-GB') %><br /><%= new Date(a.appliedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) %></td>
+          <td class="muted" style="font-size:.85rem;white-space:nowrap;">
+            <%= new Date(a.appliedAt).toLocaleDateString('en-GB') %><br />
+            <%= new Date(a.appliedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) %>
+          </td>
+          <td>
+            <form action="/admin/applications/<%= a.id %>/status" method="post" class="status-form">
+              <input type="hidden" name="back" value="<%= back %>" />
+              <select name="status" aria-label="Status for <%= a.name %>" class="status-select status-select--<%= st %>">
+                <% statuses.forEach(function(s2){ %>
+                <option value="<%= s2.value %>" <%= st === s2.value ? 'selected' : '' %>><%= s2.label %></option>
+                <% }) %>
+              </select>
+              <textarea name="notes" rows="2" placeholder="Private notes…" aria-label="Notes about <%= a.name %>"><%= a.notes || '' %></textarea>
+              <button type="submit" class="btn btn--sm btn--ghost">Save</button>
+            </form>
+          </td>
         </tr>
         <% }) %>
       </tbody>
     </table>
     </div>
     <% } else { %>
-    <div style="padding:2.5rem;text-align:center;" class="muted">No applications yet<% if (jobId) { %> for this role<% } %>.</div>
+    <div style="padding:2.5rem;text-align:center;" class="muted">
+      No applications<% if (jobId || status) { %> match these filters<% } else { %> yet<% } %>.
+    </div>
     <% } %>
   </div>
 </div>

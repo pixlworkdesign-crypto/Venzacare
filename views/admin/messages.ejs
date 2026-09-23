@@ -1,35 +1,95 @@
 <%- include('../partials/admin-header') %>
+<%
+  var backQuery = [];
+  if (kind) backQuery.push('kind=' + encodeURIComponent(kind));
+  if (status) backQuery.push('status=' + encodeURIComponent(status));
+  var back = backQuery.join('&');
+  var newCount = messages.filter(function(m){ return (m.status || 'new') === 'new'; }).length;
+%>
 
 <h1 class="admin-h1">Enquiries</h1>
-<p class="muted">Messages sent through the contact form.</p>
+<p class="muted">Messages and callback requests sent through the website<% if (newCount) { %> — <strong style="color:var(--green-800)"><%= newCount %></strong> not yet answered<% } %>.</p>
 
 <div class="panel" style="margin-top:1.5rem;">
-  <div class="panel__head"><h2><%= messages.length %> enquir<%= messages.length===1?'y':'ies' %></h2></div>
+  <div class="panel__head">
+    <h2><%= messages.length %> <%= kind === 'callback' ? 'callback request' : 'message' %><%= messages.length===1?'':'s' %></h2>
+    <form action="/admin/messages" method="get" class="admin-filter">
+      <select name="kind" onchange="this.form.submit()" aria-label="Filter by type">
+        <option value="">Everything</option>
+        <option value="enquiry" <%= kind==='enquiry'?'selected':'' %>>Enquiries</option>
+        <option value="callback" <%= kind==='callback'?'selected':'' %>>Callback requests</option>
+      </select>
+      <select name="status" onchange="this.form.submit()" aria-label="Filter by status">
+        <option value="">Any status</option>
+        <% statuses.forEach(function(st){ %><option value="<%= st.value %>" <%= status===st.value?'selected':'' %>><%= st.label %></option><% }) %>
+      </select>
+      <% if (kind || status) { %><a href="/admin/messages" class="btn btn--sm btn--muted">Clear</a><% } %>
+    </form>
+  </div>
+
   <div class="panel__body" style="padding:0;">
     <% if (messages.length) { %>
     <div class="table-wrap">
-    <table class="table">
-      <thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th></tr></thead>
-      <tbody>
-        <% messages.forEach(function(m){ %>
+    <table class="table messages-table">
+      <thead>
         <tr>
+          <th>From</th>
+          <th>About</th>
+          <th>Message</th>
+          <th>Received</th>
+          <th>Progress</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% messages.forEach(function(m){ var st = m.status || 'new'; var isCb = (m.kind === 'callback'); %>
+        <tr id="<%= m.id %>" class="<%= st === 'new' ? 'is-unread' : '' %>">
           <td>
             <strong><%= m.name %></strong>
             <div class="muted" style="font-size:.85rem;">
-              <% if (m.email) { %><a href="mailto:<%= m.email %>"><%= m.email %></a><% } %>
-              <% if (m.phone) { %><% if (m.email) { %><br /><% } %><%= m.phone %><% } %>
+              <% if (m.email) { %><a href="mailto:<%= m.email %>"><%= m.email %></a><br /><% } %>
+              <% if (m.phone) { %><a href="tel:<%= m.phone.replace(/\s/g,'') %>"><%= m.phone %></a><% } %>
             </div>
           </td>
-          <td><%= m.subject || '—' %></td>
-          <td style="max-width:42ch;"><%= m.message %></td>
-          <td class="muted" style="font-size:.85rem;white-space:nowrap;"><%= new Date(m.createdAt).toLocaleDateString('en-GB') %></td>
+          <td>
+            <span class="kind-tag <%= isCb ? 'kind-tag--callback' : '' %>"><%= isCb ? 'Callback' : 'Enquiry' %></span>
+            <% if (m.subject && !isCb) { %><div class="muted" style="font-size:.85rem;margin-top:.3rem;"><%= m.subject %></div><% } %>
+            <% if (isCb) { %>
+              <div class="muted" style="font-size:.85rem;margin-top:.3rem;">
+                <%= m.bestTime || 'Anytime' %><% if (m.home) { %><br /><%= m.home %><% } %>
+              </div>
+            <% } %>
+          </td>
+          <td style="max-width:36ch;font-size:.92rem;">
+            <%# For callbacks the message is generated from the fields already shown
+                under "About", so it only earns its place on older rows saved
+                before those fields were stored separately. %>
+            <% if (!isCb || !m.bestTime) { %><%= m.message %><% } else { %><span class="muted">—</span><% } %>
+          </td>
+          <td class="muted" style="font-size:.85rem;white-space:nowrap;">
+            <%= new Date(m.createdAt).toLocaleDateString('en-GB') %><br />
+            <%= new Date(m.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) %>
+          </td>
+          <td>
+            <form action="/admin/messages/<%= m.id %>/status" method="post" class="status-form">
+              <input type="hidden" name="back" value="<%= back %>" />
+              <select name="status" aria-label="Status for <%= m.name %>" class="status-select status-select--<%= st %>">
+                <% statuses.forEach(function(s2){ %>
+                <option value="<%= s2.value %>" <%= st === s2.value ? 'selected' : '' %>><%= s2.label %></option>
+                <% }) %>
+              </select>
+              <textarea name="notes" rows="2" placeholder="Private notes…" aria-label="Notes about <%= m.name %>"><%= m.notes || '' %></textarea>
+              <button type="submit" class="btn btn--sm btn--ghost">Save</button>
+            </form>
+          </td>
         </tr>
         <% }) %>
       </tbody>
     </table>
     </div>
     <% } else { %>
-    <div style="padding:2.5rem;text-align:center;" class="muted">No enquiries yet.</div>
+    <div style="padding:2.5rem;text-align:center;" class="muted">
+      Nothing here<% if (kind || status) { %> matching these filters<% } else { %> yet<% } %>.
+    </div>
     <% } %>
   </div>
 </div>

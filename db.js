@@ -336,9 +336,34 @@ function createPgBackend(connectionString) {
       return toApplication(rows[0]);
     },
 
+    async applicationById(id) {
+      const { rows } = await q('select * from applications where id = $1', [id]);
+      return rows.length ? toApplication(rows[0]) : null;
+    },
+    async setApplicationStatus(id, status, notes) {
+      const { rows } = await q(
+        `update applications set status = coalesce($2, status), notes = coalesce($3, notes)
+         where id = $1 returning *`,
+        [id, status, notes]
+      );
+      return rows.length ? toApplication(rows[0]) : null;
+    },
+
     async allMessages() {
       const { rows } = await q('select * from messages order by created_at desc');
       return rows.map(toMessage);
+    },
+    async messageById(id) {
+      const { rows } = await q('select * from messages where id = $1', [id]);
+      return rows.length ? toMessage(rows[0]) : null;
+    },
+    async setMessageStatus(id, status, notes) {
+      const { rows } = await q(
+        `update messages set status = coalesce($2, status), notes = coalesce($3, notes)
+         where id = $1 returning *`,
+        [id, status, notes]
+      );
+      return rows.length ? toMessage(rows[0]) : null;
     },
     async insertMessage(m) {
       const { rows } = await q(
@@ -353,13 +378,22 @@ function createPgBackend(connectionString) {
     async counts() {
       const { rows } = await q(`
         select
-          (select count(*) from jobs where status = 'open')::int   as open_jobs,
-          (select count(*) from jobs where status = 'closed')::int as closed_jobs,
-          (select count(*) from applications)::int                 as applications,
-          (select count(*) from messages)::int                     as messages
+          (select count(*) from jobs where status = 'open')::int         as open_jobs,
+          (select count(*) from jobs where status = 'closed')::int       as closed_jobs,
+          (select count(*) from applications)::int                       as applications,
+          (select count(*) from applications where status = 'new')::int  as new_applications,
+          (select count(*) from messages)::int                           as messages,
+          (select count(*) from messages where status = 'new')::int      as new_messages
       `);
       const r = rows[0];
-      return { open: r.open_jobs, closed: r.closed_jobs, applications: r.applications, messages: r.messages };
+      return {
+        open: r.open_jobs,
+        closed: r.closed_jobs,
+        applications: r.applications,
+        newApplications: r.new_applications,
+        messages: r.messages,
+        newMessages: r.new_messages,
+      };
     },
 
     async close() { await pool.end(); },
@@ -493,8 +527,27 @@ function createFileBackend() {
       return app;
     },
 
+    async applicationById(id) { return byId(store.applications, id) || null; },
+    async setApplicationStatus(id, status, notes) {
+      const app = byId(store.applications, id);
+      if (!app) return null;
+      if (status != null) app.status = status;
+      if (notes != null) app.notes = notes;
+      save();
+      return app;
+    },
+
     async allMessages() {
       return store.messages.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    },
+    async messageById(id) { return byId(store.messages, id) || null; },
+    async setMessageStatus(id, status, notes) {
+      const msg = byId(store.messages, id);
+      if (!msg) return null;
+      if (status != null) msg.status = status;
+      if (notes != null) msg.notes = notes;
+      save();
+      return msg;
     },
     async insertMessage(m) {
       const msg = Object.assign({ kind: 'enquiry', status: 'new', notes: '', bestTime: '', home: '' }, m, {
@@ -510,7 +563,9 @@ function createFileBackend() {
         open: store.jobs.filter((j) => j.status === 'open').length,
         closed: store.jobs.filter((j) => j.status === 'closed').length,
         applications: store.applications.length,
+        newApplications: store.applications.filter((a) => a.status === 'new').length,
         messages: store.messages.length,
+        newMessages: store.messages.filter((m) => m.status === 'new').length,
       };
     },
 
@@ -692,7 +747,34 @@ async function toggleJob(id) {
 async function deleteJob(id) { return backend.deleteJobRow(id); }
 
 /* ---------- Applications ---------- */
+
+/* Where an application has got to. The labels are what the admin shows. */
+const APPLICATION_STATUSES = [
+  { value: 'new', label: 'New' },
+  { value: 'shortlisted', label: 'Shortlisted' },
+  { value: 'interviewed', label: 'Interviewed' },
+  { value: 'offered', label: 'Offered' },
+  { value: 'hired', label: 'Hired' },
+  { value: 'rejected', label: 'Not proceeding' },
+];
+
+/* Enquiries and callback requests are simpler — someone either has or
+   hasn't got back to them yet. */
+const MESSAGE_STATUSES = [
+  { value: 'new', label: 'New' },
+  { value: 'contacted', label: 'Contacted' },
+  { value: 'closed', label: 'Closed' },
+];
+
+const isStatus = (list, v) => list.some((s) => s.value === v);
+
 async function applications(jobId) { return backend.allApplications(jobId); }
+async function application(id) { return backend.applicationById(id); }
+
+async function setApplicationStatus(id, status, notes) {
+  const clean = isStatus(APPLICATION_STATUSES, status) ? status : null;
+  return backend.setApplicationStatus(id, clean, notes == null ? null : String(notes));
+}
 async function applicationCounts() { return backend.countApplicationsByJob(); }
 
 async function addApplication(data) {
@@ -712,6 +794,12 @@ async function addApplication(data) {
 
 /* ---------- Messages / enquiries ---------- */
 async function messages() { return backend.allMessages(); }
+async function message(id) { return backend.messageById(id); }
+
+async function setMessageStatus(id, status, notes) {
+  const clean = isStatus(MESSAGE_STATUSES, status) ? status : null;
+  return backend.setMessageStatus(id, clean, notes == null ? null : String(notes));
+}
 
 async function addMessage(data) {
   return backend.insertMessage({
@@ -734,13 +822,15 @@ module.exports = {
   DEFAULT_SITE,
   DEFAULT_HOMES,
   CARE_TYPES,
+  APPLICATION_STATUSES,
+  MESSAGE_STATUSES,
   backendKind: backend.kind,
 
   settings, saveSettings,
   homes, home, saveHome, removeHome, filterHomes, regions, siteStats,
   jobs, openJobs, job, jobsForHome, jobLocations, createJob, updateJob, toggleJob, deleteJob,
-  applications, applicationCounts, addApplication,
-  messages, addMessage,
+  applications, application, applicationCounts, addApplication, setApplicationStatus,
+  messages, message, addMessage, setMessageStatus,
   stats,
   close: () => backend.close(),
 };
