@@ -1,0 +1,27 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-crumb"><a href="/admin/people">People &amp; access</a> › Invite from a spreadsheet</div>
+<h1 class="hub-h1">Invite from a spreadsheet</h1>
+<% if (results) { var ok = results.filter(function (r) { return r.ok; }); %>
+  <div class="hub-notice <%= ok.length ? 'hub-notice--ok' : 'hub-notice--warn' %>"><%= ok.length %> of <%= results.length %> invited.<%= ok.length && !mailOn ? ' Email isn’t set up, so pass each link on yourself.' : '' %></div>
+  <div class="hub-card"><div class="table-wrap"><table class="table">
+    <thead><tr><th>Name</th><th>Email</th><th>Result</th><th>Link</th></tr></thead>
+    <tbody><% results.forEach(function (r, i) { %><tr>
+      <td><%= r.name || '—' %></td><td><%= r.email || '—' %></td>
+      <td><% if (r.ok) { %><span class="hub-pill hub-pill--ok">Invited</span> <span class="hint"><%= r.preset %>, <%= r.where %></span><% } else { %><span class="hub-pill hub-pill--bad"><%= r.error %></span><% } %></td>
+      <td><% if (r.ok && !r.link.emailed) { %><div class="hub-copy"><input id="l<%= i %>" value="<%= r.link.url %>" readonly aria-label="Invite link for <%= r.name %>" /><button type="button" class="btn btn--sm btn--ghost" data-copy="#l<%= i %>">Copy</button></div><% } else if (r.ok) { %>Emailed<% } %></td>
+    </tr><% }) %></tbody>
+  </table></div></div>
+  <p><a class="btn btn--ghost" href="/admin/people">Back to People</a></p>
+<% } else { %>
+<p class="muted">One person per row: <strong>Name, Email, Home, Access level</strong>. Leave Home blank (or write “Head office”) for company-wide staff. Access level defaults to <em>Carer / staff</em>.</p>
+<div class="hub-card"><div class="table-wrap"><table class="table">
+  <thead><tr><th>Name</th><th>Email</th><th>Home</th><th>Access level</th></tr></thead>
+  <tbody><tr><td>Jordan Smith</td><td>jordan@example.com</td><td><%= (hubHomes[0] || {}).name %></td><td>Carer / staff</td></tr><tr><td>Amira Hussain</td><td>amira@example.com</td><td><%= (hubHomes[1] || hubHomes[0] || {}).name %></td><td>Reception</td></tr></tbody>
+</table></div></div>
+<form action="/admin/people/bulk" method="post" enctype="multipart/form-data" class="admin-form">
+  <div class="field"><label for="b-file">Upload a CSV file (save your spreadsheet as “CSV”)</label><input id="b-file" type="file" name="file" accept=".csv,.txt" /></div>
+  <div class="field"><label for="b-csv">…or paste the rows here</label><textarea id="b-csv" name="csv" rows="8" placeholder="Jordan Smith, jordan@example.com, Fieldway, Carer / staff"></textarea></div>
+  <div><button class="btn btn--primary" type="submit">Send invites</button></div>
+</form>
+<% } %>
+<%- include('../partials/admin-footer') %>

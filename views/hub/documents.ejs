@@ -1,0 +1,105 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1">Documents</h1>
+    <p class="muted">Policies, the staff handbook and forms — plus training certificates.</p>
+  </div>
+</div>
+
+<div class="hub-tabs" role="tablist">
+  <a role="tab" href="/admin/documents" class="<%= tab === 'shared' ? 'is-on' : '' %>" aria-selected="<%= tab === 'shared' %>">Shared documents</a>
+  <a role="tab" href="/admin/documents?tab=certificates" class="<%= tab === 'certificates' ? 'is-on' : '' %>" aria-selected="<%= tab === 'certificates' %>"><%= seeOthers ? 'Training certificates' : 'My certificates' %></a>
+</div>
+
+<% if (tab === 'shared') { %>
+  <% if (canEdit) { %>
+  <details class="hub-card hub-compose">
+    <summary>Upload a document</summary>
+    <form action="/admin/documents" method="post" enctype="multipart/form-data" class="admin-form">
+      <div class="grid-2">
+        <div class="field"><label for="d-name">Name</label><input id="d-name" name="name" placeholder="Leave blank to use the file name" /></div>
+        <div class="field"><label for="d-folder">Folder</label><select id="d-folder" name="folder"><% folders.forEach(function (f) { %><option><%= f %></option><% }) %></select></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="d-vis">Who can see it</label><select id="d-vis" name="visibleTo"><option value="everyone">Everyone</option><option value="managers">Managers only</option></select></div>
+        <div class="field"><label for="d-file">File</label><input id="d-file" name="file" type="file" required accept="<%= docTypes %>" /><span class="hint">PDF, Word, Excel, PowerPoint or an image, up to 10 MB.</span></div>
+      </div>
+      <div><button class="btn btn--primary" type="submit">Upload</button></div>
+    </form>
+  </details>
+  <% } %>
+  <% if (!docs.length) { %><div class="hub-card"><div class="hub-empty"><p class="muted">No documents yet.<%= canEdit ? ' Upload your first one above.' : '' %></p></div></div><% } %>
+  <% folders.forEach(function (folder) { var inFolder = docs.filter(function (d) { return d.folder === folder; }); if (!inFolder.length) return; %>
+  <h2 class="hub-group"><%= folder %></h2>
+  <div class="hub-card">
+    <div class="table-wrap"><table class="table">
+      <tbody>
+      <% inFolder.forEach(function (d) { var v = d.versions[d.versions.length - 1]; %>
+        <tr>
+          <td><strong><%= d.name %></strong><div class="hint">Version <%= v.version %> · updated <%= new Date(v.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %> by <%= v.uploadedBy %></div>
+            <% if (d.versions.length > 1) { %><details class="hub-mini"><summary>Earlier versions</summary><% d.versions.slice(0, -1).reverse().forEach(function (o) { %><a href="/admin/documents/<%= d.id %>/file?v=<%= o.version %>" target="_blank" rel="noopener">Version <%= o.version %> (<%= new Date(o.at).toLocaleDateString('en-GB') %>)</a><br /><% }) %></details><% } %>
+          </td>
+          <td><% if (d.visibleTo === 'managers') { %><span class="hub-chip">Managers only</span><% } %></td>
+          <td>
+            <div class="row-actions">
+              <a class="btn btn--sm btn--ghost" href="/admin/documents/<%= d.id %>/file" target="_blank" rel="noopener">Open</a>
+              <% if (canEdit) { %>
+              <details class="hub-mini hub-replace"><summary class="btn btn--sm btn--muted">Replace</summary>
+                <form action="/admin/documents/<%= d.id %>/replace" method="post" enctype="multipart/form-data" class="hub-inline">
+                  <label class="sr-only" for="r-<%= d.id %>">New file</label>
+                  <input id="r-<%= d.id %>" type="file" name="file" required accept="<%= docTypes %>" />
+                  <button class="btn btn--sm btn--primary">Upload new version</button>
+                </form>
+              </details>
+              <form action="/admin/documents/<%= d.id %>/delete" method="post" class="inline-form" data-confirm="Delete “<%= d.name.replace(/"/g, '') %>” and all its versions?"><button class="btn btn--sm btn--danger">Delete</button></form>
+              <% } %>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table></div>
+  </div>
+  <% }) %>
+<% } else { %>
+  <% if (seeOthers) { %><div class="hub-notice"><%= mailOn ? 'People and their managers get an email 30 days before a certificate runs out.' : 'Certificates due within 30 days are flagged here. Set up email to get reminders too.' %> Staff only ever see their own.</div><% } %>
+  <% if (!me.builtin) { %>
+  <details class="hub-card hub-compose" <%= certs.length ? '' : 'open' %>>
+    <summary>Upload a certificate</summary>
+    <form action="/admin/certificates" method="post" enctype="multipart/form-data" class="admin-form">
+      <div class="grid-2">
+        <div class="field"><label for="c-name">Certificate</label><input id="c-name" name="name" required placeholder="e.g. Moving & handling" /></div>
+        <div class="field"><label for="c-exp">Expiry date (if it has one)</label><input id="c-exp" name="expiresOn" type="date" /></div>
+      </div>
+      <div class="grid-2">
+        <% if (canEditCerts && uploadFor.length) { %>
+        <div class="field"><label for="c-who">Whose certificate?</label><select id="c-who" name="userId"><option value="<%= me.id %>">Mine</option><% uploadFor.forEach(function (u) { %><option value="<%= u.id %>"><%= u.name %></option><% }) %></select></div>
+        <% } %>
+        <div class="field"><label for="c-file">Photo or PDF of the certificate</label><input id="c-file" name="file" type="file" required accept="<%= certTypes %>" capture="environment" /></div>
+      </div>
+      <div><button class="btn btn--primary" type="submit">Upload</button></div>
+    </form>
+  </details>
+  <% } %>
+  <div class="hub-card">
+    <div class="table-wrap"><table class="table">
+      <thead><tr><% if (seeOthers) { %><th>Person</th><% } %><th>Certificate</th><th>Expires</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      <% if (!certs.length) { %><tr><td colspan="5" class="muted">No certificates uploaded yet.</td></tr><% } %>
+      <% certs.forEach(function (c) { var owner = people.get(c.userId); %>
+        <tr>
+          <% if (seeOthers) { %><td><strong><%= owner ? owner.name : '—' %></strong><% if (owner) { %><div class="hint"><%= homesLabel(owner) %></div><% } %></td><% } %>
+          <td><%= c.name %></td>
+          <td class="tabnum"><%= c.expiresOn ? new Date(c.expiresOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—' %></td>
+          <td><span class="hub-pill <%= { expired: 'hub-pill--bad', soon: 'hub-pill--warn', ok: 'hub-pill--ok', none: 'hub-pill--plain' }[c.state.key] %>"><%= c.state.text %></span></td>
+          <td><div class="row-actions">
+            <a class="btn btn--sm btn--ghost" href="/admin/certificates/<%= c.id %>/file" target="_blank" rel="noopener">Open</a>
+            <% if (c.userId === me.id || canEditCerts) { %><form action="/admin/certificates/<%= c.id %>/delete" method="post" class="inline-form" data-confirm="Remove this certificate?"><button class="btn btn--sm btn--muted">Remove</button></form><% } %>
+          </div></td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table></div>
+  </div>
+<% } %>
+<%- include('../partials/admin-footer') %>

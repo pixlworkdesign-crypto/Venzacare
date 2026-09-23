@@ -1,0 +1,12 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-head"><div>
+  <h1 class="hub-h1">Activity log</h1>
+  <p class="muted">Every change to people, access, homes, fees, enquiries, jobs, documents and the noticeboard. It can’t be edited. Showing the latest <%= entries.length %>.</p>
+</div></div>
+<div class="hub-card">
+  <% if (!entries.length) { %><div class="hub-empty"><p class="muted">Nothing yet.</p></div><% } %>
+  <ul class="hub-log">
+    <% entries.forEach(function (e) { %><li><time datetime="<%= e.at %>"><%= new Date(e.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></time><span><%= e.text %></span></li><% }) %>
+  </ul>
+</div>
+<%- include('../partials/admin-footer') %>

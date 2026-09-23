@@ -1,83 +1,58 @@
 <%- include('../partials/admin-header') %>
 
-<div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;">
+<div class="hub-head">
   <div>
-    <h1 class="admin-h1">Dashboard</h1>
-    <p class="muted mb-0">Manage your live vacancies and review applications.</p>
+    <h1 class="hub-h1">Jobs</h1>
+    <p class="muted">Vacancies on the careers site<%= me.homes === 'all' ? '' : ' for ' + homesLabel(me) %>. Anything open appears on the website straight away.</p>
   </div>
-  <a href="/admin/jobs/new" class="btn btn--primary">+ Post a new job</a>
+  <% if (canEdit) { %><a href="/admin/jobs/new" class="btn btn--primary">+ Post a job</a><% } %>
 </div>
 
-<% if (health && (!health.ok || health.problems.length)) { %>
-<div class="alert alert--error" role="alert" style="margin-top:1.5rem;">
-  <strong>Website setup needs attention<%= health.backend === 'postgres' ? ' (Supabase database)' : '' %></strong>
-  <ul style="margin:.5rem 0 0;padding-left:1.2rem;">
-    <% health.problems.forEach(function(p){ %><li><%= p %></li><% }) %>
-    <% if (!health.ok && !health.problems.length) { %><li>Database error: <%= health.error %></li><% } %>
-  </ul>
-</div>
-<% } else if (health) { %>
-<p class="muted" style="margin:1rem 0 0;font-size:.9rem;">● Database: <%= health.backend === 'postgres' ? 'connected to Supabase' : 'local file (development)' %></p>
-<% } %>
-
-<div class="stat-cards">
-  <div class="stat-card"><div class="n"><%= stats.open %></div><div class="l">Live vacancies</div></div>
-  <div class="stat-card"><div class="n"><%= stats.closed %></div><div class="l">Closed vacancies</div></div>
-  <div class="stat-card"><div class="n"><%= stats.applications %></div><div class="l">Total applications</div></div>
-  <div class="stat-card"><div class="n"><%= stats.messages %></div><div class="l">Enquiries</div></div>
-</div>
-
-<div class="panel">
-  <div class="panel__head">
-    <h2>Vacancies <span class="panel__count"><%= jobs.length %></span></h2>
+<div class="hub-card">
+  <% if (jobs.length) { %>
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Role</th><th>Home</th><th>Status</th><th>Applications</th><th>Posted</th><th></th></tr></thead>
+    <tbody>
+      <% jobs.forEach(function(job){ var h = hubHomes.find(function (x) { return x.id === job.homeId; }); %>
+      <tr>
+        <td>
+          <strong><%= job.title %></strong>
+          <% if (job.featured) { %><span class="badge badge--featured" style="margin-left:.4rem;">Featured</span><% } %>
+          <div class="muted" style="font-size:.85rem;"><%= job.employmentType %><%= job.salary ? ' · ' + job.salary : '' %></div>
+        </td>
+        <td><%= h ? h.name : (job.location || 'Head office') %></td>
+        <td><span class="badge <%= job.status === 'open' ? 'badge--open' : 'badge--closed' %>"><%= job.status %></span></td>
+        <td>
+          <% if (!canApps) { %><span class="muted">—</span>
+          <% } else if (counts[job.id]) { %><a href="/admin/applications?job=<%= job.id %>"><strong><%= counts[job.id] %></strong> view</a>
+          <% } else { %><span class="muted">0</span><% } %>
+        </td>
+        <td class="muted" style="font-size:.85rem;"><%= new Date(job.postedAt).toLocaleDateString('en-GB') %></td>
+        <td>
+          <% if (canEdit) { %>
+          <div class="row-actions">
+            <a href="/admin/jobs/<%= job.id %>/edit" class="btn btn--sm btn--ghost">Edit</a>
+            <form action="/admin/jobs/<%= job.id %>/toggle" method="post" class="inline-form">
+              <button class="btn btn--sm btn--muted"><%= job.status === 'open' ? 'Close' : 'Reopen' %></button>
+            </form>
+            <form action="/admin/jobs/<%= job.id %>/delete" method="post" class="inline-form" data-confirm="Delete this vacancy and all its applications? This can’t be undone.">
+              <button class="btn btn--sm btn--danger">Delete</button>
+            </form>
+          </div>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
   </div>
-  <div class="panel__body" style="padding:0;">
-    <% if (jobs.length) { %>
-    <div class="table-wrap">
-    <table class="table">
-      <thead>
-        <tr><th>Role</th><th>Service</th><th>Location</th><th>Status</th><th>Applications</th><th>Posted</th><th></th></tr>
-      </thead>
-      <tbody>
-        <% jobs.forEach(function(job){ %>
-        <tr>
-          <td>
-            <strong><%= job.title %></strong>
-            <% if (job.featured) { %><span class="badge badge--featured" style="margin-left:.4rem;">Featured</span><% } %>
-            <div class="muted" style="font-size:.85rem;"><%= job.employmentType %><%= job.salary ? ' · ' + job.salary : '' %></div>
-          </td>
-          <td><%= job.service %></td>
-          <td><%= job.location %></td>
-          <td><span class="badge <%= job.status === 'open' ? 'badge--open' : 'badge--closed' %>"><%= job.status %></span></td>
-          <td>
-            <% if (counts[job.id]) { %>
-              <a href="/admin/applications?job=<%= job.id %>"><strong><%= counts[job.id] %></strong> view</a>
-            <% } else { %><span class="muted">0</span><% } %>
-          </td>
-          <td class="muted" style="font-size:.85rem;"><%= new Date(job.postedAt).toLocaleDateString('en-GB') %></td>
-          <td>
-            <div class="row-actions">
-              <a href="/admin/jobs/<%= job.id %>/edit" class="btn btn--sm btn--ghost">Edit</a>
-              <form action="/admin/jobs/<%= job.id %>/toggle" method="post" class="inline-form">
-                <button class="btn btn--sm btn--muted"><%= job.status === 'open' ? 'Close' : 'Reopen' %></button>
-              </form>
-              <form action="/admin/jobs/<%= job.id %>/delete" method="post" class="inline-form" onsubmit="return confirm('Delete this vacancy and its applications? This cannot be undone.');">
-                <button class="btn btn--sm btn--danger">Delete</button>
-              </form>
-            </div>
-          </td>
-        </tr>
-        <% }) %>
-      </tbody>
-    </table>
-    </div>
-    <% } else { %>
-    <div style="padding:2.5rem;text-align:center;" class="muted">
-      <p>No vacancies yet.</p>
-      <a href="/admin/jobs/new" class="btn btn--primary">Post your first job</a>
-    </div>
-    <% } %>
+  <% } else { %>
+  <div class="hub-empty">
+    <p class="muted">No vacancies yet.</p>
+    <% if (canEdit) { %><a href="/admin/jobs/new" class="btn btn--primary">Post your first job</a><% } %>
   </div>
+  <% } %>
 </div>
 
 <%- include('../partials/admin-footer') %>

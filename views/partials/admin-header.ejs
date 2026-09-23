@@ -1,33 +1,72 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-  <meta name="robots" content="noindex" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= title %> · Venza Care UK Admin</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#0d4f5c" />
+  <title><%= title %> · Venza Care staff hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="icon" type="image/png" href="/images/logo.png" />
 </head>
-<body class="admin-body page">
-  <header class="admin-topbar">
-    <div class="admin-topbar__inner">
-      <a href="/admin" class="admin-brand">
-        <img src="/images/logo-white.png" alt="Venza Care" class="admin-logo" />
-        <span>Admin</span>
+<body class="hub-body">
+<%
+  var sections = [
+    { label: 'Work', items: [
+      { href: '/admin', key: 'overview', label: 'Overview', show: true, icon: 'M3 12 12 4l9 8M5 10v10h14V10' },
+      { href: '/admin/homes', key: 'homes', label: 'Homes', show: hubCan('homes') || hubCan('fees') || hubCan('availability'), icon: 'M3 21h18M5 21V8l7-5 7 5v13M10 21v-6h4v6' },
+      { href: '/admin/enquiries', key: 'enquiries', label: 'Enquiries', show: hubCan('enquiries'), count: navCounts.enquiries, icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
+      { href: '/admin/jobs', key: 'jobs', label: 'Jobs', show: hubCan('jobs') || hubCan('applications'), icon: 'M3 7h18v13H3zM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2' },
+      { href: '/admin/applications', key: 'applications', label: 'Applications', show: hubCan('applications'), icon: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5' }
+    ]},
+    { label: 'Staff hub', items: [
+      { href: '/admin/noticeboard', key: 'noticeboard', label: 'Noticeboard', show: true, count: navCounts.noticeboard, icon: 'M4 4h16v12H8l-4 4zM8 8h8M8 12h5' },
+      { href: '/admin/documents', key: 'documents', label: 'Documents', show: true, icon: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6' },
+      { href: '/admin/directory', key: 'directory', label: 'Staff directory', show: true, icon: 'M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M17 11a3 3 0 1 0-1-5.8M21.5 20a5.5 5.5 0 0 0-4-5.3' }
+    ]},
+    { label: 'Admin', items: [
+      { href: '/admin/people', key: 'people', label: 'People & access', show: hubCan('people'), icon: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4' },
+      { href: '/admin/activity', key: 'activity', label: 'Activity log', show: hubCan('activity'), icon: 'M3 12h4l3 8 4-16 3 8h4' }
+    ]}
+  ];
+  function isOn(it) {
+    if (it.href === '/admin') return currentPath === '/admin';
+    return currentPath === it.href || currentPath.indexOf(it.href + '/') === 0;
+  }
+  var initials = me.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase();
+%>
+  <a class="skip-link" href="#hub-main">Skip to main content</a>
+  <div class="hub-top">
+    <a href="/admin" class="hub-top__brand"><img src="/images/logo-white.png" alt="Venza Care" /><span>Staff hub</span></a>
+    <button type="button" class="hub-menu" aria-controls="hubNav" aria-expanded="false">Menu<% if (navCounts.noticeboard + navCounts.enquiries) { %> <span class="hub-count"><%= navCounts.noticeboard + navCounts.enquiries %></span><% } %></button>
+  </div>
+  <div class="hub">
+    <aside class="hub-nav" id="hubNav" aria-label="Staff hub">
+      <a href="/admin" class="hub-nav__brand"><img src="/images/logo-white.png" alt="Venza Care" /><span>Staff hub</span></a>
+      <a href="/admin/account" class="hub-nav__who<%= currentPath === '/admin/account' ? ' is-on' : '' %>">
+        <span class="hub-avatar"><%= initials %></span>
+        <span><b><%= me.name %></b><small><%= me.title %><%= me.builtin ? '' : ' · ' + homesLabel(me) %></small></span>
       </a>
-      <nav class="admin-nav">
-        <a href="/admin" class="<%= currentPath === '/admin' ? 'is-active' : '' %>">Dashboard</a>
-        <a href="/admin/applications" class="<%= currentPath.startsWith('/admin/applications') ? 'is-active' : '' %>">Applications</a>
-        <a href="/admin/messages" class="<%= currentPath === '/admin/messages' ? 'is-active' : '' %>">Enquiries</a>
-        <a href="/admin/homes" class="<%= currentPath.startsWith('/admin/homes') ? 'is-active' : '' %>">Homes</a>
+      <nav>
+        <% sections.forEach(function (sec) { var items = sec.items.filter(function (i) { return i.show; }); if (!items.length) return; %>
+        <div class="hub-nav__label"><%= sec.label %></div>
+        <% items.forEach(function (it) { %>
+        <a href="<%= it.href %>" class="<%= isOn(it) ? 'is-on' : '' %>"<%- isOn(it) ? ' aria-current="page"' : '' %>>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<%= it.icon %>"/></svg>
+          <span><%= it.label %></span>
+          <% if (it.count) { %><span class="hub-count" aria-label="<%= it.count %> new"><%= it.count %></span><% } %>
+        </a>
+        <% }) %>
+        <% }) %>
       </nav>
-      <div class="spacer"></div>
-      <a href="/" target="_blank" rel="noopener" class="admin-topbar__view">View site ↗</a>
-      <form action="/admin/logout" method="post" class="inline-form">
-        <button type="submit" class="btn btn--sm admin-signout">Sign out</button>
-      </form>
-    </div>
-  </header>
-  <main class="admin-main">
+      <div class="hub-nav__foot">
+        <a href="/" target="_blank" rel="noopener">View website ↗</a>
+        <form action="/admin/logout" method="post"><button type="submit">Sign out</button></form>
+      </div>
+    </aside>
+    <main class="hub-main" id="hub-main" tabindex="-1">
+      <% if (me.builtin) { %><div class="hub-banner">You’re using the <strong>emergency owner login</strong>. Invite yourself under People &amp; access and use your own account day to day.</div><% } %>
+      <% if (flash) { %><div class="hub-flash" role="status"><%= flash %></div><% } %>

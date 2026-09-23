@@ -1,0 +1,17 @@
+<%- include('_auth-top') %>
+<h1 style="text-align:center;font-size:1.4rem;margin:1rem 0 .3rem;">Forgotten your password?</h1>
+<% if (sent) { %>
+<div class="alert alert--success" role="status">If that email belongs to a staff hub account, a reset link is on its way. It works for 24 hours — check your junk folder too.</div>
+<p style="text-align:center;"><a href="/admin/login">Back to sign in</a></p>
+<% } else if (!mailOn) { %>
+<p>Ask your home manager or head office to send you a new sign-in link. They can do it from <strong>People &amp; access</strong> in a few seconds.</p>
+<p style="text-align:center;"><a href="/admin/login">Back to sign in</a></p>
+<% } else { %>
+<p class="muted" style="text-align:center;margin-top:0;">Enter your email and we’ll send you a link to choose a new one.</p>
+<form method="post" class="mt-2">
+  <div class="field"><label for="email">Email</label><input type="email" id="email" name="email" autocomplete="email" required autofocus /></div>
+  <button type="submit" class="btn btn--primary btn--block">Send reset link</button>
+</form>
+<p style="text-align:center;margin-top:1rem;"><a href="/admin/login">Back to sign in</a></p>
+<% } %>
+<%- include('_auth-bottom') %>

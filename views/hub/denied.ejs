@@ -1,0 +1,7 @@
+<% if (typeof me !== 'undefined' && me && typeof hubCan !== 'undefined') { %><%- include('../partials/admin-header') %><% } else { %><%- include('_auth-top') %><% } %>
+<div class="hub-empty">
+  <h1 class="hub-h1"><%= title %></h1>
+  <p class="muted"><%= message %></p>
+  <p><a class="btn btn--primary" href="/admin">Back to the overview</a></p>
+</div>
+<% if (typeof me !== 'undefined' && me && typeof hubCan !== 'undefined') { %><%- include('../partials/admin-footer') %><% } else { %><%- include('_auth-bottom') %><% } %>

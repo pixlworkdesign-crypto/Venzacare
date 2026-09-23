@@ -1,0 +1,66 @@
+<%- include('../partials/admin-header') %>
+<% var NEXT_LABEL = { New: 'I’ve called them', Called: 'Book a visit', 'Visit booked': 'They’ve visited', Visited: 'They’re moving in' }; %>
+<div class="hub-head"><div>
+  <h1 class="hub-h1">Enquiries &amp; visit requests</h1>
+  <p class="muted">Every family who gets in touch, from their first message to moving in. Press the green button each time you’ve done the next step. <%= me.homes === 'all' ? 'Showing all homes.' : 'Showing ' + homesLabel(me) + ' only.' %></p>
+</div></div>
+
+<div class="hub-tabs" role="tablist">
+  <% [['todo', 'Need a call'], ['progress', 'In progress'], ['done', 'Finished']].forEach(function (t) { %>
+  <a role="tab" href="/admin/enquiries?tab=<%= t[0] %>" class="<%= tab === t[0] ? 'is-on' : '' %>" aria-selected="<%= tab === t[0] %>"><%= t[1] %> <span class="hub-chip"><%= counts[t[0]] %></span></a>
+  <% }) %>
+</div>
+
+<div class="hub-card">
+<% if (!list.length) { %>
+  <div class="hub-empty"><p class="muted"><%= { todo: 'Nobody is waiting for a call. Nice work.', progress: 'No families in progress.', done: 'Nothing finished yet.' }[tab] %></p></div>
+<% } %>
+<% list.forEach(function (e) {
+     var ageDays = (Date.now() - new Date(e.createdAt)) / dayMs;
+     var idx = STEPS.indexOf(e.stage), stopped = e.stage === 'Not going ahead';
+     var kindWord = { visit: 'Wants to visit', callback: 'Asked for a call back', enquiry: 'Sent a message' }[e.kind] || 'Sent a message'; %>
+  <article class="hub-enq">
+    <div class="hub-enq__main">
+      <div class="hub-enq__top">
+        <h3><%= e.name %></h3>
+        <% if (e.stage === 'New') { %><span class="hub-pill <%= ageDays > 1 ? 'hub-pill--bad' : 'hub-pill--warn' %>"><%= ageDays > 1 ? 'Waiting over a day' : 'Call today' %></span>
+        <% } else if (stopped) { %><span class="hub-pill hub-pill--plain">Not going ahead</span>
+        <% } else if (e.stage === 'Moved in') { %><span class="hub-pill hub-pill--ok">Moved in</span>
+        <% } else { %><span class="hub-pill hub-pill--info"><%= STEP_WORDS[e.stage] %></span><% } %>
+      </div>
+      <p><strong><%= kindWord %></strong><% if (e.subject && e.kind === 'enquiry') { %> · <%= e.subject %><% } %><% if (e.bestTime && e.kind !== 'enquiry') { %> · prefers <%= e.bestTime %><% } %></p>
+      <% if (e.message) { %><p class="hub-enq__msg"><%= e.message %></p><% } %>
+      <p class="hint"><%= e.home || 'No home chosen' %> · received <%= new Date(e.createdAt).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) %>
+        <% if (e.phone) { %> · <a href="tel:<%= e.phone.replace(/\s/g, '') %>" class="tabnum"><%= e.phone %></a><% } %>
+        <% if (e.email) { %> · <a href="mailto:<%= e.email %>"><%= e.email %></a><% } %></p>
+      <% if (e.note) { %><p class="hub-enq__note"><%= e.note %></p><% } %>
+      <% if (!stopped) { %>
+      <ol class="hub-track" aria-label="Progress">
+        <% STEPS.forEach(function (st, i) { %><li class="<%= i < idx ? 'done' : i === idx ? 'now' : '' %>"><span><%= STEP_WORDS[st] %></span></li><% }) %>
+      </ol>
+      <% } %>
+      <% if (canEdit) { %>
+      <details class="hub-enq__notefold"><summary>Add or change the note</summary>
+        <form action="/admin/enquiries/<%= e.id %>/note" method="post" class="hub-inline">
+          <label class="sr-only" for="note-<%= e.id %>">Note</label>
+          <input id="note-<%= e.id %>" name="note" value="<%= e.note %>" maxlength="500" placeholder="e.g. Daughter calling back Tuesday" />
+          <button class="btn btn--sm btn--ghost">Save note</button>
+        </form>
+      </details>
+      <% } %>
+    </div>
+    <% if (canEdit) { %>
+    <div class="hub-enq__act">
+      <% if (NEXT_STEP[e.stage]) { %>
+      <form action="/admin/enquiries/<%= e.id %>/step" method="post"><input type="hidden" name="action" value="next" /><button class="btn btn--go"><%= NEXT_LABEL[e.stage] %></button></form>
+      <form action="/admin/enquiries/<%= e.id %>/step" method="post" data-confirm="Mark <%= e.name.replace(/"/g, '') %> as not going ahead?"><input type="hidden" name="action" value="stop" /><button class="btn btn--quiet btn--sm">Not going ahead</button></form>
+      <% } else { %>
+      <form action="/admin/enquiries/<%= e.id %>/step" method="post"><input type="hidden" name="action" value="reopen" /><button class="btn btn--quiet btn--sm">Reopen</button></form>
+      <% } %>
+    </div>
+    <% } %>
+  </article>
+<% }) %>
+</div>
+<% if (!canEdit) { %><p class="hint">You can see enquiries but not update them.</p><% } %>
+<%- include('../partials/admin-footer') %>

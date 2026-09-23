@@ -1,0 +1,17 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-crumb"><a href="/admin/people">People &amp; access</a> › <a href="/admin/people/<%= p.id %>"><%= p.name %></a> › Delete</div>
+<h1 class="hub-h1">Delete <%= p.name %>’s account?</h1>
+<div class="hub-notice hub-notice--bad">This can’t be undone. <%= p.name.split(' ')[0] %> loses access straight away, and their profile<%= certs.length ? ' and ' + certs.length + ' training certificate' + (certs.length > 1 ? 's are' : ' is') : ' is' %> removed. The activity log and anything they posted stay.</div>
+<% if (certs.length) { %>
+<div class="hub-card"><div class="hub-card__head"><h2>Download their certificates first</h2></div><div class="hub-card__body">
+  <p class="hint">You may need to keep training records after someone leaves. Open each one and save it before deleting.</p>
+  <ul class="plain-list"><% certs.forEach(function (c) { %><li><a href="/admin/certificates/<%= c.id %>/file" target="_blank" rel="noopener"><%= c.name %></a></li><% }) %></ul>
+</div></div>
+<% } %>
+<p class="muted">Would pausing be enough? Pausing keeps everything and can be undone. <form action="/admin/people/<%= p.id %>/pause" method="post" class="inline-form"><button class="btn btn--quiet btn--sm">Pause instead</button></form></p>
+<% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
+<form method="post" class="admin-form">
+  <div class="field"><label for="confirm">Type <strong><%= p.name %></strong> to confirm</label><input id="confirm" name="confirm" autocomplete="off" data-match="<%= p.name %>" required /></div>
+  <div style="display:flex;gap:.8rem;"><button class="btn btn--danger" type="submit" data-enable-on-match>Delete account</button><a class="btn btn--muted" href="/admin/people/<%= p.id %>">Cancel</a></div>
+</form>
+<%- include('../partials/admin-footer') %>

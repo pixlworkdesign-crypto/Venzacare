@@ -1,0 +1,71 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1">Noticeboard</h1>
+    <p class="muted">Announcements from head office and your managers.</p>
+  </div>
+  <% if (canPost) { %><a href="#new-post" class="btn btn--primary" data-open="new-post">+ New post</a><% } %>
+</div>
+
+<% if (canPost) { %>
+<details class="hub-card hub-compose" id="new-post">
+  <summary>Write a new post</summary>
+  <form action="/admin/noticeboard" method="post" class="admin-form">
+    <div class="field"><label for="p-title">Title</label><input id="p-title" name="title" maxlength="140" required /></div>
+    <div class="field"><label for="p-body">Message</label><textarea id="p-body" name="body" rows="5" required></textarea></div>
+    <div class="grid-2">
+      <div class="field"><label for="p-aud">Who should see it</label>
+        <select id="p-aud" name="audience">
+          <% if (companyWide) { %><option value="all">Everyone</option><% } %>
+          <% myHomes.forEach(function (h) { %><option value="home:<%= h.id %>"><%= h.name %> only</option><% }) %>
+          <% if (companyWide) { PRESET_NAMES.forEach(function (r) { %><option value="role:<%= r %>"><%= r %> only</option><% }) } %>
+        </select>
+      </div>
+      <div class="field"><label for="p-exp">Take down on (optional)</label><input id="p-exp" name="expiresOn" type="date" min="<%= new Date().toISOString().slice(0, 10) %>" /></div>
+    </div>
+    <div class="hub-checks">
+      <label><input type="checkbox" name="pinned" /> Pin to the top</label>
+      <label><input type="checkbox" name="mustRead" /> Must read (track who has seen it)</label>
+      <label><input type="checkbox" name="email" <%= mailOn ? '' : 'disabled' %> /> Also send as an email<%= mailOn ? '' : ' (email isn’t set up yet)' %></label>
+    </div>
+    <div><button class="btn btn--primary" type="submit">Post</button></div>
+  </form>
+</details>
+<% } %>
+
+<div class="hub-card">
+  <% if (!posts.length) { %><div class="hub-empty"><p class="muted">No notices for you right now.</p></div><% } %>
+  <% posts.forEach(function (p) { %>
+  <article class="hub-post">
+    <div class="hub-post__top">
+      <% if (p.pinned) { %><span class="hub-pill hub-pill--info">Pinned</span><% } %>
+      <% if (p.mustRead) { %><span class="hub-pill hub-pill--warn">Must read</span><% } %>
+      <% if (!p.live) { %><span class="hub-pill hub-pill--plain">Taken down (only editors see this)</span><% } %>
+      <span class="hub-chip">To: <%= p.audienceText %></span>
+    </div>
+    <h3><%= p.title %></h3>
+    <p class="hub-post__body"><%= p.body %></p>
+    <p class="hint"><%= p.authorName %> · <%= new Date(p.createdAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) %><% if (p.expiresOn) { %> · up until <%= new Date(p.expiresOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) %><% } %></p>
+    <div class="hub-post__foot">
+      <% if (p.mustRead) { %>
+        <% if (canPost) { %>
+        <span class="hub-bar" aria-hidden="true"><i style="width:<%= Math.round(100 * p.seen / Math.max(p.total, 1)) %>%"></i></span>
+        <span class="tabnum hint">Seen by <%= p.seen %> of <%= p.total %></span>
+        <% if (p.notSeen.length) { %><details class="hub-mini"><summary>Who hasn’t?</summary><p class="hint"><%= p.notSeen.join(', ') %></p></details><% } %>
+        <% } %>
+        <% if (p.mine) { %><span class="hub-pill hub-pill--ok">You’ve read this</span>
+        <% } else { %><form action="/admin/noticeboard/<%= p.id %>/read" method="post"><button class="btn btn--sm btn--primary">I’ve read this</button></form><% } %>
+      <% } %>
+      <% if (canPost) { %>
+      <span class="hub-post__tools">
+        <form action="/admin/noticeboard/<%= p.id %>/pin" method="post"><button class="btn btn--quiet btn--sm"><%= p.pinned ? 'Unpin' : 'Pin' %></button></form>
+        <% if (me.homes === 'all' || p.authorId === me.id) { %>
+        <form action="/admin/noticeboard/<%= p.id %>/delete" method="post" data-confirm="Remove this post for everyone?"><button class="btn btn--quiet btn--sm">Remove</button></form>
+        <% } %>
+      </span>
+      <% } %>
+    </div>
+  </article>
+  <% }) %>
+</div>
+<%- include('../partials/admin-footer') %>

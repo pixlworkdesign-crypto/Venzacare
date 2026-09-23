@@ -264,7 +264,10 @@ function createPgBackend(rawConnectionString) {
     kind: 'postgres',
     problems,
 
-    async ping() { await q('select 1 from homes limit 1'); },
+    async ping() {
+      await q('select 1 from homes limit 1');
+      await q('select 1 from hub_records limit 1'); // staff hub table (added later — re-run sql/schema.sql)
+    },
 
     async getSettings() {
       const { rows } = await q("select value from settings where key = 'site'");
@@ -386,6 +389,31 @@ function createPgBackend(rawConnectionString) {
       return toMessage(rows[0]);
     },
 
+    /* ---- Staff hub records (see hub_records in sql/schema.sql) ---- */
+    async recList(collection) {
+      const { rows } = await q(
+        'select id, data, created_at from hub_records where collection = $1 order by created_at desc',
+        [collection]
+      );
+      return rows.map((r) => Object.assign({}, r.data, { id: r.id, createdAt: r.created_at }));
+    },
+    async recGet(collection, id) {
+      const { rows } = await q('select id, data, created_at from hub_records where collection = $1 and id = $2', [collection, id]);
+      return rows.length ? Object.assign({}, rows[0].data, { id: rows[0].id, createdAt: rows[0].created_at }) : null;
+    },
+    async recPut(collection, id, data) {
+      const clean = Object.assign({}, data);
+      delete clean.id; delete clean.createdAt;
+      await q(
+        `insert into hub_records (collection, id, data) values ($1, $2, $3)
+         on conflict (collection, id) do update set data = excluded.data, updated_at = now()`,
+        [collection, id, JSON.stringify(clean)]
+      );
+    },
+    async recDelete(collection, id) {
+      await q('delete from hub_records where collection = $1 and id = $2', [collection, id]);
+    },
+
     async counts() {
       const { rows } = await q(`
         select
@@ -414,7 +442,7 @@ function createFileBackend() {
   const DATA_DIR = path.join(process.env.VERCEL ? '/tmp' : __dirname, 'data');
   const DB_FILE = path.join(DATA_DIR, 'db.json');
 
-  let store = { settings: null, homes: [], jobs: [], applications: [], messages: [] };
+  let store = { settings: null, homes: [], jobs: [], applications: [], messages: [], records: {} };
 
   try {
     if (fs.existsSync(DB_FILE)) {
@@ -423,6 +451,7 @@ function createFileBackend() {
       ['homes', 'jobs', 'applications', 'messages'].forEach((k) => {
         if (!Array.isArray(store[k])) store[k] = [];
       });
+      if (!store.records || typeof store.records !== 'object') store.records = {};
     }
   } catch (err) {
     console.error('[db] could not read data/db.json, starting empty:', err.message);
@@ -545,6 +574,26 @@ function createFileBackend() {
       return msg;
     },
 
+    async recList(collection) {
+      return (store.records[collection] || []).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    },
+    async recGet(collection, id) {
+      return (store.records[collection] || []).find((r) => r.id === id) || null;
+    },
+    async recPut(collection, id, data) {
+      const list = store.records[collection] || (store.records[collection] = []);
+      // Replace the whole record (like the Postgres backend) so removed fields stay removed.
+      const i = list.findIndex((r) => r.id === id);
+      const createdAt = i > -1 ? list[i].createdAt : new Date().toISOString();
+      const row = Object.assign({}, data, { id, createdAt });
+      if (i > -1) list[i] = row; else list.push(row);
+      save();
+    },
+    async recDelete(collection, id) {
+      store.records[collection] = (store.records[collection] || []).filter((r) => r.id !== id);
+      save();
+    },
+
     async counts() {
       return {
         open: store.jobs.filter((j) => j.status === 'open').length,
@@ -627,6 +676,7 @@ const EMPTY_DETAILS = {
   reviewScore: '',       // e.g. 9.6
   reviewCount: '',
   parking: '',           // getting here / parking notes
+  archived: false,       // hidden from the website, kept in the staff hub
 };
 
 function withDetails(h) {
@@ -637,24 +687,6 @@ function withDetails(h) {
 
 /* The last database error, kept for /api/health and the admin status panel. */
 let lastDbError = null;
-
-async function homes() {
-  if (cache.homes && fresh(cache.homesAt)) return cache.homes;
-  let list;
-  try {
-    list = await backend.allHomes();
-    lastDbError = null;
-  } catch (err) {
-    /* A database outage (or tables that were never created) shouldn't take the
-       public site down. Show the built-in directory and say why in the logs. */
-    lastDbError = err.message;
-    console.error('[db] could not load homes, showing built-in list:', err.message);
-    list = DEFAULT_HOMES.map((h, i) => Object.assign({ sortOrder: i }, h));
-  }
-  cache.homes = list.map(withDetails);
-  cache.homesAt = Date.now();
-  return cache.homes;
-}
 
 /* A plain-English status for the admin and /api/health — no secrets. */
 async function health() {
@@ -680,8 +712,36 @@ async function health() {
   return out;
 }
 
+/* Every home including archived ones — for the staff hub. The public site
+   uses homes() / home(), which leave archived homes out entirely. */
+async function allHomes() {
+  if (cache.homes && fresh(cache.homesAt)) return cache.homes;
+  let list;
+  try {
+    list = await backend.allHomes();
+    lastDbError = null;
+  } catch (err) {
+    /* A database outage (or tables that were never created) shouldn't take the
+       public site down. Show the built-in directory and say why in the logs. */
+    lastDbError = err.message;
+    console.error('[db] could not load homes, showing built-in list:', err.message);
+    list = DEFAULT_HOMES.map((h, i) => Object.assign({ sortOrder: i }, h));
+  }
+  cache.homes = list.map(withDetails);
+  cache.homesAt = Date.now();
+  return cache.homes;
+}
+
+async function homes() {
+  return (await allHomes()).filter((h) => !h.details.archived);
+}
+
 async function home(id) {
   return (await homes()).find((h) => h.id === id) || null;
+}
+
+async function anyHome(id) {
+  return (await allHomes()).find((h) => h.id === id) || null;
 }
 
 async function saveHome(data) {
@@ -827,6 +887,18 @@ async function addMessage(data) {
   });
 }
 
+/* ---------- Staff hub records ---------- */
+const records = {
+  list: (c) => backend.recList(c),
+  get: (c, id) => backend.recGet(c, id),
+  put: (c, id, data) => backend.recPut(c, id, data),
+  remove: (c, id) => backend.recDelete(c, id),
+};
+
+async function messageById(id) {
+  return (await messages()).find((m) => m.id === id) || null;
+}
+
 /* ---------- Dashboard ---------- */
 async function stats() { return backend.counts(); }
 
@@ -840,7 +912,8 @@ module.exports = {
   health,
 
   settings, saveSettings,
-  homes, home, saveHome, removeHome, filterHomes, siteStats,
+  homes, home, allHomes, anyHome, saveHome, removeHome, filterHomes, siteStats,
+  records, uid, messageById,
   jobs, openJobs, job, jobsForHome, jobLocations, createJob, updateJob, toggleJob, deleteJob,
   applications, applicationCounts, addApplication,
   messages, addMessage,

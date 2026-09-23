@@ -7,8 +7,8 @@
   function sel(a,b){ return a===b ? 'selected' : ''; }
 %>
 
-<div class="crumbs" style="color:var(--muted);margin-bottom:.5rem;"><a href="/admin">Dashboard</a> › <%= mode === 'edit' ? 'Edit vacancy' : 'New vacancy' %></div>
-<h1 class="admin-h1"><%= mode === 'edit' ? 'Edit vacancy' : 'Post a new job' %></h1>
+<div class="hub-crumb"><a href="/admin/jobs">Jobs</a> › <%= mode === 'edit' ? 'Edit vacancy' : 'New vacancy' %></div>
+<h1 class="hub-h1"><%= mode === 'edit' ? 'Edit vacancy' : 'Post a new job' %></h1>
 <p class="muted">Anything you publish here appears instantly on the public <a href="/careers" target="_blank" rel="noopener">careers page</a>.</p>
 
 <div class="panel" style="margin-top:1.5rem;">
@@ -19,6 +19,15 @@
         <input type="text" id="title" name="title" required value="<%= j.title || '' %>" placeholder="e.g. Registered Nurse (RGN)" />
       </div>
 
+      <div class="field">
+        <label for="homeId">Which home is it at?</label>
+        <select id="homeId" name="homeId">
+          <% if (allowNoHome) { %><option value="">Head office / not a single home</option><% } %>
+          <% homes.forEach(function (h) { %><option value="<%= h.id %>" <%= sel(j.homeId, h.id) %>><%= h.name %> — <%= h.town %></option><% }) %>
+        </select>
+        <span class="hint">The home manager for this home will see the applications.</span>
+      </div>
+
       <div class="grid-2">
         <div class="field">
           <label for="service">Service / department</label>
@@ -27,8 +36,8 @@
           </select>
         </div>
         <div class="field">
-          <label for="location">Location *</label>
-          <input type="text" id="location" name="location" required value="<%= j.location || '' %>" placeholder="e.g. London — Richmond" />
+          <label for="location">Location shown on the job</label>
+          <input type="text" id="location" name="location" value="<%= j.location || '' %>" placeholder="Leave blank to use the home’s town" />
         </div>
       </div>
 

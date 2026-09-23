@@ -1,0 +1,66 @@
+<%- include('../partials/admin-header') %>
+<% var hour = new Date().getHours(); var greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'; %>
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1"><%= greet %>, <%= me.name.split(' ')[0] %></h1>
+    <p class="muted">Here’s what needs your attention.</p>
+  </div>
+</div>
+
+<% if (noRealOwner) { %>
+<div class="hub-notice hub-notice--warn">
+  <strong>Start here:</strong> you’re signed in with the emergency owner login. Go to <a href="/admin/people">People &amp; access</a>, invite yourself as an <strong>Owner</strong>, and use that account from now on.
+</div>
+<% } %>
+<% if (health && (!health.ok || health.problems.length)) { %>
+<div class="hub-notice hub-notice--bad" role="alert">
+  <strong>Website setup needs attention<%= health.backend === 'postgres' ? ' (Supabase database)' : '' %></strong>
+  <ul><% health.problems.forEach(function (p) { %><li><%= p %></li><% }) %><% if (!health.ok && !health.problems.length) { %><li>Database error: <%= health.error %></li><% } %></ul>
+</div>
+<% } %>
+
+<div class="hub-tiles">
+  <div class="hub-card hub-tile">
+    <span class="muted">Must-read notices</span>
+    <span class="hub-tile__n"><%= unread.length %></span>
+    <span class="hint"><%= unread.length ? 'waiting for you to read' : 'You’re all caught up' %></span>
+    <a class="btn btn--ghost btn--sm" href="/admin/noticeboard">Open noticeboard</a>
+  </div>
+  <% if (waiting) { %>
+  <div class="hub-card hub-tile">
+    <span class="muted">Families waiting for a call</span>
+    <span class="hub-tile__n"><%= waiting.length %></span>
+    <span class="hint"><%= me.homes === 'all' ? 'across all homes' : 'for ' + homesLabel(me) %></span>
+    <a class="btn btn--ghost btn--sm" href="/admin/enquiries">See enquiries</a>
+  </div>
+  <% } %>
+  <div class="hub-card hub-tile">
+    <span class="muted"><%= hubCan('certificates') ? 'Certificates to renew' : 'Your certificates to renew' %></span>
+    <span class="hub-tile__n"><%= due.length %></span>
+    <span class="hint">expired or due within 30 days</span>
+    <a class="btn btn--ghost btn--sm" href="/admin/documents?tab=certificates">View certificates</a>
+  </div>
+  <% if (hubCan('people', 'edit')) { %>
+  <div class="hub-card hub-tile">
+    <span class="muted">Invites not yet accepted</span>
+    <span class="hub-tile__n"><%= pendingInvites %></span>
+    <span class="hint">people who haven’t set a password</span>
+    <a class="btn btn--ghost btn--sm" href="/admin/people">People &amp; access</a>
+  </div>
+  <% } %>
+</div>
+
+<% if (pinned.length) { %>
+<div class="hub-card" style="margin-top:1.25rem;">
+  <div class="hub-card__head"><h2>Pinned notices</h2></div>
+  <% pinned.forEach(function (p) { %>
+  <div class="hub-post">
+    <h3><%= p.title %></h3>
+    <p class="hub-post__body"><%= p.body.length > 280 ? p.body.slice(0, 280) + '…' : p.body %></p>
+    <p class="hint"><%= p.authorName %> · <%= new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) %> · <a href="/admin/noticeboard">Open</a></p>
+  </div>
+  <% }) %>
+</div>
+<% } %>
+
+<%- include('../partials/admin-footer') %>
