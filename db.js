@@ -375,6 +375,41 @@ function createPgBackend(rawConnectionString) {
       return toApplication(rows[0]);
     },
 
+    async updateApplicationRow(id, patch) {
+      const { rows } = await q(
+        `update applications set status = coalesce($2, status), notes = coalesce($3, notes)
+         where id = $1 returning *`,
+        [id, patch.status == null ? null : patch.status, patch.notes == null ? null : patch.notes]
+      );
+      return rows.length ? toApplication(rows[0]) : null;
+    },
+
+    /* Everything held about one person, matched on email (or phone). */
+    async findPersonRows(email, phone) {
+      // Empty values never match (a blank email mustn't find every blank row).
+      const where = `($1 <> '' and lower(email) = lower($1))
+                  or ($2 <> '' and regexp_replace(phone, '[^0-9]', '', 'g') = $2)`;
+      const apps = await q(`select * from applications where ${where} order by applied_at desc`, [email || '', phone || '']);
+      const msgs = await q(`select * from messages where ${where} order by created_at desc`, [email || '', phone || '']);
+      return { applications: apps.rows.map(toApplication), messages: msgs.rows.map(toMessage) };
+    },
+    async deleteApplicationsById(ids) {
+      if (!ids.length) return;
+      await q('delete from applications where id = any($1)', [ids]);
+    },
+    async deleteMessagesById(ids) {
+      if (!ids.length) return;
+      await q('delete from messages where id = any($1)', [ids]);
+    },
+    /* Applications past the retention period, for the clear-out. */
+    async expireApplications(days) {
+      const { rows, rowCount } = await q(
+        `delete from applications where applied_at < now() - ($1 || ' days')::interval returning cv_path`,
+        [String(days)]
+      );
+      return { count: rowCount, cvPaths: rows.map((r) => r.cv_path).filter(Boolean) };
+    },
+
     async allMessages() {
       const { rows } = await q('select * from messages order by created_at desc');
       return rows.map(toMessage);
@@ -570,6 +605,38 @@ function createFileBackend() {
       store.applications.push(app);
       save();
       return app;
+    },
+
+    async updateApplicationRow(id, patch) {
+      const a = byId(store.applications, id);
+      if (!a) return null;
+      if (patch.status != null) a.status = patch.status;
+      if (patch.notes != null) a.notes = patch.notes;
+      save();
+      return a;
+    },
+    async findPersonRows(email, phone) {
+      const digits = (v) => String(v || '').replace(/\D/g, '');
+      const hit = (x) => (email && (x.email || '').toLowerCase() === email.toLowerCase()) || (phone && digits(x.phone) === phone);
+      return {
+        applications: store.applications.filter(hit).sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt)),
+        messages: store.messages.filter(hit).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+      };
+    },
+    async deleteApplicationsById(ids) {
+      store.applications = store.applications.filter((a) => !ids.includes(a.id));
+      save();
+    },
+    async deleteMessagesById(ids) {
+      store.messages = store.messages.filter((m) => !ids.includes(m.id));
+      save();
+    },
+    async expireApplications(days) {
+      const cutoff = Date.now() - days * 86400000;
+      const old = store.applications.filter((a) => new Date(a.appliedAt).getTime() < cutoff);
+      store.applications = store.applications.filter((a) => !old.includes(a));
+      save();
+      return { count: old.length, cvPaths: old.map((a) => a.cvPath).filter(Boolean) };
     },
 
     async allMessages() {
@@ -887,6 +954,53 @@ async function addApplication(data) {
   });
 }
 
+/* Where a job application has got to. */
+const APPLICATION_STATUSES = [
+  { value: 'new', label: 'New' },
+  { value: 'shortlisted', label: 'Shortlisted' },
+  { value: 'interviewed', label: 'Interviewed' },
+  { value: 'offered', label: 'Offered' },
+  { value: 'hired', label: 'Hired' },
+  { value: 'rejected', label: 'Not proceeding' },
+];
+
+async function updateApplication(id, { status, notes } = {}) {
+  const clean = APPLICATION_STATUSES.some((s) => s.value === status) ? status : null;
+  return backend.updateApplicationRow(id, { status: clean, notes: notes == null ? null : String(notes).slice(0, 2000) });
+}
+
+/* ---------- Personal data (subject access and erasure) ---------- */
+const digitsOnly = (v) => String(v || '').replace(/\D/g, '');
+
+// Everything held about one person. Matches on email, and on phone number
+// (digits only, at least 6) because visit bookings may not have an email.
+async function findPersonData({ email, phone } = {}) {
+  const e = String(email || '').trim();
+  const p = digitsOnly(phone);
+  if (!e && p.length < 6) return { applications: [], messages: [], progress: [] };
+  const rows = await backend.findPersonRows(e, p.length >= 6 ? p : '');
+  const ids = new Set(rows.messages.map((m) => m.id));
+  const progress = (await backend.recList('enquiry_progress')).filter((r) => ids.has(r.id));
+  return Object.assign(rows, { progress });
+}
+
+// Delete it all. Returns the CV storage keys and visit claims to clean up.
+async function deletePersonData(query) {
+  const found = await findPersonData(query);
+  const msgIds = found.messages.map((m) => m.id);
+  await backend.deleteApplicationsById(found.applications.map((a) => a.id));
+  await backend.deleteMessagesById(msgIds);
+  for (const p of found.progress) await backend.recDelete('enquiry_progress', p.id);
+  return {
+    applications: found.applications.length,
+    messages: found.messages.length,
+    cvPaths: found.applications.map((a) => a.cvPath).filter(Boolean),
+    claimIds: found.progress.map((p) => p.claimId).filter(Boolean),
+  };
+}
+
+async function expireApplications(days) { return backend.expireApplications(days); }
+
 /* ---------- Messages / enquiries ---------- */
 async function messages() { return backend.allMessages(); }
 
@@ -933,7 +1047,8 @@ module.exports = {
   homes, home, allHomes, anyHome, saveHome, removeHome, filterHomes, siteStats,
   records, uid, messageById,
   jobs, openJobs, job, jobsForHome, jobLocations, createJob, updateJob, toggleJob, deleteJob,
-  applications, applicationCounts, addApplication,
+  applications, applicationCounts, addApplication, updateApplication, APPLICATION_STATUSES,
+  findPersonData, deletePersonData, expireApplications,
   messages, addMessage,
   stats,
   close: () => backend.close(),

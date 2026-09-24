@@ -1378,3 +1378,21 @@ a.hub-who:hover strong { text-decoration: underline; }
 .booked__actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
 /* Let the scrolling row of days scroll inside the card instead of widening the page */
 .visit-grid > *, .book-form, .book-step { min-width: 0; }
+/* Application stage + notes */
+.app-status { display: grid; gap: 0.35rem; }
+.app-status select, .app-status textarea { width: 100%; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 0.86rem; }
+.app-status__sel.is-new { background: #fcefd4; }
+.app-status__sel.is-shortlisted, .app-status__sel.is-interviewed { background: var(--sage-100); }
+.app-status__sel.is-offered, .app-status__sel.is-hired { background: #e2f3ea; }
+.app-status__sel.is-rejected { background: #eef2f1; color: var(--muted); }
+.app-status .btn { justify-self: start; }
+/* Home photos in the staff hub */
+.home-photos { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 1.5rem; }
+.home-photos__main img, .home-photos__none { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; margin-top: 0.4rem; }
+.home-photos__none { display: grid; place-items: center; background: #eef4f3; color: var(--muted); }
+.home-photos__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.6rem; margin-top: 0.4rem; }
+.home-photos__item { display: grid; gap: 0.25rem; font-size: 0.84rem; font-weight: 500; cursor: pointer; }
+.home-photos__item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; }
+.home-photos__item span { display: flex; gap: 0.35rem; align-items: center; }
+.home-photos__item input { width: auto; }
+@media (max-width: 700px) { .home-photos { grid-template-columns: 1fr; } }

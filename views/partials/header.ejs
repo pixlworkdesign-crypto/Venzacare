@@ -13,7 +13,7 @@
   <meta property="og:title" content="<%= pageTitle %>" />
   <meta property="og:description" content="<%= pageDesc %>" />
   <meta property="og:url" content="<%= canonical %>" />
-  <meta property="og:image" content="<%= baseUrl %>/images/<%= (typeof home !== 'undefined' && home && home.photo) ? home.photo : 'hero-home.jpg' %>" />
+  <meta property="og:image" content="<%= (typeof home !== 'undefined' && home && home.photo) ? photoAbs(home.photo, baseUrl) : baseUrl + '/images/hero-home.jpg' %>" />
   <meta property="og:locale" content="en_GB" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="theme-color" content="#0d4f5c" />

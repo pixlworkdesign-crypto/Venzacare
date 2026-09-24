@@ -8,7 +8,7 @@
 </div></div>
 <% if (home.details.archived) { %><div class="hub-notice hub-notice--warn">This home is <strong>archived</strong>, so it’s hidden from the website. <% if (canHomes) { %>When it’s ready, press <strong>Make live</strong> on the Homes list.<% } %></div><% } %>
 
-<form action="/admin/homes/<%= home.id %>" method="post" class="admin-form">
+<form action="/admin/homes/<%= home.id %>" method="post" class="admin-form" enctype="multipart/form-data">
 
   <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
   <div class="panel" style="margin-top:1.5rem;">
@@ -20,6 +20,20 @@
       </div>
       <div class="field"><label for="blurb">Short description</label><textarea id="blurb" name="blurb" rows="3"><%= home.blurb %></textarea></div>
       <div class="grid-2">
+        <div class="field"><label for="town">Town</label><input id="town" name="town" value="<%= home.town %>" /></div>
+        <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" value="<%= home.postcode %>" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="region">Region</label><input id="region" name="region" value="<%= home.region %>" list="regionList" /><datalist id="regionList"><% (SITE.regions || []).forEach(function (r) { %><option value="<%= r %>"><% }) %></datalist><span class="hint">Used for the “Region” filter on Find a home.</span></div>
+        <div class="field"><span class="label">Map position</span>
+          <div class="grid-2" style="gap:.5rem;">
+            <input id="lat" name="lat" inputmode="decimal" value="<%= home.lat == null ? '' : home.lat %>" placeholder="Latitude" aria-label="Latitude" />
+            <input id="lng" name="lng" inputmode="decimal" value="<%= home.lng == null ? '' : home.lng %>" placeholder="Longitude" aria-label="Longitude" />
+          </div>
+          <span class="hint">Leave blank to work it out from the postcode.</span>
+        </div>
+      </div>
+      <div class="grid-2">
         <div class="field"><label for="beds">Beds</label><input type="number" id="beds" name="beds" min="1" value="<%= home.beds %>" /></div>
         <div class="field">
           <span class="label">Types of care offered</span>
@@ -28,8 +42,36 @@
           </div>
         </div>
       </div>
+      <div class="field"><label for="specialisms">Specialist care (one per line)</label><textarea id="specialisms" name="specialisms" rows="4"><%= (home.specialisms || []).join('\n') %></textarea></div>
+      <div class="field"><label for="dementiaNote">Dementia care note</label><input id="dementiaNote" name="dementiaNote" value="<%= home.dementiaNote || '' %>" placeholder="e.g. A dedicated dementia floor for people living with moderate dementia." /></div>
     </div>
   </div>
+
+  <div class="panel" id="photos">
+    <div class="panel__head"><h2>Photos</h2></div>
+    <div class="panel__body">
+      <div class="home-photos">
+        <div class="home-photos__main">
+          <span class="label">Main photo (outside the home)</span>
+          <% if (home.photo) { %><img src="<%= photoSrc(home.photo) %>" alt="Current main photo of <%= home.name %>" /><% } else { %><div class="home-photos__none">No photo yet</div><% } %>
+          <label for="photoFile" class="label" style="margin-top:.5rem;">Replace it</label>
+          <input type="file" id="photoFile" name="photoFile" accept="image/jpeg,image/png,image/webp,image/avif" />
+        </div>
+        <div>
+          <span class="label">Gallery <span class="hint">— untick a photo to remove it</span></span>
+          <div class="home-photos__grid">
+            <% (home.gallery || []).forEach(function (g, i) { %>
+            <label class="home-photos__item"><img src="<%= photoSrc(g) %>" alt="Gallery photo <%= i + 1 %>" loading="lazy" /><span><input type="checkbox" name="keepGallery" value="<%= g %>" checked /> Keep</span></label>
+            <% }) %>
+          </div>
+          <label for="galleryFiles" class="label" style="margin-top:.5rem;">Add photos</label>
+          <input type="file" id="galleryFiles" name="galleryFiles" multiple accept="image/jpeg,image/png,image/webp,image/avif" />
+          <span class="hint">JPEG, PNG or WebP, up to 10 MB each. Landscape photos look best.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="hidden" name="photosSection" value="1" />
 
   </fieldset>
   <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
@@ -147,5 +189,22 @@
     <a href="/admin/homes" class="btn btn--muted">Cancel</a>
   </div>
 </form>
+
+<% if (canHomes && me.homes === 'all') { %>
+<div class="panel" style="margin-bottom:3rem;">
+  <div class="panel__head"><h2>Delete this home</h2></div>
+  <div class="panel__body">
+    <% if (!home.details.archived) { %><p class="muted" style="margin:0;">Archive the home first (on the Homes list). Archiving hides it and can be undone — deleting can’t.</p>
+    <% } else if (jobCount) { %><p class="muted" style="margin:0;"><%= home.name %> still has <%= jobCount %> job<%= jobCount === 1 ? '' : 's' %> attached. Delete or move <%= jobCount === 1 ? 'it' : 'them' %> first.</p>
+    <% } else { %>
+    <form action="/admin/homes/<%= home.id %>/delete" method="post" class="hub-inline" data-confirm="Delete <%= home.name.replace(/"/g, '') %> for good? This can’t be undone.">
+      <label for="del-confirm" class="hint">Type the home’s name to confirm.</label>
+      <input id="del-confirm" name="confirm" autocomplete="off" style="max-width:220px;" required />
+      <button class="btn btn--danger btn--sm">Delete home</button>
+    </form>
+    <% } %>
+  </div>
+</div>
+<% } %>
 
 <%- include('../partials/admin-footer') %>

@@ -27,7 +27,7 @@
           <label for="f-region">Region</label>
           <select id="f-region" name="region">
             <option value="">All regions</option>
-            <% SITE.regions.forEach(function(r){ %><option value="<%= r %>"><%= r %></option><% }) %>
+            <% homeRegions.forEach(function(r){ %><option value="<%= r %>"><%= r %></option><% }) %>
           </select>
         </div>
         <div class="field">

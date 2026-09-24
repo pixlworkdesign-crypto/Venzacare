@@ -22,6 +22,19 @@ function cqcReportUrl(home) {
   return id ? 'https://www.cqc.org.uk/location/' + encodeURIComponent(id) : 'https://www.cqc.org.uk/search/services/care-homes?query=' + encodeURIComponent(home.name + ' ' + home.postcode);
 }
 
+/* ---------- Photos ----------
+   A home photo is either a file bundled with the site ("albany/01.webp",
+   served from /images/) or an uploaded one stored as a full URL. */
+function photoSrc(p) {
+  if (!p) return '';
+  return /^(https?:)?\/\//.test(p) || p.startsWith('/') ? p : '/images/' + p;
+}
+// For sharing cards and structured data, which need an absolute address.
+function photoAbs(p, base) {
+  const src = photoSrc(p);
+  return src && src.startsWith('/') && !src.startsWith('//') ? base + src : src;
+}
+
 /* ---------- Fees ---------- */
 const FEE_ROWS = [
   { key: 'residential', label: 'Residential care' },
@@ -177,7 +190,7 @@ function homeJsonLd(home, SITE, base) {
     description: home.blurb,
     url: base + '/care-homes/' + home.id,
     telephone: d.phone || SITE.phone,
-    image: home.photo ? base + '/images/' + home.photo : undefined,
+    image: home.photo ? photoAbs(home.photo, base) : undefined,
     address: {
       '@type': 'PostalAddress',
       addressLocality: home.town,
@@ -203,6 +216,7 @@ function ldScript(obj) {
 
 module.exports = {
   CQC_RATINGS, cqcLabel, cqcClass, cqcReportUrl,
+  photoSrc, photoAbs,
   FEE_ROWS, gbp, fromPrice, INCLUDED, EXTRAS,
   FEE_FAQS, GENERAL_FAQS, WHAT_TO_BRING,
   faqJsonLd, orgJsonLd, homeJsonLd, ldScript,

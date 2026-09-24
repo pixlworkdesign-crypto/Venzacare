@@ -23,3 +23,6 @@ preview/
 Thumbs.db
 .vscode/*
 !.vscode/launch.json
+
+# Photos uploaded through the staff hub when running locally
+public/images/uploads/

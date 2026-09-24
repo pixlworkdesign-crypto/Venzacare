@@ -1,7 +1,7 @@
 <%- include('partials/header') %>
 
 <% var d = home.details || {}; var homePhone = d.phone || SITE.phone; var homeTel = homePhone.replace(/\s/g,''); var from = fromPrice(home); %>
-<section class="page-hero home-hero<%= home.photo ? ' has-photo' : '' %>"<% if (home.photo) { %> style="--hero-photo:url('/images/<%= home.photo %>');"<% } %>>
+<section class="page-hero home-hero<%= home.photo ? ' has-photo' : '' %>"<% if (home.photo) { %> style="--hero-photo:url('<%= photoSrc(home.photo) %>');"<% } %>>
   <div class="container">
     <div class="crumbs"><a href="/">Home</a> › <a href="/care-homes">Find a home</a> › <%= home.name %></div>
     <a class="home-card__rating <%= cqcClass(home) %> home-hero__rating" href="#cqc">
@@ -16,7 +16,7 @@
     </div>
   </div>
 </section>
-<% if (home.photo) { %><div class="home-hero__photo" role="img" aria-label="Outside <%= home.name %>" style="background-image:url('/images/<%= home.photo %>');"></div><% } %>
+<% if (home.photo) { %><div class="home-hero__photo" role="img" aria-label="Outside <%= home.name %>" style="background-image:url('<%= photoSrc(home.photo) %>');"></div><% } %>
 
 <section class="section">
   <div class="container">
@@ -158,7 +158,7 @@
       <h2 class="h2" style="font-size:1.6rem;">A look around <%= home.name %></h2>
       <div class="gallery-grid">
         <% home.gallery.forEach(function(g, gi){ %>
-        <button type="button" class="gallery-item" data-full="/images/<%= g %>" aria-label="View photo <%= gi+1 %> of <%= home.gallery.length %>" style="background-image:url('/images/<%= g %>');"></button>
+        <button type="button" class="gallery-item" data-full="<%= photoSrc(g) %>" aria-label="View photo <%= gi+1 %> of <%= home.gallery.length %>" style="background-image:url('<%= photoSrc(g) %>');"></button>
         <% }) %>
       </div>
     </div>

@@ -14,7 +14,8 @@
     <div class="grid-2">
       <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" value="<%= form.postcode || '' %>" /></div>
       <div class="field"><label for="region">Region</label>
-        <select id="region" name="region"><% regions.forEach(function (r) { %><option <%= form.region === r ? 'selected' : '' %>><%= r %></option><% }) %></select>
+        <input id="region" name="region" list="regionList" value="<%= form.region || '' %>" placeholder="e.g. London" />
+        <datalist id="regionList"><% regions.forEach(function (r) { %><option value="<%= r %>"><% }) %></datalist>
       </div>
     </div>
     <div class="grid-2">
@@ -24,7 +25,7 @@
       </div>
     </div>
     <div class="field"><label for="blurb">Short description</label><textarea id="blurb" name="blurb" rows="3"><%= form.blurb || '' %></textarea></div>
-    <p class="hint">Photos: add them to <code>public/images/&lt;home&gt;/</code> for now — uploading photos from here is coming next.</p>
+    <p class="hint">You can add photos on the next page. The map position is worked out from the postcode.</p>
   </div></div>
   <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;">
     <button class="btn btn--primary" type="submit">Add home</button>

@@ -5,10 +5,15 @@
 <p class="muted">Applications for jobs<%= me.homes === 'all' ? '' : ' at ' + homesLabel(me) %>, plus messages sent to the recruitment team.</p>
 </div></div>
 
-<div class="panel" style="margin-top:1.5rem;">
+<div class="hub-filter" role="group" aria-label="Filter by stage">
+  <a href="/admin/applications?job=<%= encodeURIComponent(jobId) %>" class="<%= !status ? 'is-on' : '' %>">All</a>
+  <% STATUSES.forEach(function (st) { %><a href="/admin/applications?job=<%= encodeURIComponent(jobId) %>&status=<%= st.value %>" class="<%= status === st.value ? 'is-on' : '' %>"><%= st.label %> <span class="hub-chip"><%= statusCounts[st.value] %></span></a><% }) %>
+</div>
+
+<div class="panel" style="margin-top:1rem;">
   <div class="panel__head">
     <h2><%= applications.length %> application<%= applications.length===1?'':'s' %></h2>
-    <form action="/admin/applications" method="get" class="admin-filter">
+    <form action="/admin/applications" method="get" class="admin-filter"><input type="hidden" name="status" value="<%= status %>" />
       <select name="job" onchange="this.form.submit()">
         <option value="">All roles</option>
         <% jobs.forEach(function(jb){ %><option value="<%= jb.id %>" <%= jobId===jb.id?'selected':'' %>><%= jb.title %></option><% }) %>
@@ -20,7 +25,7 @@
     <div class="table-wrap">
     <table class="table">
       <thead>
-        <tr><th>Applicant</th><th>Applied for</th><th>Contact</th><th>Right to work</th><th>CV</th><th>Received</th></tr>
+        <tr><th>Applicant</th><th>Applied for</th><th>Contact</th><th>Right to work</th><th>CV</th><th>Received</th><th>Stage &amp; notes</th></tr>
       </thead>
       <tbody>
         <% applications.forEach(function(a){ %>
@@ -41,6 +46,22 @@
             <% } else { %><span class="muted">—</span><% } %>
           </td>
           <td class="muted" style="font-size:.85rem;white-space:nowrap;"><%= new Date(a.appliedAt).toLocaleDateString('en-GB') %><br /><%= new Date(a.appliedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) %></td>
+          <td style="min-width:230px;">
+            <% var cur = a.status || 'new'; %>
+            <% if (canEdit) { %>
+            <form action="/admin/applications/<%= a.id %>" method="post" class="app-status">
+              <input type="hidden" name="job" value="<%= jobId %>" /><input type="hidden" name="filter" value="<%= status %>" />
+              <label class="sr-only" for="st-<%= a.id %>">Stage</label>
+              <select id="st-<%= a.id %>" name="status" class="app-status__sel is-<%= cur %>"><% STATUSES.forEach(function (st) { %><option value="<%= st.value %>" <%= cur === st.value ? 'selected' : '' %>><%= st.label %></option><% }) %></select>
+              <label class="sr-only" for="nt-<%= a.id %>">Notes</label>
+              <textarea id="nt-<%= a.id %>" name="notes" rows="2" placeholder="Private notes"><%= a.notes || '' %></textarea>
+              <button class="btn btn--sm btn--ghost">Save</button>
+            </form>
+            <% } else { %>
+            <span class="hub-pill hub-pill--info"><%= (STATUSES.find(function (x) { return x.value === cur; }) || {}).label || cur %></span>
+            <% if (a.notes) { %><div class="hint" style="margin-top:.3rem;"><%= a.notes %></div><% } %>
+            <% } %>
+          </td>
         </tr>
         <% }) %>
       </tbody>

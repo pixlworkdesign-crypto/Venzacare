@@ -29,6 +29,10 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 - **Documents** — policies, handbook and forms with folders, managers-only documents and version history
 - **Training certificates** — everyone uploads their own; managers see their homes'; expiry warnings and optional email reminders
 - **Staff directory** and an **activity log** of every change
+- **Data requests** (owners by default) — find everything held about a family member or applicant by email or phone, download it for a subject access request, or delete it all, CVs included. Job applications are deleted automatically after `RETENTION_DAYS` (365 by default)
+- **Application stages** — New, Shortlisted, Interviewed, Offered, Hired, Not proceeding, with private notes and a filter
+- **Inbox alerts** — every enquiry, callback, visit, application and careers question is emailed to the enquiries inbox (`ALERT_EMAIL`, or the site email) with Reply-To set to the sender. CVs are never attached
+- **Home photos** — upload the main photo and gallery from the staff hub (a public Supabase bucket, `SUPABASE_PHOTO_BUCKET`, default `home-photos`); edit address, map position (looked up from the postcode), specialisms and dementia note; delete an archived home with no jobs
 
 ## Run it
 
@@ -65,11 +69,17 @@ Sign up at supabase.com and create a project. Then:
 - **Project Settings → API** — copy the Project URL (`SUPABASE_URL`) and the
   `service_role` key (`SUPABASE_SERVICE_ROLE_KEY`). The service role key bypasses
   row-level security, so it is server-side only — never put it in client code.
-- **Storage → New bucket** — create one named `cvs` and leave it **private**.
+- **Storage → New bucket** — create one named `cvs` and leave it **private**,
+  and one named `home-photos` set to **public** for home photos.
   Applicants' CVs go here and are only reachable through short-lived signed links
   generated for a signed-in admin.
 
 **2. Create the tables**
+
+Easiest: open **Supabase → SQL Editor**, paste in the whole of `sql/setup.sql`
+and press **Run**. It creates every table and copies the care homes across, and
+is safe to run again after an update. (Regenerate it with `npm run setup-sql`
+after changing `sql/schema.sql`.) Or, from a terminal:
 
 ```bash
 DATABASE_URL="postgresql://..." npm run migrate
@@ -92,6 +102,9 @@ list. At minimum:
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | CV storage |
 
 | `RESEND_API_KEY`, `EMAIL_FROM` | Optional. Sends invite, reset, noticeboard, visit-confirmation and certificate emails through resend.com. Without them, invite and reset links are shown on screen to pass on |
+| `ALERT_EMAIL` | Optional. Where new-enquiry and application alerts go (defaults to the site's enquiries email) |
+| `RETENTION_DAYS` | Optional. Days to keep job applications and CVs before automatic deletion (default 365; 0 turns it off) |
+| `SUPABASE_PHOTO_BUCKET` | Optional. Public bucket for home photos (default `home-photos`) |
 | `CRON_SECRET` | Optional. Protects `/api/cron/certificates` — point a daily scheduler at it with `Authorization: Bearer <CRON_SECRET>` to email certificate reminders |
 | `SITE_URL` | The live address, e.g. `https://www.venzacare.co.uk` — used for canonical links, the sitemap and social previews |
 
@@ -104,7 +117,7 @@ warning at the top.
 ### Updating an existing database
 
 The staff hub adds a `hub_records` table. After deploying this version, run
-`sql/schema.sql` again in the Supabase SQL editor (or `npm run migrate`). It's
+`sql/setup.sql` again in the Supabase SQL editor (or `npm run migrate`). It's
 safe to re-run: nothing is dropped. `/api/health` tells you if it's missing.
 
 ### "My password isn't working" — checklist
