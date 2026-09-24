@@ -1348,3 +1348,33 @@ a.hub-who:hover strong { text-decoration: underline; }
   .contact-form textarea { flex: 1; }
   .contact-next { flex: 1; }
 }
+
+/* Instant visit booking */
+.book-step { border: 0; padding: 0; margin: 0 0 1.1rem; min-width: 0; }
+.book-step legend { font-family: var(--font-display); font-weight: 600; color: var(--green-900); font-size: 1rem; margin-bottom: 0.6rem; padding: 0; }
+.book-days { display: flex; gap: 0.45rem; overflow-x: auto; padding-bottom: 0.35rem; scroll-snap-type: x proximity; }
+.book-day { flex: none; scroll-snap-align: start; display: grid; justify-items: center; gap: 0.05rem; min-width: 62px; padding: 0.5rem 0.4rem; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); cursor: pointer; font: inherit; }
+.book-day:hover { border-color: var(--green-500); }
+.book-day.is-on { background: var(--green-700); border-color: var(--green-700); color: #fff; }
+.book-day__dow { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.85; }
+.book-day__num { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; line-height: 1.1; }
+.book-day__mon { font-size: 0.74rem; opacity: 0.85; }
+.book-times { margin-bottom: 0.9rem; }
+.book-times__day { font-weight: 600; margin: 0 0 0.45rem; font-size: 0.92rem; }
+.book-form.is-enhanced .book-times__day { color: var(--muted); font-weight: 500; }
+.book-times__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 0.45rem; }
+.book-time { position: relative; cursor: pointer; }
+.book-time input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.book-time span { display: block; text-align: center; padding: 0.55rem 0.3rem; border: 1px solid var(--line); border-radius: 10px; font-weight: 600; background: #fff; }
+.book-time:hover span { border-color: var(--green-500); }
+.book-time input:checked + span { background: var(--green-700); border-color: var(--green-700); color: #fff; }
+.book-time input:focus-visible + span { outline: 3px solid var(--gold-500); outline-offset: 2px; }
+.book-other { margin-top: 1.25rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+.book-other summary { cursor: pointer; color: var(--green-700); font-weight: 600; font-size: 0.92rem; margin-bottom: 0.8rem; }
+.booked { text-align: center; }
+.booked__tick { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: #e2f3ea; color: #1f7a4d; font-size: 1.6rem; font-weight: 700; margin-bottom: 0.6rem; }
+.booked h3 { margin: 0 0 0.3rem; }
+.booked__when { font-family: var(--font-display); font-size: 1.3rem; color: var(--green-800); font-weight: 700; margin: 0 0 0.3rem; }
+.booked__actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+/* Let the scrolling row of days scroll inside the card instead of widening the page */
+.visit-grid > *, .book-form, .book-step { min-width: 0; }

@@ -12,6 +12,8 @@ const content = require('./content');
 const { FEE_FAQS, GENERAL_FAQS, faqJsonLd, homeJsonLd } = content;
 const storage = require('./storage');
 const mountHub = require('./hub/routes');
+const visits = require('./visits');
+const mailer = require('./mailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -208,6 +210,10 @@ async function homeLocals(req, res, home, extra) {
     visitSent: false,
     visitForm: {},
     visitError: null,
+    slots: await visits.openSlots(home),
+    booked: null,
+    bookForm: {},
+    bookError: null,
   }, extra || {});
 }
 
@@ -244,6 +250,75 @@ app.post('/care-homes/:id/visit', wrap(async (req, res) => {
       (f.notes ? ` Notes: ${String(f.notes).slice(0, 2000)}` : ''),
   });
   res.render('home', await homeLocals(req, res, home, { visitSent: true }));
+}));
+
+// Book a visit instantly: the family picks a free slot and it's confirmed.
+app.post('/care-homes/:id/book', wrap(async (req, res) => {
+  const home = await db.home(req.params.id);
+  if (!home) return notFound(res);
+  const f = req.body || {};
+  if (f.website) return res.redirect('/care-homes/' + home.id); // honeypot
+  const name = String(f.name || '').trim().slice(0, 120);
+  const phone = String(f.phone || '').trim().slice(0, 40);
+  const email = String(f.email || '').trim().slice(0, 200);
+  const [date, time] = String(f.slot || '').split('|');
+  const again = (msg) => homeLocals(req, res, home, { bookForm: f, bookError: msg }).then((l) => res.render('home', l));
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || !/^\d{2}:\d{2}$/.test(time || '')) return again('Pick a day and a time for your visit.');
+  if (!name || (!phone && !email)) return again('Please give us your name and a phone number or email, so we can reach you if anything changes.');
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return again('That email address doesn’t look right.');
+  if (!(await visits.isOffered(home, date, time))) return again('Sorry — that time has just been taken. Please pick another.');
+  const claimId = await visits.claim(home, date, time, { name });
+  if (!claimId) return again('Sorry — that time has just been taken. Please pick another.');
+
+  const when = visits.whenLabel(date, time);
+  const msg = await db.addMessage({
+    kind: 'visit', name, email, phone,
+    subject: 'Visit booked online — ' + home.name,
+    bestTime: when,
+    home: home.name,
+    message: `Booked a visit to ${home.name} on ${when}.` +
+      (f.careType ? ` Care needed: ${String(f.careType).slice(0, 60)}.` : '') +
+      (f.notes ? ` Notes: ${String(f.notes).slice(0, 2000)}` : ''),
+  });
+  await db.records.put('visit_slots', claimId, { homeId: home.id, date, time, name, enquiryId: msg.id });
+  await db.records.put('enquiry_progress', msg.id, {
+    stage: 'Visit booked', visitAt: date + 'T' + time, claimId, online: true,
+    note: 'Booked online by the family for ' + when + '.',
+    updatedAt: new Date().toISOString(), updatedBy: 'Family (online)',
+  });
+
+  // Emails (only if email is set up): the family, and staff who cover this home.
+  const SITE = res.locals.SITE;
+  const phoneHome = (home.details && home.details.phone) || SITE.phone;
+  const directions = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(home.name + ', ' + home.town + ' ' + home.postcode);
+  if (email) {
+    mailer.send({
+      to: email,
+      subject: 'Your visit to ' + home.name + ' — ' + when,
+      heading: 'Your visit is booked',
+      lines: ['Hi ' + name.split(' ')[0] + ',', 'You’re booked to visit ' + home.name + ', ' + home.town + ' ' + home.postcode + ' on ' + when + '.', 'If you need to change the time, call us on ' + phoneHome + '.'],
+      button: { label: 'Get directions', url: directions },
+    }).catch(() => {});
+  }
+  if (mailer.configured()) {
+    const hubAuth = require('./hub/auth'), access = require('./hub/access');
+    const staff = (await hubAuth.allUsers()).filter((u) => u.status === 'active' && u.email && access.can(u, 'enquiries', 'view') && access.covers(u, home.id));
+    mailer.sendMany(staff.map((u) => u.email), {
+      subject: 'New visit booked: ' + name + ' — ' + when,
+      heading: 'New visit booked online',
+      lines: [name + ' has booked to visit ' + home.name + ' on ' + when + '.', [phone, email].filter(Boolean).join(' · ')],
+      button: { label: 'Open enquiries', url: siteUrl(req) + '/admin/enquiries?tab=progress' },
+    }).catch(() => {});
+  }
+
+  res.render('home', await homeLocals(req, res, home, {
+    booked: {
+      when, name,
+      ics: 'data:text/calendar;charset=utf-8,' + encodeURIComponent(visits.calendarFile(home, date, time, SITE.name)),
+      directions, phone: phoneHome,
+    },
+  }));
 }));
 
 // Careers (filterable jobs board)
@@ -518,7 +593,7 @@ async function buildKnowledge() {
         (fees ? `Fees: ${fees}${d.feesUpdated ? ' (as of ' + d.feesUpdated + ')' : ''}. ` : 'Fees: not published yet — ask people to call. ') +
         (avail ? `Availability: ${avail}${d.availabilityNote ? ' — ' + d.availabilityNote : ''}. ` : '') +
         (d.managerName ? `Home manager: ${d.managerName}. ` : '') +
-        `Page: /care-homes/${h.id} (book a visit there). ` +
+        `Page: /care-homes/${h.id} — families can book a visit there instantly by picking a free time. ` +
         `Care types: ${h.careTypes.join(', ')}. ${h.blurb}` +
         (h.specialisms && h.specialisms.length ? ` Specialisms: ${h.specialisms.join(', ')}.` : '') +
         (h.dementiaNote ? ` ${h.dementiaNote}` : '')

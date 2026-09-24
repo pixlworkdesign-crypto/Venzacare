@@ -413,6 +413,16 @@ function createPgBackend(rawConnectionString) {
     async recDelete(collection, id) {
       await q('delete from hub_records where collection = $1 and id = $2', [collection, id]);
     },
+    // Insert only if the id is free. Returns true if this call created it —
+    // the database settles races, so two people can't claim the same id.
+    async recCreate(collection, id, data) {
+      const { rowCount } = await q(
+        `insert into hub_records (collection, id, data) values ($1, $2, $3)
+         on conflict (collection, id) do nothing`,
+        [collection, id, JSON.stringify(data || {})]
+      );
+      return rowCount === 1;
+    },
 
     async counts() {
       const { rows } = await q(`
@@ -592,6 +602,13 @@ function createFileBackend() {
     async recDelete(collection, id) {
       store.records[collection] = (store.records[collection] || []).filter((r) => r.id !== id);
       save();
+    },
+    async recCreate(collection, id, data) {
+      const list = store.records[collection] || (store.records[collection] = []);
+      if (list.some((r) => r.id === id)) return false;
+      list.push(Object.assign({}, data, { id, createdAt: new Date().toISOString() }));
+      save();
+      return true;
     },
 
     async counts() {
@@ -893,6 +910,7 @@ const records = {
   get: (c, id) => backend.recGet(c, id),
   put: (c, id, data) => backend.recPut(c, id, data),
   remove: (c, id) => backend.recDelete(c, id),
+  create: (c, id, data) => backend.recCreate(c, id, data),
 };
 
 async function messageById(id) {

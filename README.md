@@ -16,7 +16,7 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 - **Fees & funding** — weekly prices per home, what's included, extras, deposits and funding help
 - **CQC ratings** — every home's rating with links to the reports (and the CQC widget when a location ID is set)
 - **FAQs** — common questions plus a "what to bring" checklist
-- **Book a visit** — a form on every home page
+- **Book a visit instantly** — each home page shows free visiting times for the next few weeks; the family picks one and it's confirmed on the spot (with an add-to-calendar link). Double bookings are impossible, even when two people click at once. Each home sets its own days, times, visits per slot, notice and closed dates in the staff hub. "None of these times work?" still sends a request
 
 **Staff hub** (`/admin`, also `/staff`)
 - **Individual accounts** — invite people by email (or pass on the link yourself), passwords hashed with scrypt, forgotten-password links, pause and delete

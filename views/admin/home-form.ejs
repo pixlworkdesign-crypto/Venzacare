@@ -32,6 +32,29 @@
   </div>
 
   </fieldset>
+  <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
+  <div class="panel" id="visiting">
+    <div class="panel__head"><h2>Visit booking</h2></div>
+    <div class="panel__body">
+      <p class="muted" style="margin-top:0;">Families pick one of these times on the website and it’s booked straight away. Booked visits appear in Enquiries.</p>
+      <label class="checkbox" style="display:flex;margin-bottom:1rem;"><input type="checkbox" name="visitsEnabled" <%= visitSettings.enabled ? 'checked' : '' %> /> Let families book visits online</label>
+      <div class="field"><span class="label">Visiting days</span>
+        <div class="check-grid" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr));">
+          <% [1,2,3,4,5,6,0].forEach(function (d) { %><label><input type="checkbox" name="visitDays" value="<%= d %>" <%= visitSettings.days.indexOf(d) > -1 ? 'checked' : '' %> /> <%= DAY_NAMES[d] %></label><% }) %>
+        </div>
+      </div>
+      <div class="field"><label for="visitTimes">Visit start times</label><input id="visitTimes" name="visitTimes" value="<%= visitSettings.times.map(timeLabel).join(', ') %>" /><span class="hint">Separate with commas, e.g. 10am, 11am, 2pm, 3:30pm. Leave out mealtimes and handovers.</span></div>
+      <div class="grid-2">
+        <div class="field"><label for="visitPerSlot">Visits at the same time</label><input id="visitPerSlot" name="visitPerSlot" type="number" min="1" max="10" value="<%= visitSettings.perSlot %>" /></div>
+        <div class="field"><label for="visitNotice">Notice needed (hours)</label><input id="visitNotice" name="visitNotice" type="number" min="0" max="336" value="<%= visitSettings.noticeHours %>" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="visitWeeks">How far ahead (weeks)</label><input id="visitWeeks" name="visitWeeks" type="number" min="1" max="12" value="<%= visitSettings.weeksAhead %>" /></div>
+        <div class="field"><label for="visitClosed">Dates with no visits</label><textarea id="visitClosed" name="visitClosed" rows="2" placeholder="2026-12-25"><%= visitSettings.closedDates.join('\n') %></textarea><span class="hint">One date per line (year-month-day), e.g. bank holidays.</span></div>
+      </div>
+    </div>
+  </div>
+  </fieldset>
   <% if (seeAvail) { %>
   <fieldset class="hub-fieldset" <%= canAvail ? "" : "disabled" %>>
   <div class="panel">

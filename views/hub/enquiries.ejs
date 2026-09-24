@@ -27,6 +27,7 @@
         <% } else if (stopped) { %><span class="hub-pill hub-pill--plain">Not going ahead</span>
         <% } else if (e.stage === 'Moved in') { %><span class="hub-pill hub-pill--ok">Moved in</span>
         <% } else { %><span class="hub-pill hub-pill--info"><%= STEP_WORDS[e.stage] %></span><% } %>
+        <% if (e.online) { %><span class="hub-chip">Booked online</span><% } %>
       </div>
       <p><strong><%= kindWord %></strong><% if (e.subject && e.kind === 'enquiry') { %> · <%= e.subject %><% } %><% if (e.bestTime && e.kind !== 'enquiry') { %> · prefers <%= e.bestTime %><% } %></p>
       <% if (e.message) { %><p class="hub-enq__msg"><%= e.message %></p><% } %>

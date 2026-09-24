@@ -50,6 +50,24 @@
   <% } %>
 </div>
 
+<% if (upcoming && upcoming.length) { %>
+<div class="hub-card" style="margin-top:1.25rem;">
+  <div class="hub-card__head"><h2>Upcoming visits</h2><a class="btn btn--quiet btn--sm" href="/admin/enquiries?tab=progress">All enquiries</a></div>
+  <div class="table-wrap"><table class="table">
+    <tbody>
+    <% upcoming.forEach(function (e) { %>
+      <tr>
+        <td class="tabnum" style="white-space:nowrap;"><strong><%= e.whenText %></strong></td>
+        <td><%= e.name %><% if (e.online) { %> <span class="hub-chip">Booked online</span><% } %></td>
+        <td><%= e.home %></td>
+        <td class="hint"><% if (e.phone) { %><a href="tel:<%= e.phone.replace(/\s/g, '') %>"><%= e.phone %></a><% } else if (e.email) { %><a href="mailto:<%= e.email %>"><%= e.email %></a><% } %></td>
+      </tr>
+    <% }) %>
+    </tbody>
+  </table></div>
+</div>
+<% } %>
+
 <% if (pinned.length) { %>
 <div class="hub-card" style="margin-top:1.25rem;">
   <div class="hub-card__head"><h2>Pinned notices</h2></div>

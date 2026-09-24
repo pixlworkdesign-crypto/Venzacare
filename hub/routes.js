@@ -15,6 +15,7 @@ const multer = require('multer');
 const db = require('../db');
 const storage = require('../storage');
 const mailer = require('../mailer');
+const visits = require('../visits');
 const auth = require('./auth');
 const access = require('./access');
 
@@ -238,6 +239,13 @@ module.exports = function mountHub(app, deps) {
       pinned: posts.filter((p) => p.pinned).slice(0, 3),
       due,
       waiting: can(me, 'enquiries', 'view') ? (await enquiryList(me)).filter((e) => e.stage === 'New') : null,
+      upcoming: can(me, 'enquiries', 'view')
+        ? (await enquiryList(me))
+          .filter((e) => e.stage === 'Visit booked' && e.visitAt && e.visitAt.slice(0, 10) >= visits.ukStamp().slice(0, 10))
+          .sort((a, b) => (a.visitAt < b.visitAt ? -1 : 1))
+          .slice(0, 8)
+          .map((e) => Object.assign(e, { whenText: e.visitAt.length > 10 ? visits.whenLabel(e.visitAt.slice(0, 10), e.visitAt.slice(11, 16)) : visits.dayLabel(e.visitAt) }))
+        : null,
       pendingInvites: users.filter((u) => u.status === 'invited').length,
       noRealOwner: me.builtin && !users.some((u) => u.preset === 'Owner' && u.status === 'active'),
       health: can(me, 'people', 'edit') ? await db.health() : null,
@@ -281,6 +289,7 @@ module.exports = function mountHub(app, deps) {
     if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
     res.render('admin/home-form', {
       title: 'Edit ' + home.name, home, careTypes: CARE_TYPES, error: null,
+      visitSettings: visits.settingsFor(home), DAY_NAMES: visits.DAY_NAMES, timeLabel: visits.timeLabel,
       canHomes: can(req.me, 'homes', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
       seeFees: can(req.me, 'fees', 'view'), seeAvail: can(req.me, 'availability', 'view'),
     });
@@ -322,6 +331,15 @@ module.exports = function mountHub(app, deps) {
         reviewScore: text(f.reviewScore, 6),
         reviewCount: text(f.reviewCount, 8),
         parking: text(f.parking, 400),
+        visits: {
+          enabled: !!f.visitsEnabled,
+          days: [].concat(f.visitDays || []).map(Number).filter((d) => d >= 0 && d <= 6),
+          times: parseTimes(f.visitTimes),
+          perSlot: parseInt(f.visitPerSlot, 10) || 1,
+          noticeHours: parseInt(f.visitNotice, 10) || 0,
+          weeksAhead: parseInt(f.visitWeeks, 10) || 3,
+          closedDates: String(f.visitClosed || '').split(/[\s,]+/).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)),
+        },
       });
       const careTypes = [].concat(f.careTypes || []).filter((c) => CARE_TYPES.includes(c));
       const cqc = CQC_OPTIONS.includes(f.cqc) ? f.cqc : home.cqc;
@@ -340,6 +358,22 @@ module.exports = function mountHub(app, deps) {
     await log(me, me.name + ' updated ' + home.name + ' — ' + [...new Set(changed)].join(', '));
     back(res, '/admin/homes', 'Saved ' + home.name + '. The website shows the change within 30 seconds.');
   }));
+
+  /* "10, 11:30, 2pm, 14.00" → ['10:00', '11:30', '14:00'] */
+  function parseTimes(raw) {
+    const out = new Set();
+    String(raw || '').split(/[,;\s]+/).forEach((t) => {
+      const m = t.trim().toLowerCase().match(/^(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?$/);
+      if (!m) return;
+      let h = parseInt(m[1], 10);
+      const min = parseInt(m[2] || '0', 10);
+      if (m[3] === 'pm' && h < 12) h += 12;
+      if (m[3] === 'am' && h === 12) h = 0;
+      if (h > 23 || min > 59) return;
+      out.add(String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0'));
+    });
+    return [...out].sort();
+  }
 
   for (const [action, archived] of [['archive', true], ['restore', false]]) {
     app.post('/admin/homes/:id/' + action, need('homes', 'edit'), wrap(async (req, res) => {
@@ -365,6 +399,8 @@ module.exports = function mountHub(app, deps) {
         stage: p.stage || 'New',
         note: p.note || '',
         visitAt: p.visitAt || '',
+        online: !!p.online,
+        claimId: p.claimId || '',
         stageUpdatedAt: p.updatedAt || '',
       });
     }).filter((e) => covers(me, e.homeId));
@@ -403,7 +439,13 @@ module.exports = function mountHub(app, deps) {
     else if (action === 'reopen') stage = 'New';
     if (stage === 'Visit booked') return res.redirect('/admin/enquiries/' + e.id + '/book');
     const note = text(req.body.note, 500) || (stage === 'Called' ? 'Called by ' + req.me.name + '.' : e.note);
-    await saveProgress(req.me, e, { stage, note });
+    const patch = { stage, note };
+    // Cancelling or reopening frees the visit slot for someone else.
+    if (e.claimId && (stage === 'Not going ahead' || stage === 'New')) {
+      await visits.release(e.claimId);
+      patch.claimId = '';
+    }
+    await saveProgress(req.me, e, patch);
     await log(req.me, req.me.name + ' moved ' + e.name + ' from “' + STEP_WORDS[e.stage] + '” to “' + STEP_WORDS[stage] + '”');
     back(res, '/admin/enquiries?tab=' + enqGroup({ stage }), e.name + ': ' + STEP_WORDS[stage]);
   }));
@@ -426,11 +468,20 @@ module.exports = function mountHub(app, deps) {
     if (!e) return res.redirect('/admin/enquiries');
     const date = text(req.body.date, 10), time = text(req.body.time, 5);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.render('hub/book-visit', { title: 'Book a visit', e, error: 'Pick the day of the visit.' });
-    const when = new Date(date + 'T' + (time || '12:00')).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: time ? '2-digit' : undefined, minute: time ? '2-digit' : undefined });
-    await saveProgress(req.me, e, { stage: 'Visit booked', visitAt: date + (time ? 'T' + time : ''), note: 'Visit booked for ' + when + ' by ' + req.me.name + '.' });
+    const hasTime = /^\d{2}:\d{2}$/.test(time);
+    const when = hasTime ? visits.whenLabel(date, time) : visits.dayLabel(date);
+    // Take the slot so online bookings can't clash with it (staff can still
+    // overbook on purpose — it's noted if the slot was already full).
+    if (e.claimId) await visits.release(e.claimId);
+    const home = await db.anyHome(e.homeId);
+    const claimId = home && hasTime ? await visits.claim(home, date, time, { name: e.name, enquiryId: e.id }) : null;
+    const full = home && hasTime && !claimId;
+    await saveProgress(req.me, e, {
+      stage: 'Visit booked', visitAt: date + (hasTime ? 'T' + time : ''), claimId: claimId || '',
+      note: 'Visit booked for ' + when + ' by ' + req.me.name + '.' + (full ? ' (That time was already fully booked.)' : ''),
+    });
     let emailed = false;
     if (req.body.confirm && e.email) {
-      const home = await db.anyHome(e.homeId);
       emailed = await mailer.send({
         to: e.email,
         subject: 'Your visit to ' + (home ? home.name : 'Venza Care'),
