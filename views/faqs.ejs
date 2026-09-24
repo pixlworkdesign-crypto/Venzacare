@@ -1,0 +1,68 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Questions families ask</div>
+    <span class="eyebrow hero__eyebrow">Help &amp; advice</span>
+    <h1>Questions families ask</h1>
+    <p>Straight answers to the things people most want to know when they're looking at care. Can't see your question? Call us — we're happy to help.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:860px;">
+    <div class="faq-list">
+      <% faqs.forEach(function(f){ %>
+      <details class="faq">
+        <summary><%= f.q %></summary>
+        <p><%= f.a %></p>
+      </details>
+      <% }) %>
+      <details class="faq">
+        <summary>How much does it cost?</summary>
+        <p>We publish weekly prices for every home. See <a href="/fees-and-funding">fees &amp; funding</a> for prices, what's included and the help available.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt" id="what-to-bring">
+  <div class="container" style="max-width:860px;">
+    <div class="section-head">
+      <span class="eyebrow">Moving in</span>
+      <h2 class="h2">What to bring — a checklist</h2>
+      <p class="lead">Familiar things make a room feel like home from day one. Tick things off as you go — this list remembers your ticks on this device.</p>
+    </div>
+    <ul class="checklist" id="bringList">
+      <% WHAT_TO_BRING.forEach(function(item, i){ %>
+      <li><label><input type="checkbox" data-key="bring-<%= i %>" /> <span><%= item %></span></label></li>
+      <% }) %>
+    </ul>
+    <p style="margin-top:1.5rem;"><a class="care-card__link" href="/guides/making-the-move-easier.pdf" target="_blank" rel="noopener">Download our guide: Making the move easier (PDF) →</a></p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:3rem;">
+  <div class="container">
+    <div class="cta-band" style="background:linear-gradient(120deg,var(--green-800),var(--green-600));">
+      <h2>Still have a question?</h2>
+      <p>Speak to a real person — our team answers the phone seven days a week.</p>
+      <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>" class="btn btn--gold">Call <%= SITE.phone %></a>
+      <a href="/contact" class="btn btn--outline-light">Send a message</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    document.querySelectorAll('#bringList input[type=checkbox]').forEach(function (box) {
+      var k = 'venza-' + box.getAttribute('data-key');
+      try { box.checked = localStorage.getItem(k) === '1'; } catch (e) {}
+      box.addEventListener('change', function () {
+        try { localStorage.setItem(k, box.checked ? '1' : '0'); } catch (e) {}
+      });
+    });
+  })();
+</script>
+
+<%- include('partials/footer') %>

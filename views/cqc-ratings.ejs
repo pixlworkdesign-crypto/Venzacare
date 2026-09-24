@@ -1,0 +1,42 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › CQC ratings</div>
+    <span class="eyebrow hero__eyebrow">Regulated &amp; inspected</span>
+    <h1>Our CQC ratings</h1>
+    <p>Every Venza Care home is registered with and inspected by the Care Quality Commission, the independent regulator of care in England. Here is the latest rating for each one.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="cqc-grid">
+      <% homes.forEach(function(h){ var d = h.details; %>
+      <article class="cqc-card">
+        <div class="cqc-box__rating <%= cqcClass(h) %>">
+          <span class="cqc-box__label">CQC overall rating</span>
+          <strong><%= cqcLabel(h) %></strong>
+          <% if (d.cqcRatedOn) { %><span class="cqc-box__date">Report: <%= d.cqcRatedOn %></span><% } %>
+        </div>
+        <div class="cqc-card__body">
+          <h2 class="h2" style="font-size:1.35rem;margin:0 0 .25rem;"><a href="/care-homes/<%= h.id %>"><%= h.name %></a></h2>
+          <p class="muted" style="margin:0 0 1rem;"><%= h.town %> · <%= h.postcode %></p>
+          <a class="care-card__link" href="<%= cqcReportUrl(h) %>" target="_blank" rel="noopener">Read the report on cqc.org.uk ↗</a>
+          <% if (d.cqcLocationId) { %>
+          <div class="cqc-widget"><script src="https://www.cqc.org.uk/sites/all/modules/custom/cqc_widget/widget.js?data-id=<%= encodeURIComponent(d.cqcLocationId) %>&data-host=https://www.cqc.org.uk&type=location"></script></div>
+          <% } %>
+        </div>
+      </article>
+      <% }) %>
+    </div>
+
+    <div class="prose" style="max-width:800px;margin-top:3rem;">
+      <h2>What the ratings mean</h2>
+      <p>The CQC rates each home as <strong>Outstanding</strong>, <strong>Good</strong>, <strong>Requires improvement</strong> or <strong>Inadequate</strong>, looking at whether care is safe, effective, caring, responsive and well-led. Newly registered homes show as <em>not yet rated</em> until their first inspection.</p>
+      <p>We publish every rating, whatever it says, and update this page within 21 days of a new report. If you'd like to talk about any report, the home manager will be glad to go through it with you.</p>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

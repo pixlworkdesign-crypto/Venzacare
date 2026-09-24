@@ -40,7 +40,7 @@
     </div>
 
     <div class="finder-actions">
-      <p class="muted" style="margin:0;"><strong style="color:var(--green-800)"><span id="resultNum"><%= homes.length %></span></strong> home<span id="resultPlural"><%= homes.length===1?'':'s' %></span> found</p>
+      <p class="muted" style="margin:0;"><strong style="color:var(--green-800)"><span id="resultNum"><%= shownIds.length %></span></strong> home<span id="resultPlural"><%= shownIds.length===1?'':'s' %></span> found</p>
       <div class="finder-actions__btns">
         <button type="button" class="btn btn--ghost btn--sm" id="useLocation">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
@@ -50,43 +50,12 @@
       </div>
     </div>
 
+    <p class="alert alert--error" id="locMsg" role="status" hidden></p>
     <div class="homes-grid">
-      <% homes.forEach(function(h, i){ %>
-      <a class="home-card" href="/care-homes/<%= h.id %>"
-         data-id="<%= h.id %>"
-         data-name="<%= h.name.toLowerCase() %>"
-         data-town="<%= h.town.toLowerCase() %>"
-         data-postcode="<%= h.postcode.toLowerCase().replace(/\s/g,'') %>"
-         data-region="<%= h.region %>"
-         data-care="<%= h.careTypes.join('|') %>"
-         data-lat="<%= h.lat %>" data-lng="<%= h.lng %>">
-        <div class="home-card__media<%= h.photo ? ' has-photo' : '' %>"<% if (h.photo) { %> style="background-image:url('<%= photoUrl(h.photo) %>'); background-repeat:no-repeat; background-position:center; background-size:cover;"<% } %>>
-          <% if (h.cqc === 'Good' || h.cqc === 'Outstanding') { %>
-          <span class="home-card__rating <%= h.cqc === 'Outstanding' ? 'is-outstanding' : '' %>">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/></svg>
-            CQC <%= h.cqc %>
-          </span>
-          <% } else { %>
-          <span class="home-card__rating">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Z"/></svg>
-            CQC registered
-          </span>
-          <% } %>
-        </div>
-        <div class="home-card__body">
-          <span class="home-card__town"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg><%= h.town %></span>
-          <h3><%= h.name %></h3>
-          <p><%= h.blurb %></p>
-          <div class="chips">
-            <% h.careTypes.forEach(function(c){ %><span class="chip"><%= c %></span><% }) %>
-          </div>
-          <span class="btn btn--ghost btn--sm">View this home</span>
-        </div>
-      </a>
-      <% }) %>
+      <% homes.forEach(function(h){ %><%- include('partials/home-card', { h: h, hidden: shownIds.indexOf(h.id) === -1 }) %><% }) %>
     </div>
 
-    <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="empty-state" id="emptyState"<%- shownIds.length ? ' style="display:none;"' : '' %>>
       <h3>No homes match your search</h3>
       <p>Try widening your search, or <button type="button" class="link-btn" id="emptyClear">view all our homes</button>.</p>
     </div>
@@ -249,7 +218,8 @@
             locBtn.innerHTML = label; locBtn.disabled = false;
           }, function () {
             locBtn.innerHTML = label; locBtn.disabled = false;
-            alert('We could not get your location. Please allow location access in your browser, or search by town or postcode instead.');
+            var msg = document.getElementById('locMsg');
+            if (msg) { msg.textContent = 'We could not get your location. Please allow location access in your browser, or search by town or postcode instead.'; msg.hidden = false; }
           });
         });
       }

@@ -12,7 +12,11 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 - **Find a home** — searchable/filterable care-home directory + individual home pages
 - **Careers** — filterable jobs board pulling live from the backoffice
 - **Job detail + application form** — with optional CV upload
-- **Contact** — enquiry form
+- **Contact** — enquiry form and callback requests
+- **Fees & funding** — weekly prices per home, what's included, extras, deposits and funding help
+- **CQC ratings** — every home's rating with links to the reports (and the CQC widget when a location ID is set)
+- **FAQs** — common questions plus a "what to bring" checklist
+- **Book a visit** — a form on every home page
 
 **Admin backoffice** (`/admin`)
 - Secure login
@@ -76,10 +80,44 @@ list. At minimum:
 
 | Variable | Why |
 |---|---|
-| `ADMIN_USER`, `ADMIN_PASS` | Admin sign-in. **Required** — the app won't boot without a password, because this repo is public |
+| `ADMIN_USER`, `ADMIN_PASS` | Admin sign-in. **Required** — without them the public site runs but `/admin` is switched off, because this repo is public |
 | `SESSION_SECRET` | Signs the admin session cookie. Long and random |
 | `DATABASE_URL` | Supabase Postgres. Without it, data is lost on every cold start |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | CV storage |
+
+| `SITE_URL` | The live address, e.g. `https://www.venzacare.co.uk` — used for canonical links, the sitemap and social previews |
+
+**4. Check it worked**
+
+Open `/api/health` on the live site. It says whether the database is connected
+and, if not, what's wrong in plain English. The admin dashboard shows the same
+warning at the top.
+
+### "My password isn't working" — checklist
+
+- **The admin password is `ADMIN_PASS`, not your Supabase password.** Supabase's
+  database password only goes inside `DATABASE_URL`. You sign in to `/admin` with
+  `ADMIN_USER` / `ADMIN_PASS` from Vercel's environment variables.
+- **Redeploy after changing environment variables.** Vercel only picks up new
+  values on the next deployment.
+- **Make sure the Supabase code is what's deployed.** If Vercel deploys `main`,
+  this branch has to be merged first.
+- **Use the Transaction pooler string** (host `…pooler.supabase.com`, port
+  `6543`, user `postgres.<project-ref>`). The direct `db.<ref>.supabase.co` host
+  is IPv6-only and Vercel can't reach it.
+- **URL-encode special characters in the database password** — `@` → `%40`,
+  `#` → `%23`, `/` → `%2F`, `?` → `%3F`, `%` → `%25` — or reset it in Supabase to
+  letters and numbers only.
+- **Run the migration** (step 2). Without the tables, the site falls back to the
+  built-in homes and nothing saves.
+
+### Content to confirm before going live
+
+- Fee terms in `content.js` (what's included, extras, deposits, fee reviews,
+  fees after death) are typical CMA-compliant wording, **not** confirmed policy.
+  They must match your residents' contract.
+- Fees, availability, CQC ratings and location IDs, managers and review links are
+  entered per home in **Admin → Homes**. Blank fields are simply hidden.
 
 ### Other optional settings
 

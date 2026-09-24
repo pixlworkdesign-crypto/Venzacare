@@ -831,9 +831,10 @@ textarea { resize: vertical; min-height: 120px; }
 .careers-portal { background: #fbfaf7; }
 .careers-nav { position: sticky; top: 0; z-index: 60; background: var(--green-800); color: #fff; }
 .careers-nav__inner { max-width: var(--maxw, 1200px); margin: 0 auto; padding: 0.7rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; }
-.careers-brand { display: flex; align-items: center; gap: 0.6rem; }
-.careers-brand__logo { height: 34px; width: auto; filter: brightness(0) invert(1); }
-.careers-brand__tag { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; padding-left: 0.7rem; border-left: 1px solid rgba(255,255,255,0.35); }
+.careers-brand { display: flex; align-items: center; gap: 0.6rem; color: #fff; }
+.careers-brand:hover { color: #fff; }
+.careers-brand__logo { height: 40px; width: auto; } /* the real logo: colour V, white wordmark */
+.careers-brand__tag { color: #fff; font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; padding-left: 0.7rem; border-left: 1px solid rgba(255,255,255,0.35); }
 .careers-nav__links { display: flex; align-items: center; gap: 1.4rem; margin-left: auto; }
 .careers-nav__links a { color: rgba(255,255,255,0.85); font-weight: 600; font-size: 0.95rem; }
 .careers-nav__links a:hover, .careers-nav__links a.is-active { color: #fff; }
@@ -1006,149 +1007,154 @@ a.contact-list__value:hover { color: var(--green-500); }
 }
 
 /* =========================================================
-   Admin — care homes manager
+   v5 — fixes + fees, CQC, visit booking, FAQs
    ========================================================= */
-.form-section {
-  font-size: 1rem; color: var(--green-900); margin: 2rem 0 0.2rem;
-  padding-top: 1.2rem; border-top: 1px solid var(--line);
+
+/* Hero content needs the same side gutter as every other section
+   (an earlier `width: 100%` let it touch the screen edge on phones). */
+.hero__inner { width: min(100% - 2.5rem, var(--maxw)); max-width: none; margin-inline: auto; }
+
+/* Skip link for keyboard and screen-reader users */
+.skip-link { position: absolute; left: 1rem; top: -60px; z-index: 1000; background: var(--green-900); color: #fff; padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; }
+.skip-link:focus { top: 0.75rem; }
+:focus-visible { outline: 3px solid var(--gold-500); outline-offset: 2px; }
+
+/* CQC rating colours — the four official ratings plus "not yet rated" */
+.home-card__rating.is-good { background: #fff; color: var(--green-800); }
+.home-card__rating.is-ri { background: #fff4e0; color: #8a5300; }
+.home-card__rating.is-inadequate { background: #fde8e8; color: #9b1c1c; }
+.home-card__rating.is-unrated { background: #fff; color: var(--muted); }
+
+/* Availability badge on home cards */
+.avail-badge { position: absolute; bottom: 12px; left: 12px; font-weight: 700; font-size: 0.76rem; padding: 0.28rem 0.65rem; border-radius: 999px; }
+.avail-badge.is-available { background: #1f7a4d; color: #fff; }
+.avail-badge.is-limited { background: var(--gold-400); color: var(--green-900); }
+.avail-badge.is-waitlist { background: rgba(255,255,255,0.95); color: var(--muted); }
+.home-card .home-card__price { margin: 0.2rem 0 1rem; color: var(--ink); font-size: 0.95rem; }
+.home-card__price strong { color: var(--green-800); font-size: 1.1rem; }
+.home-card__price .u { text-decoration: underline; }
+
+/* Home page hero: text on solid colour, photo alongside (desktop) or below (phone) */
+.home-hero.has-photo {
+  background-color: var(--green-800);
+  background-image: linear-gradient(90deg, rgba(13,79,92,0.97) 0%, rgba(13,79,92,0.8) 34%, rgba(13,79,92,0.1) 56%, rgba(13,79,92,0) 68%), var(--hero-photo);
+  background-repeat: no-repeat, no-repeat; background-position: center, right center; background-size: cover, contain;
 }
-.admin-form .form-section:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
-
-.form-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.8rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
-
-/* Tick-list of care types */
-.check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem 1rem; }
-.check {
-  display: flex; align-items: center; gap: 0.55rem;
-  background: var(--cream); border: 1px solid var(--line); border-radius: 10px;
-  padding: 0.6rem 0.8rem; font-size: 0.92rem; cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-.check:hover { border-color: var(--sage-300); }
-.check:has(input:checked) { background: var(--sage-100); border-color: var(--green-500); }
-.check input { width: 16px; height: 16px; accent-color: var(--green-700); flex: none; margin: 0; }
-
-/* Current main photo, shown above the file picker */
-.photo-current { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.7rem; }
-.photo-current__img {
-  width: 108px; height: 68px; border-radius: 10px; flex: none;
-  background-size: cover; background-position: center; border: 1px solid var(--line);
-}
-
-/* Gallery, each photo with a keep/remove tick */
-.gallery-manage { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 0.7rem; margin-bottom: 0.6rem; }
-.gallery-manage__item { display: flex; flex-direction: column; gap: 0.4rem; cursor: pointer; }
-.gallery-manage__img {
-  width: 100%; aspect-ratio: 4 / 3; max-width: 100%; border-radius: 10px;
-  background-size: cover; background-position: center; border: 1px solid var(--line);
-  transition: opacity 0.15s ease;
-}
-.gallery-manage__keep { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--muted); }
-.gallery-manage__keep input { width: 15px; height: 15px; accent-color: var(--green-700); margin: 0; }
-.gallery-manage__item:has(input:not(:checked)) .gallery-manage__img { opacity: 0.35; }
-.gallery-manage__item:has(input:not(:checked)) .gallery-manage__keep { color: var(--gold-600); }
-
-/* Thumbnail in the homes table */
-.home-row { display: flex; align-items: center; gap: 0.75rem; }
-.home-row__thumb {
-  width: 52px; height: 40px; border-radius: 8px; flex: none;
-  background: var(--sage-100); background-size: cover; background-position: center;
-  border: 1px solid var(--line);
-}
-
-input[type="file"] {
-  font-size: 0.9rem; padding: 0.55rem; background: var(--cream);
-  border: 1.5px dashed var(--line); cursor: pointer;
-}
-input[type="file"]::file-selector-button {
-  font-family: inherit; font-size: 0.86rem; font-weight: 600;
-  background: var(--green-700); color: #fff; border: 0; border-radius: 8px;
-  padding: 0.4rem 0.8rem; margin-right: 0.7rem; cursor: pointer;
-}
-input[type="file"]::file-selector-button:hover { background: var(--green-800); }
-
-@media (max-width: 560px) {
-  .check-grid { grid-template-columns: 1fr; }
-  .form-actions .btn { flex: 1; justify-content: center; }
-}
-
-/* Homes table — fixed columns so the care-type tags can't crowd the figures */
-.homes-table { table-layout: fixed; min-width: 900px; }
-.homes-table th, .homes-table td { vertical-align: middle; }
-.homes-table th:nth-child(1), .homes-table td:nth-child(1) { width: 24%; }
-.homes-table th:nth-child(2), .homes-table td:nth-child(2) { width: 17%; }
-.homes-table th:nth-child(3), .homes-table td:nth-child(3) { width: 26%; }
-.homes-table th:nth-child(4), .homes-table td:nth-child(4) { width: 7%; }
-.homes-table th:nth-child(5), .homes-table td:nth-child(5) { width: 11%; }
-.homes-table th:nth-child(6), .homes-table td:nth-child(6) { width: 6%; }
-.homes-table th:nth-child(7), .homes-table td:nth-child(7) { width: 9%; }
-.homes-table .num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 1.1rem; }
-.homes-table .row-actions { justify-content: flex-end; flex-wrap: nowrap; }
-
-.mini-chips { display: flex; flex-wrap: wrap; gap: 0.28rem; }
-.mini-chip {
-  font-size: 0.74rem; font-weight: 600; line-height: 1.5;
-  background: var(--sage-100); color: var(--green-800);
-  border-radius: 5px; padding: 0.08rem 0.4rem; white-space: nowrap;
-}
-
-/* Form panels track the form's own width rather than stretching the screen */
-.panel--form { max-width: 860px; }
-
-/* =========================================================
-   Admin — statuses, notes and the enquiry inbox
-   ========================================================= */
-.status-form { display: flex; flex-direction: column; gap: 0.4rem; min-width: 190px; }
-.status-form textarea { font-size: 0.84rem; padding: 0.45rem 0.55rem; min-height: 0; border-radius: 9px; }
-.status-form .btn { align-self: flex-start; }
-
-/* The status control carries its own state, so a row reads at a glance */
-.status-select {
-  font-size: 0.85rem; font-weight: 600; padding: 0.4rem 0.6rem;
-  border-radius: 9px; border-width: 1.5px;
-}
-.status-select--new         { background: var(--gold-100); border-color: var(--gold-400); color: var(--gold-600); }
-.status-select--shortlisted,
-.status-select--contacted   { background: var(--sage-100); border-color: var(--sage-300); color: var(--green-800); }
-.status-select--interviewed { background: #e8eefb; border-color: #b9caee; color: #2f4d8c; }
-.status-select--offered     { background: #e6f3ee; border-color: #a8d5c2; color: #1f6d4e; }
-.status-select--hired,
-.status-select--closed      { background: var(--green-800); border-color: var(--green-800); color: #fff; }
-.status-select--rejected    { background: #f7eceb; border-color: #e2bdb8; color: #8d3d33; }
-
-/* An untouched row gets a quiet marker down its left edge */
-tr.is-unread > td:first-child { box-shadow: inset 3px 0 0 var(--gold-400); }
-
-.kind-tag {
-  display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em;
-  text-transform: uppercase; padding: 0.15rem 0.45rem; border-radius: 5px;
-  background: var(--sage-100); color: var(--green-800);
-}
-.kind-tag--callback { background: var(--gold-100); color: var(--gold-600); }
-
-.applications-table td, .messages-table td { vertical-align: top; }
-.admin-filter { flex-wrap: wrap; }
-
+.home-hero__rating { position: static; display: inline-flex; margin-bottom: 1rem; text-decoration: none; }
+.home-hero .hero__cta { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+.home-hero__photo { display: none; }
 @media (max-width: 760px) {
-  .status-form { min-width: 160px; }
+  .home-hero.has-photo { background-image: none; }
+  .home-hero__photo { display: block; height: 220px; background: center / cover no-repeat; }
 }
 
-/* Data-request screen */
-.record-list { list-style: none; padding: 0; margin: 0 0 1.5rem; display: grid; gap: 0.4rem; }
-.record-list li {
-  background: var(--cream); border: 1px solid var(--line); border-radius: 9px;
-  padding: 0.6rem 0.8rem; font-size: 0.92rem;
-}
-.danger-zone {
-  margin-top: 1.75rem; padding: 1.25rem 1.4rem;
-  background: #fdf3f2; border: 1px solid #edcac5; border-radius: var(--radius);
-}
-.danger-zone h3 { margin: 0 0 0.4rem; font-size: 1rem; color: #8d3d33; }
-.danger-zone p { margin: 0 0 1rem; font-size: 0.91rem; color: var(--muted); }
+/* Home page sections */
+.home-section { margin-top: 3.5rem; scroll-margin-top: 96px; }
+.home-aside .avail-line { margin: 0 0 1rem; padding: 0.7rem 0.9rem; border-radius: 12px; background: var(--sage-100); font-size: 0.95rem; }
+.avail-line .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.45rem; background: var(--muted); }
+.avail-line.is-available .dot { background: #1f7a4d; }
+.avail-line.is-limited .dot { background: var(--gold-500); }
 
-.admin-topbar__who {
-  font-size: 0.85rem; color: var(--sage-100); font-weight: 600;
-  padding: 0.3rem 0.7rem; border-radius: 999px; background: rgba(255,255,255,0.12);
-  margin-right: 0.5rem; white-space: nowrap;
+/* Fee tables */
+.fee-table-wrap { overflow-x: auto; background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+.fee-table { margin: 0; min-width: 0; }
+.fee-table th[scope="row"] { font-weight: 600; text-align: left; }
+.fee-table td strong { color: var(--green-800); font-size: 1.1rem; }
+.fee-town { display: block; font-weight: 400; font-size: 0.85rem; }
+.fee-note { font-size: 0.9rem; margin-top: 0.8rem; }
+.included-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem; }
+.plain-list { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.45rem; }
+@media (max-width: 760px) {
+  .included-grid { grid-template-columns: 1fr; }
+  /* The all-homes fee table becomes one card per home on phones */
+  .fee-table--all thead { display: none; }
+  .fee-table--all, .fee-table--all tbody, .fee-table--all tr, .fee-table--all th, .fee-table--all td { display: block; width: 100%; }
+  .fee-table--all tr { padding: 0.9rem 1rem; border-bottom: 1px solid var(--line); }
+  .fee-table--all th[scope="row"] { padding: 0 0 0.4rem; border: 0; }
+  .fee-table--all td { display: flex; justify-content: space-between; padding: 0.3rem 0; border: 0; }
+  .fee-table--all td::before { content: attr(data-label); color: var(--muted); }
 }
-.admin-topbar__who:hover { background: rgba(255,255,255,0.22); color: #fff; }
+
+/* CQC */
+.cqc-box { display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; align-items: start; background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 1.5rem; }
+.cqc-box__rating { border-radius: 14px; padding: 1.1rem 1.2rem; background: var(--sage-100); color: var(--green-900); display: flex; flex-direction: column; gap: 0.2rem; }
+.cqc-box__rating strong { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.2; }
+.cqc-box__label, .cqc-box__date { font-size: 0.8rem; color: var(--muted); }
+.cqc-box__rating.is-outstanding { background: var(--gold-100); }
+.cqc-box__rating.is-ri { background: #fff4e0; color: #8a5300; }
+.cqc-box__rating.is-inadequate { background: #fde8e8; color: #9b1c1c; }
+.cqc-widget { margin-top: 1rem; }
+.cqc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+.cqc-card { display: grid; grid-template-columns: 180px 1fr; gap: 1.25rem; background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 1.25rem; }
+.cqc-card h2 a { color: inherit; }
+@media (max-width: 860px) {
+  .cqc-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .cqc-box, .cqc-card { grid-template-columns: 1fr; }
+}
+
+/* Manager + reviews */
+.manager-card { display: flex; gap: 1.5rem; align-items: center; background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 1.5rem; }
+.manager-card__photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; flex: none; }
+.manager-card__initials { display: grid; place-items: center; background: var(--sage-100); color: var(--green-800); font-family: var(--font-display); font-size: 2.2rem; font-weight: 700; }
+.review-strip { display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; background: var(--sage-100); border-radius: var(--radius); padding: 1.1rem 1.4rem; }
+.review-strip__score { font-family: var(--font-display); font-size: 2rem; color: var(--green-800); }
+.review-strip .btn { margin-left: auto; }
+@media (max-width: 560px) { .manager-card { flex-direction: column; text-align: center; } }
+
+/* Visit booking */
+.visit-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+.visit-grid .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+.directions { margin-top: 1.5rem; padding: 1.1rem 1.25rem; border-radius: var(--radius); background: var(--sage-100); }
+.directions h3 { font-size: 1.05rem; margin: 0 0 0.4rem; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+@media (max-width: 860px) {
+  .visit-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .visit-grid .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* FAQs + checklist */
+.faq-list { display: grid; gap: 0.75rem; }
+.faq { background: var(--paper); border-radius: 14px; box-shadow: var(--shadow-sm); padding: 0 1.25rem; }
+.faq summary { cursor: pointer; font-weight: 600; color: var(--green-900); padding: 1.05rem 0; list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '+'; font-size: 1.4rem; line-height: 1; color: var(--green-600); }
+.faq[open] summary::after { content: '–'; }
+.faq p { margin: 0 0 1.1rem; color: var(--ink); }
+.checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.6rem; }
+.checklist label { display: flex; gap: 0.75rem; align-items: flex-start; background: var(--paper); border-radius: 12px; padding: 0.85rem 1rem; cursor: pointer; box-shadow: var(--shadow-sm); }
+.checklist input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--green-700); flex: none; }
+.checklist input:checked + span { text-decoration: line-through; color: var(--muted); }
+
+/* Admin: care-type checkboxes */
+.check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1rem; margin-top: 0.4rem; }
+.check-grid label { display: flex; gap: 0.45rem; align-items: center; font-weight: 500; }
+.admin-form .label { display: block; font-weight: 600; font-size: 0.9rem; }
+
+/* Six nav links: tighten on mid-size screens so the bar doesn't wrap */
+@media (min-width: 961px) and (max-width: 1180px) {
+  .nav__links { gap: 1rem; }
+  .nav__links a { font-size: 0.9rem; }
+  .nav__call { display: none; }
+}
+.fee-table tbody th[scope="row"] { text-transform: none; letter-spacing: 0; font-size: 0.98rem; color: var(--ink); }
+.included-grid .tick-list { grid-template-columns: 1fr; }
+
+/* Job page: the role description first, then the application form — both full width */
+.job-detail--stacked { grid-template-columns: 1fr; gap: 2.5rem; }
+.job-detail--stacked .prose { max-width: none; }
+.job-detail--stacked .apply-card { position: static; padding: clamp(1.5rem, 3vw, 2.5rem); scroll-margin-top: 96px; }
+.job-detail--stacked .apply-card h3 { font-size: 1.6rem; }
+.job-detail--stacked .job-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 1.5rem; }
+.job-detail--stacked .job-facts li { flex-direction: column; gap: 0.15rem; }
+.job-detail--stacked .job-facts li span:last-child { text-align: left; }
+.apply-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5rem; }
+.apply-form .field--wide, .apply-form > .alert { grid-column: 1 / -1; }
+.apply-form__submit .btn { min-width: 260px; }
+@media (max-width: 700px) {
+  .apply-form { grid-template-columns: 1fr; }
+  .apply-form__submit .btn { width: 100%; min-width: 0; }
+}

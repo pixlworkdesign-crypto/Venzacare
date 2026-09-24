@@ -8,7 +8,7 @@
 %>
 
 <h1 class="admin-h1">Enquiries</h1>
-<p class="muted">Messages and callback requests sent through the website<% if (newCount) { %> — <strong style="color:var(--green-800)"><%= newCount %></strong> not yet answered<% } %>.</p>
+<p class="muted">Messages, callback requests and visit bookings from the website.</p>
 
 <div class="panel" style="margin-top:1.5rem;">
   <div class="panel__head">
@@ -30,8 +30,10 @@
   <div class="panel__body" style="padding:0;">
     <% if (messages.length) { %>
     <div class="table-wrap">
-    <table class="table messages-table">
-      <thead>
+    <table class="table">
+      <thead><tr><th>From</th><th>Type</th><th>Subject</th><th>Message</th><th>Received</th></tr></thead>
+      <tbody>
+        <% messages.forEach(function(m){ %>
         <tr>
           <th>From</th>
           <th>About</th>
@@ -50,37 +52,10 @@
               <% if (m.phone) { %><a href="tel:<%= m.phone.replace(/\s/g,'') %>"><%= m.phone %></a><% } %>
             </div>
           </td>
-          <td>
-            <span class="kind-tag <%= isCb ? 'kind-tag--callback' : '' %>"><%= isCb ? 'Callback' : 'Enquiry' %></span>
-            <% if (m.subject && !isCb) { %><div class="muted" style="font-size:.85rem;margin-top:.3rem;"><%= m.subject %></div><% } %>
-            <% if (isCb) { %>
-              <div class="muted" style="font-size:.85rem;margin-top:.3rem;">
-                <%= m.bestTime || 'Anytime' %><% if (m.home) { %><br /><%= m.home %><% } %>
-              </div>
-            <% } %>
-          </td>
-          <td style="max-width:36ch;font-size:.92rem;">
-            <%# For callbacks the message is generated from the fields already shown
-                under "About", so it only earns its place on older rows saved
-                before those fields were stored separately. %>
-            <% if (!isCb || !m.bestTime) { %><%= m.message %><% } else { %><span class="muted">—</span><% } %>
-          </td>
-          <td class="muted" style="font-size:.85rem;white-space:nowrap;">
-            <%= new Date(m.createdAt).toLocaleDateString('en-GB') %><br />
-            <%= new Date(m.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) %>
-          </td>
-          <td>
-            <form action="/admin/messages/<%= m.id %>/status" method="post" class="status-form">
-              <input type="hidden" name="back" value="<%= back %>" />
-              <select name="status" aria-label="Status for <%= m.name %>" class="status-select status-select--<%= st %>">
-                <% statuses.forEach(function(s2){ %>
-                <option value="<%= s2.value %>" <%= st === s2.value ? 'selected' : '' %>><%= s2.label %></option>
-                <% }) %>
-              </select>
-              <textarea name="notes" rows="2" placeholder="Private notes…" aria-label="Notes about <%= m.name %>"><%= m.notes || '' %></textarea>
-              <button type="submit" class="btn btn--sm btn--ghost">Save</button>
-            </form>
-          </td>
+          <td><span class="badge <%= m.kind === 'visit' ? 'badge--featured' : (m.kind === 'callback' ? 'badge--open' : 'badge--service') %>"><%= { visit: 'Visit', callback: 'Callback', enquiry: 'Enquiry' }[m.kind] || 'Enquiry' %></span></td>
+          <td><%= m.subject || '—' %><% if (m.home) { %><div class="muted" style="font-size:.85rem;"><%= m.home %></div><% } %><% if (m.bestTime) { %><div class="muted" style="font-size:.85rem;">When: <%= m.bestTime %></div><% } %></td>
+          <td style="max-width:42ch;"><%= m.message %></td>
+          <td class="muted" style="font-size:.85rem;white-space:nowrap;"><%= new Date(m.createdAt).toLocaleDateString('en-GB') %></td>
         </tr>
         <% }) %>
       </tbody>

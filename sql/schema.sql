@@ -87,22 +87,20 @@ create table if not exists messages (
 );
 create index if not exists messages_created_idx on messages (created_at desc);
 
-create table if not exists admin_users (
-  id            text primary key,
-  email         text not null unique,
-  name          text not null default '',
-  password_hash text not null,
-  role          text not null default 'staff' check (role in ('owner','staff')),
-  created_at    timestamptz not null default now(),
-  last_login_at timestamptz
-);
+-- ---- Additions (safe to re-run on an existing database) ----------------
 
--- Who changed what, so an account can be held to account.
-create table if not exists audit_log (
-  id         bigserial primary key,
-  actor      text not null default '',
-  action     text not null,
-  detail     text not null default '',
-  created_at timestamptz not null default now()
-);
-create index if not exists audit_log_created_idx on audit_log (created_at desc);
+-- Per-home extras: fees, availability, manager, CQC location id, reviews.
+alter table homes add column if not exists details jsonb not null default '{}'::jsonb;
+
+-- Visit bookings arrive as their own kind of message.
+alter table messages drop constraint if exists messages_kind_check;
+alter table messages add constraint messages_kind_check check (kind in ('enquiry','callback','visit'));
+
+-- Supabase exposes every table in the public schema through its REST API.
+-- This app talks to Postgres directly, so switch on row-level security with
+-- no policies: the public API gets nothing, the server connection is unaffected.
+alter table settings     enable row level security;
+alter table homes        enable row level security;
+alter table jobs         enable row level security;
+alter table applications enable row level security;
+alter table messages     enable row level security;

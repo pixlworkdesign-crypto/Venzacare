@@ -140,8 +140,48 @@ function num(val, fallback = null) {
 /* =============================================================
    Backend A — Postgres (Supabase in production)
    ============================================================= */
-function createPgBackend(connectionString) {
+/* Spot the usual copy-paste mistakes in a Supabase connection string, so the
+   logs (and /api/health) say what's wrong instead of a bare driver error. */
+function connectionProblems(url) {
+  const problems = [];
+  if (/\[YOUR-PASSWORD\]/i.test(url)) {
+    problems.push('DATABASE_URL still contains [YOUR-PASSWORD] — replace it with your Supabase database password.');
+  }
+  let parsed = null;
+  try { parsed = new URL(url); } catch (e) {
+    problems.push('DATABASE_URL is not a valid URL. If the password contains @ # / ? or %, URL-encode it (e.g. @ → %40).');
+  }
+  if (parsed) {
+    if (/^db\.[a-z0-9]+\.supabase\.co$/i.test(parsed.hostname)) {
+      problems.push('DATABASE_URL uses the direct connection (db.<ref>.supabase.co), which is IPv6-only and unreachable from Vercel. Use the "Transaction pooler" string (…pooler.supabase.com:6543).');
+    }
+    if (/pooler\.supabase\.com$/i.test(parsed.hostname) && !parsed.username.includes('.')) {
+      problems.push('Pooler connections need the username in the form postgres.<project-ref> — copy the full string from Supabase.');
+    }
+  }
+  return problems;
+}
+
+/* pg lets ssl settings in the URL override the `ssl` option, and it treats
+   sslmode=require as full certificate verification — which fails against
+   Supabase's pooler ("self-signed certificate in certificate chain"). Strip
+   them so the ssl option below is the one that applies. */
+function stripSslParams(url) {
+  try {
+    const u = new URL(url);
+    ['sslmode', 'ssl', 'sslcert', 'sslkey', 'sslrootcert'].forEach((k) => u.searchParams.delete(k));
+    return u.toString();
+  } catch (e) {
+    return url;
+  }
+}
+
+function createPgBackend(rawConnectionString) {
   const { Pool } = require('pg');
+
+  const problems = connectionProblems(rawConnectionString);
+  problems.forEach((p) => console.error('[db] ' + p));
+  const connectionString = stripSslParams(rawConnectionString);
 
   const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(connectionString);
   const pool = new Pool({
@@ -177,6 +217,7 @@ function createPgBackend(connectionString) {
     photo: r.photo,
     gallery: r.gallery || [],
     sortOrder: r.sort_order,
+    details: r.details || {},
   });
 
   const toJob = (r) => ({
@@ -241,6 +282,9 @@ function createPgBackend(connectionString) {
 
   return {
     kind: 'postgres',
+    problems,
+
+    async ping() { await q('select 1 from homes limit 1'); },
 
     async getSettings() {
       const { rows } = await q("select value from settings where key = 'site'");
@@ -262,19 +306,21 @@ function createPgBackend(connectionString) {
     async upsertHome(h) {
       const { rows } = await q(
         `insert into homes (id, name, town, postcode, region, lat, lng, beds, cqc,
-                            care_types, specialisms, blurb, dementia_note, photo, gallery, sort_order, updated_at)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16, now())
+                            care_types, specialisms, blurb, dementia_note, photo, gallery, sort_order, details, updated_at)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17, now())
          on conflict (id) do update set
            name = excluded.name, town = excluded.town, postcode = excluded.postcode,
            region = excluded.region, lat = excluded.lat, lng = excluded.lng,
            beds = excluded.beds, cqc = excluded.cqc, care_types = excluded.care_types,
            specialisms = excluded.specialisms, blurb = excluded.blurb,
            dementia_note = excluded.dementia_note, photo = excluded.photo,
-           gallery = excluded.gallery, sort_order = excluded.sort_order, updated_at = now()
+           gallery = excluded.gallery, sort_order = excluded.sort_order,
+           details = excluded.details, updated_at = now()
          returning *`,
         [h.id, h.name, h.town || '', h.postcode || '', h.region || '', h.lat, h.lng,
          h.beds, h.cqc || 'Registered', toArray(h.careTypes), toArray(h.specialisms),
-         h.blurb || '', h.dementiaNote || '', h.photo || '', toArray(h.gallery), h.sortOrder || 0]
+         h.blurb || '', h.dementiaNote || '', h.photo || '', toArray(h.gallery), h.sortOrder || 0,
+         JSON.stringify(h.details || {})]
       );
       return toHome(rows[0]);
     },
@@ -522,6 +568,9 @@ function createFileBackend() {
 
   return {
     kind: 'file',
+    problems: [],
+
+    async ping() {},
 
     async getSettings() { return store.settings; },
     async setSettings(value) { store.settings = value; save(); return value; },
@@ -537,6 +586,7 @@ function createFileBackend() {
         specialisms: toArray(h.specialisms), blurb: h.blurb || '',
         dementiaNote: h.dementiaNote || '', photo: h.photo || '',
         gallery: toArray(h.gallery), sortOrder: h.sortOrder || 0,
+        details: h.details || {},
       };
       const existing = byId(store.homes, h.id);
       if (existing) Object.assign(existing, home);
@@ -769,12 +819,75 @@ async function saveSettings(patch) {
   return next;
 }
 
+/* Everything a home page can show beyond the basics. All optional: a blank
+   value simply hides that part of the page, so nothing is ever invented. */
+const EMPTY_DETAILS = {
+  phone: '',             // direct line for this home (falls back to the central number)
+  availability: '',      // '' | 'available' | 'limited' | 'waitlist'
+  availabilityNote: '',  // e.g. "Two en-suite rooms free from October"
+  fees: { residential: null, nursing: null, dementia: null, respite: null }, // £ per week, "from"
+  feesUpdated: '',       // e.g. "September 2026" — shown next to the prices
+  feesNote: '',          // e.g. "Nursing fees shown before NHS-funded nursing care (FNC)"
+  cqcLocationId: '',     // e.g. 1-123456789 — powers the official CQC widget
+  cqcRatedOn: '',        // date of the latest report
+  managerName: '',
+  managerBio: '',
+  managerPhoto: '',
+  carehomeUrl: '',       // carehome.co.uk profile
+  reviewScore: '',       // e.g. 9.6
+  reviewCount: '',
+  parking: '',           // getting here / parking notes
+};
+
+function withDetails(h) {
+  const d = Object.assign({}, EMPTY_DETAILS, h.details || {});
+  d.fees = Object.assign({}, EMPTY_DETAILS.fees, (h.details && h.details.fees) || {});
+  return Object.assign({}, h, { details: d });
+}
+
+/* The last database error, kept for /api/health and the admin status panel. */
+let lastDbError = null;
+
 async function homes() {
   if (cache.homes && fresh(cache.homesAt)) return cache.homes;
-  const list = await backend.allHomes();
-  cache.homes = list;
+  let list;
+  try {
+    list = await backend.allHomes();
+    lastDbError = null;
+  } catch (err) {
+    /* A database outage (or tables that were never created) shouldn't take the
+       public site down. Show the built-in directory and say why in the logs. */
+    lastDbError = err.message;
+    console.error('[db] could not load homes, showing built-in list:', err.message);
+    list = DEFAULT_HOMES.map((h, i) => Object.assign({ sortOrder: i }, h));
+  }
+  cache.homes = list.map(withDetails);
   cache.homesAt = Date.now();
-  return list;
+  return cache.homes;
+}
+
+/* A plain-English status for the admin and /api/health — no secrets. */
+async function health() {
+  const out = { backend: backend.kind, ok: true, problems: backend.problems.slice() };
+  try {
+    await backend.ping();
+  } catch (err) {
+    out.ok = false;
+    out.error = err.message;
+    if (/relation .* does not exist/i.test(err.message)) {
+      out.problems.push('The tables have not been created yet. Run the SQL in sql/schema.sql in Supabase → SQL editor, or `npm run migrate`.');
+    } else if (/password authentication failed/i.test(err.message)) {
+      out.problems.push('Supabase rejected the database password in DATABASE_URL. Reset it in Supabase → Project Settings → Database, then update DATABASE_URL in Vercel and redeploy.');
+    } else if (/ENOTFOUND|ENETUNREACH|EHOSTUNREACH|timeout/i.test(err.message)) {
+      out.problems.push('Could not reach the database. Use the "Transaction pooler" connection string (port 6543) and check the Supabase project is not paused.');
+    } else if (/Tenant or user not found/i.test(err.message)) {
+      out.problems.push('The pooler did not recognise the user. The username must be postgres.<project-ref>, and the region in the host must match your project.');
+    }
+  }
+  if (backend.kind === 'file' && process.env.VERCEL) {
+    out.problems.push('DATABASE_URL is not set, so nothing saved on the site will persist on Vercel.');
+  }
+  return out;
 }
 
 async function home(id) {
@@ -822,7 +935,7 @@ async function siteStats() {
   const site = await settings();
   const careTypeSet = new Set();
   list.forEach((h) => (h.careTypes || []).forEach((c) => careTypeSet.add(c)));
-  const open = (await jobs()).filter((j) => j.status === 'open').length;
+  const open = (await openJobs()).length;
   return {
     homes: list.length,
     beds: list.reduce((sum, h) => sum + (h.beds || 0), 0),
@@ -838,7 +951,14 @@ async function siteStats() {
 async function jobs() { return backend.allJobs(); }
 
 async function openJobs() {
-  return (await jobs()).filter((j) => j.status === 'open');
+  try {
+    return (await jobs()).filter((j) => j.status === 'open');
+  } catch (err) {
+    // Public pages carry on without vacancies rather than erroring.
+    lastDbError = err.message;
+    console.error('[db] could not load vacancies:', err.message);
+    return [];
+  }
 }
 
 async function job(id) {
@@ -949,7 +1069,7 @@ async function setMessageStatus(id, status, notes) {
 async function addMessage(data) {
   return backend.insertMessage({
     id: uid('msg'),
-    kind: data.kind === 'callback' ? 'callback' : 'enquiry',
+    kind: ['callback', 'visit'].includes(data.kind) ? data.kind : 'enquiry',
     name: data.name || '',
     email: data.email || '',
     phone: data.phone || '',
@@ -1026,10 +1146,11 @@ async function stats() { return backend.counts(); }
 module.exports = {
   DEFAULT_SITE,
   DEFAULT_HOMES,
-  CARE_TYPES,
-  APPLICATION_STATUSES,
-  MESSAGE_STATUSES,
+  EMPTY_DETAILS,
+  connectionProblems,
+  stripSslParams,
   backendKind: backend.kind,
+  health,
 
   settings, saveSettings,
   homes, home, saveHome, removeHome, filterHomes, regions, siteStats,

@@ -1,85 +1,35 @@
 <%- include('../partials/admin-header') %>
 
-<div class="crumbs" style="color:var(--muted);margin-bottom:.5rem;"><a href="/admin">Dashboard</a> › Care homes</div>
-<div class="panel__head" style="border:0;padding:0;align-items:flex-start;">
-  <div>
-    <h1 class="admin-h1">Care homes</h1>
-    <p class="muted">These are the homes shown on <a href="/care-homes" target="_blank" rel="noopener">Find a home</a>. Changes appear on the site straight away.</p>
-  </div>
-  <a href="/admin/homes/new" class="btn btn--primary">+ Add a home</a>
-</div>
+<h1 class="admin-h1">Homes</h1>
+<p class="muted">Keep fees, availability, CQC ratings and manager details up to date — changes go live on the website within 30 seconds.</p>
 
-<% if (typeof error !== 'undefined' && error) { %>
-<div class="alert alert--error" style="margin-top:1.25rem;"><%= error %></div>
-<% } %>
+<% if (saved) { %><div class="alert alert--success" role="status">Saved. The public page will show the change within 30 seconds.</div><% } %>
 
 <div class="panel" style="margin-top:1.5rem;">
-  <div class="panel__head">
-    <h2>All homes <span class="panel__count"><%= homes.length %></span></h2>
-  </div>
-
-  <% if (homes.length) { %>
-  <div class="table-wrap">
-    <table class="admin-table homes-table">
-      <thead>
-        <tr>
-          <th>Home</th>
-          <th>Where</th>
-          <th>Care provided</th>
-          <th class="num">Beds</th>
-          <th>CQC</th>
-          <th class="num">Jobs</th>
-          <th></th>
-        </tr>
-      </thead>
+  <div class="panel__body" style="padding:0;">
+    <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Home</th><th>CQC</th><th>Availability</th><th>Fees from</th><th>What's missing</th><th></th></tr></thead>
       <tbody>
-        <% homes.forEach(function(h){ %>
+        <% homes.forEach(function(h){ var d = h.details; var from = fromPrice(h);
+             var missing = [];
+             if (!from) missing.push('fees');
+             if (!d.cqcLocationId) missing.push('CQC location ID');
+             if (!d.managerName) missing.push('manager');
+             if (!d.availability) missing.push('availability'); %>
         <tr>
-          <td>
-            <div class="home-row">
-              <span class="home-row__thumb"<% if (h.photo) { %> style="background-image:url('<%= photoUrl(h.photo) %>');"<% } %>></span>
-              <span>
-                <strong><%= h.name %></strong><br />
-                <a href="/care-homes/<%= h.id %>" target="_blank" rel="noopener" class="muted" style="font-size:.82rem;">View page ↗</a>
-              </span>
-            </div>
-          </td>
-          <td><%= h.town %><br /><span class="muted" style="font-size:.82rem;"><%= h.postcode %> · <%= h.region %></span></td>
-          <td>
-            <% if (h.careTypes && h.careTypes.length) { %>
-            <span class="mini-chips">
-              <% h.careTypes.forEach(function(c){ %><span class="mini-chip"><%= c.replace(/ Care$/, '') %></span><% }) %>
-            </span>
-            <% } else { %>
-              <span class="muted" style="font-size:.84rem;">—</span>
-            <% } %>
-          </td>
-          <td class="num"><%= h.beds || '—' %></td>
-          <td><%= h.cqc || '—' %></td>
-          <td class="num"><%= jobCounts[h.id] || 0 %></td>
-          <td>
-            <div class="row-actions">
-              <a href="/admin/homes/<%= h.id %>/edit" class="btn btn--sm btn--ghost">Edit</a>
-              <form action="/admin/homes/<%= h.id %>/delete" method="post" class="inline-form"
-                    onsubmit="return confirm('Delete <%= h.name.replace(/'/g, "\\'") %>? This cannot be undone.');">
-                <button type="submit" class="btn btn--sm btn--danger">Delete</button>
-              </form>
-            </div>
-          </td>
+          <td><strong><%= h.name %></strong><div class="muted" style="font-size:.85rem;"><%= h.town %> · <%= h.postcode %></div></td>
+          <td><%= cqcLabel(h) %></td>
+          <td><%= { available: 'Rooms available', limited: 'Limited', waitlist: 'Waiting list' }[d.availability] || '—' %></td>
+          <td><%= from ? gbp(from) + '/wk' : '—' %></td>
+          <td class="muted" style="font-size:.85rem;"><%= missing.length ? missing.join(', ') : 'Nothing — all set' %></td>
+          <td><div class="row-actions"><a class="btn btn--sm btn--ghost" href="/admin/homes/<%= h.id %>/edit">Edit</a><a class="btn btn--sm btn--muted" href="/care-homes/<%= h.id %>" target="_blank" rel="noopener">View ↗</a></div></td>
         </tr>
         <% }) %>
       </tbody>
     </table>
-  </div>
-  <% } else { %>
-  <div class="panel__body">
-    <div class="empty-state">
-      <h3>No homes yet</h3>
-      <p>Add your first care home and it'll appear on the public site immediately.</p>
-      <a href="/admin/homes/new" class="btn btn--primary" style="margin-top:.5rem;">+ Add a home</a>
     </div>
   </div>
-  <% } %>
 </div>
 
 <%- include('../partials/admin-footer') %>

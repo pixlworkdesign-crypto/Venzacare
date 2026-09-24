@@ -1,0 +1,27 @@
+<% var d = h.details || {}; var from = fromPrice(h); %>
+<a class="home-card" href="/care-homes/<%= h.id %>"
+   data-id="<%= h.id %>"
+   data-name="<%= h.name.toLowerCase() %>"
+   data-town="<%= h.town.toLowerCase() %>"
+   data-postcode="<%= h.postcode.toLowerCase().replace(/\s/g,'') %>"
+   data-region="<%= h.region %>"
+   data-care="<%= h.careTypes.join('|') %>"
+   data-lat="<%= h.lat %>" data-lng="<%= h.lng %>"<%- (typeof hidden !== 'undefined' && hidden) ? ' style="display:none"' : '' %>>
+  <div class="home-card__media<%= h.photo ? ' has-photo' : '' %>"<% if (h.photo) { %> style="background-image:url('/images/<%= h.photo %>'); background-repeat:no-repeat; background-position:center; background-size:cover;"<% } %>>
+    <span class="home-card__rating <%= cqcClass(h) %>">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Z"/></svg>
+      CQC: <%= cqcLabel(h) %>
+    </span>
+    <% if (d.availability === 'available') { %><span class="avail-badge is-available">Rooms available</span><% } else if (d.availability === 'limited') { %><span class="avail-badge is-limited">Limited availability</span><% } else if (d.availability === 'waitlist') { %><span class="avail-badge is-waitlist">Waiting list</span><% } %>
+  </div>
+  <div class="home-card__body">
+    <span class="home-card__town"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg><%= h.town %> · <%= h.postcode %></span>
+    <h3><%= h.name %></h3>
+    <p><%= h.blurb %></p>
+    <div class="chips">
+      <% h.careTypes.forEach(function(c){ %><span class="chip"><%= c %></span><% }) %>
+    </div>
+    <p class="home-card__price"><% if (from) { %>From <strong><%= gbp(from) %></strong> per week<% } else { %>Fees on request — <span class="u">call us</span><% } %></p>
+    <span class="btn btn--ghost btn--sm">View this home</span>
+  </div>
+</a>

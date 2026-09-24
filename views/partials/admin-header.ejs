@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
+  <meta name="robots" content="noindex" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= title %> · Venza Care UK Admin</title>
@@ -21,10 +22,7 @@
         <a href="/admin/homes" class="<%= currentPath.startsWith('/admin/homes') ? 'is-active' : '' %>">Care homes</a>
         <a href="/admin/applications" class="<%= currentPath.startsWith('/admin/applications') ? 'is-active' : '' %>">Applications</a>
         <a href="/admin/messages" class="<%= currentPath === '/admin/messages' ? 'is-active' : '' %>">Enquiries</a>
-        <% if (typeof adminRole !== 'undefined' && adminRole === 'owner') { %>
-        <a href="/admin/users" class="<%= currentPath.startsWith('/admin/users') ? 'is-active' : '' %>">Accounts</a>
-        <a href="/admin/data" class="<%= currentPath.startsWith('/admin/data') ? 'is-active' : '' %>">Data requests</a>
-        <% } %>
+        <a href="/admin/homes" class="<%= currentPath.startsWith('/admin/homes') ? 'is-active' : '' %>">Homes</a>
       </nav>
       <div class="spacer"></div>
       <% if (typeof adminLabel !== 'undefined' && adminLabel) { %>

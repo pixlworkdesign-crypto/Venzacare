@@ -15,6 +15,7 @@
    empty and is filled in through the admin.
    ============================================================= */
 
+require('../env');
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
@@ -30,7 +31,8 @@ if (!url) {
 }
 
 const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
-const pool = new Pool({ connectionString: url, ssl: isLocal ? false : { rejectUnauthorized: false } });
+db.connectionProblems(url).forEach((p) => console.error('  ! ' + p));
+const pool = new Pool({ connectionString: db.stripSslParams(url), ssl: isLocal ? false : { rejectUnauthorized: false } });
 
 (async () => {
   console.log('\n→ Connecting…');

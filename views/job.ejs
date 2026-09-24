@@ -6,12 +6,13 @@
     <span class="badge badge--service" style="background:rgba(255,255,255,0.9);"><%= job.service %></span>
     <h1 style="margin-top:0.8rem;"><%= job.title %></h1>
     <p><%= job.summary %></p>
+    <a href="#apply" class="btn btn--gold" style="margin-top:1rem;">Apply for this job</a>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-    <div class="job-detail">
+    <div class="job-detail job-detail--stacked">
       <!-- description -->
       <div class="prose">
         <h2 style="margin-top:0;">About the role</h2>
@@ -37,7 +38,7 @@
       </div>
 
       <!-- apply -->
-      <aside class="apply-card" id="apply">
+      <section class="apply-card" id="apply">
         <h3>Apply for this job</h3>
         <p class="muted" style="margin-top:-0.3rem;font-size:0.92rem;">Job application — takes about 2 minutes.</p>
         <ul class="job-facts">
@@ -50,7 +51,7 @@
 
         <% if (error) { %><div class="alert alert--error"><%= error %></div><% } %>
 
-        <form action="/careers/<%= job.id %>/apply" method="post" enctype="multipart/form-data">
+        <form action="/careers/<%= job.id %>/apply#apply" method="post" enctype="multipart/form-data" class="apply-form">
           <div class="field">
             <label for="name">Full name *</label>
             <input type="text" id="name" name="name" required value="<%= form.name || '' %>" />
@@ -67,24 +68,26 @@
             <label for="rightToWork">Do you have the right to work in the UK?</label>
             <select id="rightToWork" name="rightToWork">
               <option value="">Please select</option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-              <option value="Sponsorship needed">I’d need sponsorship</option>
+              <option value="Yes" <%= form.rightToWork === 'Yes' ? 'selected' : '' %>>Yes</option>
+              <option value="No" <%= form.rightToWork === 'No' ? 'selected' : '' %>>No</option>
+              <option value="Sponsorship needed" <%= form.rightToWork === 'Sponsorship needed' ? 'selected' : '' %>>I’d need sponsorship</option>
             </select>
           </div>
-          <div class="field">
+          <div class="field field--wide">
             <label for="message">Cover message</label>
             <textarea id="message" name="message" placeholder="Tell us a little about yourself and why you’d like to join us"><%= form.message || '' %></textarea>
           </div>
-          <div class="field">
+          <div class="field field--wide">
             <label for="cv">Upload your CV</label>
             <input type="file" id="cv" name="cv" accept=".pdf,.doc,.docx,.rtf,.txt,.odt" />
             <span class="hint">PDF or Word, up to 8&nbsp;MB (optional).</span>
           </div>
-          <button type="submit" class="btn btn--primary btn--block">Submit application</button>
-          <p class="hint mt-1" style="text-align:center;">By applying you agree to our recruitment privacy notice.</p>
+          <div class="field--wide apply-form__submit">
+          <button type="submit" class="btn btn--primary">Submit application</button>
+          <p class="hint mt-1">By applying you agree to our <a href="/privacy">recruitment privacy notice</a>.</p>
+          </div>
         </form>
-      </aside>
+      </section>
     </div>
   </div>
 </section>
