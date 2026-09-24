@@ -1,0 +1,39 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-head"><div>
+  <h1 class="hub-h1">My account</h1>
+  <p class="muted"><%= me.builtin ? 'This is the emergency owner login from your hosting settings.' : me.email %></p>
+</div></div>
+<% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
+<% if (!me.builtin) { %>
+<div class="hub-grid2">
+  <form action="/admin/account" method="post" class="panel admin-form">
+    <div class="panel__head"><h2>How you appear in the directory</h2></div>
+    <div class="panel__body">
+      <% if (me.preset !== 'Carer / staff') { %>
+      <div class="field"><label for="a-title">Job title</label><input id="a-title" name="title" value="<%= me.title %>" /></div>
+      <div class="field"><label for="a-phone">Work phone</label><input id="a-phone" name="phone" type="tel" value="<%= me.phone %>" /><span class="hint">Shown to colleagues in the staff directory.</span></div>
+      <% } else { %>
+      <p class="hint">Your name, role and home are shown to colleagues. Phone numbers aren’t shown for care staff.</p>
+      <input type="hidden" name="phone" value="" />
+      <% } %>
+      <button class="btn btn--primary" type="submit">Save</button>
+    </div>
+  </form>
+  <form action="/admin/account/password" method="post" class="panel admin-form">
+    <div class="panel__head"><h2>Change password</h2></div>
+    <div class="panel__body">
+      <input type="text" name="username" value="<%= me.email %>" autocomplete="username" hidden />
+      <div class="field"><label for="a-cur">Current password</label><input id="a-cur" name="current" type="password" autocomplete="current-password" required /></div>
+      <div class="field"><label for="a-new">New password</label><input id="a-new" name="password" type="password" autocomplete="new-password" minlength="10" required /><span class="hint">At least 10 characters.</span></div>
+      <div class="field"><label for="a-con">Type it again</label><input id="a-con" name="confirm" type="password" autocomplete="new-password" minlength="10" required /></div>
+      <button class="btn btn--primary" type="submit">Change password</button>
+    </div>
+  </form>
+</div>
+<div class="panel"><div class="panel__body">
+  <p style="margin:0;"><strong>Your access:</strong> <%= me.preset %> · <%= homesLabel(me) %>. Ask an admin if you need something changed.</p>
+</div></div>
+<% } else { %>
+<div class="hub-notice">To change this password, update <code>ADMIN_PASS</code> in your hosting settings and redeploy. For day-to-day use, invite yourself under People &amp; access.</div>
+<% } %>
+<%- include('../partials/admin-footer') %>

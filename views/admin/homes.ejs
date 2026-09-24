@@ -1,15 +1,17 @@
 <%- include('../partials/admin-header') %>
 
-<h1 class="admin-h1">Homes</h1>
-<p class="muted">Keep fees, availability, CQC ratings and manager details up to date — changes go live on the website within 30 seconds.</p>
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1">Homes</h1>
+    <p class="muted">Keep fees, availability, CQC ratings and managers up to date — changes show on the website within 30 seconds. Archiving hides a home from the website without losing anything.</p>
+  </div>
+  <% if (hubCan('homes', 'edit') && me.homes === 'all') { %><a href="/admin/homes/new" class="btn btn--primary">+ Add a home</a><% } %>
+</div>
 
-<% if (saved) { %><div class="alert alert--success" role="status">Saved. The public page will show the change within 30 seconds.</div><% } %>
-
-<div class="panel" style="margin-top:1.5rem;">
-  <div class="panel__body" style="padding:0;">
-    <div class="table-wrap">
+<div class="hub-card">
+  <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>Home</th><th>CQC</th><th>Availability</th><th>Fees from</th><th>What's missing</th><th></th></tr></thead>
+      <thead><tr><th>Home</th><th>On the website</th><th>CQC</th><th>Availability</th><th>Fees from</th><th>Still to fill in</th><th></th></tr></thead>
       <tbody>
         <% homes.forEach(function(h){ var d = h.details; var from = fromPrice(h);
              var missing = [];
@@ -19,17 +21,28 @@
              if (!d.availability) missing.push('availability'); %>
         <tr>
           <td><strong><%= h.name %></strong><div class="muted" style="font-size:.85rem;"><%= h.town %> · <%= h.postcode %></div></td>
+          <td><% if (d.archived) { %><span class="hub-pill hub-pill--plain">Archived</span><% } else { %><span class="hub-pill hub-pill--ok">Live</span><% } %></td>
           <td><%= cqcLabel(h) %></td>
-          <td><%= { available: 'Rooms available', limited: 'Limited', waitlist: 'Waiting list' }[d.availability] || '—' %></td>
-          <td><%= from ? gbp(from) + '/wk' : '—' %></td>
+          <td><%= hubCan('availability') ? ({ available: 'Rooms available', limited: 'Limited', waitlist: 'Waiting list' }[d.availability] || '—') : '—' %></td>
+          <td class="tabnum"><%= hubCan('fees') ? (from ? gbp(from) + '/wk' : '—') : '—' %></td>
           <td class="muted" style="font-size:.85rem;"><%= missing.length ? missing.join(', ') : 'Nothing — all set' %></td>
-          <td><div class="row-actions"><a class="btn btn--sm btn--ghost" href="/admin/homes/<%= h.id %>/edit">Edit</a><a class="btn btn--sm btn--muted" href="/care-homes/<%= h.id %>" target="_blank" rel="noopener">View ↗</a></div></td>
+          <td>
+            <div class="row-actions">
+              <a class="btn btn--sm btn--ghost" href="/admin/homes/<%= h.id %>/edit"><%= hubCan('homes', 'edit') || hubCan('fees', 'edit') || hubCan('availability', 'edit') ? 'Edit' : 'View' %></a>
+              <% if (hubCan('homes', 'edit')) { %>
+              <form action="/admin/homes/<%= h.id %>/<%= d.archived ? 'restore' : 'archive' %>" method="post" class="inline-form" <%- d.archived ? '' : 'data-confirm="Hide ' + h.name.replace(/"/g, '') + ' from the website? You can bring it back any time."' %>>
+                <button class="btn btn--sm btn--muted"><%= d.archived ? 'Make live' : 'Archive' %></button>
+              </form>
+              <% } %>
+              <% if (!d.archived) { %><a class="btn btn--sm btn--muted" href="/care-homes/<%= h.id %>" target="_blank" rel="noopener">View ↗</a><% } %>
+            </div>
+          </td>
         </tr>
         <% }) %>
       </tbody>
     </table>
-    </div>
   </div>
 </div>
+<% if (me.homes !== 'all') { %><p class="hint">You only see the homes you cover.</p><% } %>
 
 <%- include('../partials/admin-footer') %>

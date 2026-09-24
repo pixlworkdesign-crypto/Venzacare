@@ -1,0 +1,14 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-crumb"><a href="/admin/people">People &amp; access</a> › <a href="/admin/people/<%= person.id %>"><%= person.name %></a></div>
+<h1 class="hub-h1"><%= kind === 'invite' ? 'Invite ready for ' + person.name : 'Reset link for ' + person.name %></h1>
+<% if (link.emailed) { %>
+<div class="hub-notice hub-notice--ok">We’ve emailed <%= person.email %> a link to <%= kind === 'invite' ? 'set their password' : 'choose a new password' %>. You can also pass on the link below.</div>
+<% } else { %>
+<div class="hub-notice hub-notice--warn">Email isn’t set up, so <strong>send this link to <%= person.name.split(' ')[0] %> yourself</strong> — by text or WhatsApp is fine. It only works once, for <%= kind === 'invite' ? '7 days' : '24 hours' %>, and only you can see it now.</div>
+<% } %>
+<div class="hub-card"><div class="hub-card__body">
+  <label class="label" for="theLink"><%= kind === 'invite' ? 'Invite link' : 'Reset link' %></label>
+  <div class="hub-copy"><input id="theLink" value="<%= link.url %>" readonly /><button type="button" class="btn btn--primary" data-copy="#theLink">Copy</button></div>
+</div></div>
+<p><a class="btn btn--ghost" href="/admin/people/<%= person.id %>">Go to <%= person.name.split(' ')[0] %>’s access</a> <a class="btn btn--quiet" href="/admin/people">Back to People</a></p>
+<%- include('../partials/admin-footer') %>

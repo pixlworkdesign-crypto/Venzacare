@@ -104,3 +104,22 @@ alter table homes        enable row level security;
 alter table jobs         enable row level security;
 alter table applications enable row level security;
 alter table messages     enable row level security;
+
+-- ---- Staff hub -----------------------------------------------------------
+-- People, noticeboard posts, read receipts, documents, certificates,
+-- enquiry progress and the activity log. Each is a small collection of
+-- JSON records: the numbers are tiny (hundreds of rows), and one shape
+-- keeps the local-file and Postgres backends identical.
+create table if not exists hub_records (
+  collection text not null,
+  id         text not null,
+  data       jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (collection, id)
+);
+create index if not exists hub_records_collection_idx on hub_records (collection, created_at desc);
+-- One account per email address.
+create unique index if not exists hub_users_email_idx
+  on hub_records (lower(data->>'email')) where collection = 'users';
+alter table hub_records enable row level security;

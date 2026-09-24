@@ -176,7 +176,7 @@
         <div>
           <span class="eyebrow">Come and see us</span>
           <h2 class="h2">Book a visit to <%= home.name %></h2>
-          <p class="lead" style="font-size:1.05rem;">Pick a day that suits you and we'll call or email to confirm. There's no obligation, and you're welcome to bring family along.</p>
+          <p class="lead" style="font-size:1.05rem;"><% if (slots.length) { %>Pick a time that suits you and it’s booked straight away — no waiting for a call back.<% } else { %>Pick a day that suits you and we’ll call or email to confirm.<% } %> There’s no obligation, and you’re welcome to bring family along.</p>
           <div class="directions">
             <h3>Finding us</h3>
             <p style="margin:0 0 .4rem;"><%= home.name %>, <%= home.town %> <%= home.postcode %></p>
@@ -184,9 +184,92 @@
             <a class="care-card__link" href="https://www.google.com/maps/dir/?api=1&destination=<%= encodeURIComponent(home.name + ', ' + home.town + ' ' + home.postcode) %>" target="_blank" rel="noopener">Get directions ↗</a>
           </div>
         </div>
-        <div class="apply-card">
-          <% if (visitSent) { %>
+        <div class="apply-card book-card">
+          <% if (booked) { %>
+          <div class="booked" role="status">
+            <span class="booked__tick" aria-hidden="true">✓</span>
+            <h3>You’re booked in, <%= booked.name.split(' ')[0] %></h3>
+            <p class="booked__when"><%= booked.when %></p>
+            <p class="muted" style="margin:0 0 1rem;"><%= home.name %>, <%= home.town %> <%= home.postcode %></p>
+            <div class="booked__actions">
+              <a class="btn btn--primary" href="<%= booked.ics %>" download="visit-<%= home.id %>.ics">Add to my calendar</a>
+              <a class="btn btn--ghost" href="<%= booked.directions %>" target="_blank" rel="noopener">Get directions ↗</a>
+            </div>
+            <p class="hint" style="margin-top:1rem;">Need to change it? Call <a href="tel:<%= booked.phone.replace(/\s/g, '') %>"><%= booked.phone %></a>. We look forward to meeting you.</p>
+          </div>
+          <% } else if (visitSent) { %>
           <div class="alert alert--success" role="status"><strong>Thank you — your visit request is in.</strong><br />The team at <%= home.name %> will be in touch within one working day to confirm a time.</div>
+          <% } else if (slots.length) { %>
+          <% if (bookError) { %><div class="alert alert--error" role="alert"><%= bookError %></div><% } %>
+          <form action="/care-homes/<%= home.id %>/book#visit" method="post" class="book-form" id="bookForm">
+            <fieldset class="book-step">
+              <legend>1. Choose a day</legend>
+              <div class="book-days" role="radiogroup" aria-label="Day" hidden>
+                <% slots.forEach(function (day, i) { var chosen = bookForm.slot ? String(bookForm.slot).indexOf(day.date) === 0 : i === 0; %>
+                <button type="button" class="book-day<%= chosen ? ' is-on' : '' %>" data-day="<%= day.date %>" aria-pressed="<%= chosen %>">
+                  <span class="book-day__dow"><%= day.short.split(' ')[0] %></span>
+                  <span class="book-day__num"><%= day.short.split(' ')[1] %></span>
+                  <span class="book-day__mon"><%= day.short.split(' ')[2] %></span>
+                </button>
+                <% }) %>
+              </div>
+            </fieldset>
+            <fieldset class="book-step">
+              <legend>2. Choose a time</legend>
+              <% slots.forEach(function (day, i) { %>
+              <div class="book-times" data-times="<%= day.date %>">
+                <p class="book-times__day"><%= day.label %></p>
+                <div class="book-times__list">
+                  <% day.times.forEach(function (t) { var v = day.date + '|' + t.time; %>
+                  <label class="book-time"><input type="radio" name="slot" value="<%= v %>" required <%= bookForm.slot === v ? 'checked' : '' %> /><span><%= t.label %></span></label>
+                  <% }) %>
+                </div>
+              </div>
+              <% }) %>
+            </fieldset>
+            <fieldset class="book-step">
+              <legend>3. Your details</legend>
+              <div class="field"><label for="b-name">Your name *</label><input type="text" id="b-name" name="name" required autocomplete="name" value="<%= bookForm.name || '' %>" /></div>
+              <div class="grid-2">
+                <div class="field"><label for="b-phone">Phone</label><input type="tel" id="b-phone" name="phone" autocomplete="tel" value="<%= bookForm.phone || '' %>" /></div>
+                <div class="field"><label for="b-email">Email</label><input type="email" id="b-email" name="email" autocomplete="email" value="<%= bookForm.email || '' %>" /></div>
+              </div>
+              <p class="hint" style="margin-top:-.6rem;">A phone number or email, so we can reach you if anything changes.</p>
+              <div class="field"><label for="b-care">Type of care (if known)</label>
+                <select id="b-care" name="careType"><option value="">Not sure yet</option><% home.careTypes.forEach(function(c){ %><option <%= bookForm.careType===c?'selected':'' %>><%= c %></option><% }) %></select>
+              </div>
+              <div class="field"><label for="b-notes">Anything we should know?</label><textarea id="b-notes" name="notes" rows="2"><%= bookForm.notes || '' %></textarea></div>
+              <div class="hp" aria-hidden="true"><label for="b-website">Leave this empty</label><input type="text" id="b-website" name="website" tabindex="-1" autocomplete="off" /></div>
+            </fieldset>
+            <button type="submit" class="btn btn--primary btn--block" id="bookBtn">Confirm my visit</button>
+            <p class="hint mt-1" style="text-align:center;">Booked instantly — no obligation. <a href="/privacy">Privacy policy</a></p>
+          </form>
+          <details class="book-other"<%= visitError ? ' open' : '' %>>
+            <summary>None of these times work? Ask for a different time</summary>
+            <% if (visitError) { %><div class="alert alert--error" role="alert"><%= visitError %></div><% } %>
+          <form action="/care-homes/<%= home.id %>/visit#visit" method="post">
+            <div class="grid-2">
+              <div class="field"><label for="v-date">Preferred day</label><input type="date" id="v-date" name="date" value="<%= visitForm.date || '' %>" min="<%= new Date().toISOString().slice(0,10) %>" /></div>
+              <div class="field"><label for="v-time">Time</label>
+                <select id="v-time" name="time">
+                  <% ['Any time','Morning','Afternoon','Evening (after 5pm)','Weekend'].forEach(function(t){ %><option <%= visitForm.time===t?'selected':'' %>><%= t %></option><% }) %>
+                </select>
+              </div>
+            </div>
+            <div class="field"><label for="v-name">Your name *</label><input type="text" id="v-name" name="name" required autocomplete="name" value="<%= visitForm.name || '' %>" /></div>
+            <div class="grid-2">
+              <div class="field"><label for="v-phone">Phone</label><input type="tel" id="v-phone" name="phone" autocomplete="tel" value="<%= visitForm.phone || '' %>" /></div>
+              <div class="field"><label for="v-email">Email</label><input type="email" id="v-email" name="email" autocomplete="email" value="<%= visitForm.email || '' %>" /></div>
+            </div>
+            <div class="field"><label for="v-care">Type of care (if known)</label>
+              <select id="v-care" name="careType"><option value="">Not sure yet</option><% home.careTypes.forEach(function(c){ %><option <%= visitForm.careType===c?'selected':'' %>><%= c %></option><% }) %></select>
+            </div>
+            <div class="field"><label for="v-notes">Anything we should know?</label><textarea id="v-notes" name="notes" rows="3"><%= visitForm.notes || '' %></textarea></div>
+            <div class="hp" aria-hidden="true"><label for="v-website">Leave this empty</label><input type="text" id="v-website" name="website" tabindex="-1" autocomplete="off" /></div>
+            <button type="submit" class="btn btn--primary btn--block">Send my request</button>
+            <p class="hint mt-1" style="text-align:center;">We'll only use your details to arrange your visit. <a href="/privacy">Privacy policy</a></p>
+          </form>
+          </details>
           <% } else { %>
           <% if (visitError) { %><div class="alert alert--error" role="alert"><%= visitError %></div><% } %>
           <form action="/care-homes/<%= home.id %>/visit#visit" method="post">

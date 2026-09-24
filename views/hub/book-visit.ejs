@@ -1,0 +1,25 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-crumb"><a href="/admin/enquiries?tab=progress">Enquiries</a> › Book a visit</div>
+<div class="hub-head"><div>
+  <h1 class="hub-h1">Book a visit for <%= e.name %></h1>
+  <p class="muted"><%= e.home || 'No home chosen' %><% if (e.bestTime) { %> · they said: <%= e.bestTime %><% } %><% if (e.phone) { %> · <span class="tabnum"><%= e.phone %></span><% } %></p>
+</div></div>
+<% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
+<form method="post" class="admin-form">
+  <div class="panel"><div class="panel__body">
+    <div class="grid-2">
+      <div class="field"><label for="date">Day *</label><input id="date" name="date" type="date" required min="<%= new Date().toISOString().slice(0, 10) %>" /></div>
+      <div class="field"><label for="time">Time</label><input id="time" name="time" type="time" step="900" /></div>
+    </div>
+    <% if (e.email) { %>
+    <label class="checkbox" style="display:flex;"><input type="checkbox" name="confirm" <%= mailOn ? 'checked' : 'disabled' %> /> Email <%= e.name.split(' ')[0] %> a confirmation with directions<%= mailOn ? '' : ' (email isn’t set up yet)' %></label>
+    <% } else { %>
+    <p class="hint">They didn’t leave an email, so remember to confirm by phone.</p>
+    <% } %>
+  </div></div>
+  <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;">
+    <button class="btn btn--primary" type="submit">Book visit</button>
+    <a class="btn btn--muted" href="/admin/enquiries?tab=progress">Cancel</a>
+  </div>
+</form>
+<%- include('../partials/admin-footer') %>

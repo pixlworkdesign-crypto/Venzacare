@@ -1,7 +1,9 @@
 <%- include('../partials/admin-header') %>
 
-<h1 class="admin-h1">Applications</h1>
-<p class="muted">Every application submitted through the careers site.</p>
+<div class="hub-head"><div>
+<h1 class="hub-h1">Applications</h1>
+<p class="muted">Applications for jobs<%= me.homes === 'all' ? '' : ' at ' + homesLabel(me) %>, plus messages sent to the recruitment team.</p>
+</div></div>
 
 <div class="panel" style="margin-top:1.5rem;">
   <div class="panel__head">
@@ -49,5 +51,28 @@
     <% } %>
   </div>
 </div>
+
+<% if (recruitMsgs.length) { %>
+<div class="panel">
+  <div class="panel__head"><h2>Messages to the recruitment team <span class="panel__count"><%= recruitMsgs.length %></span></h2></div>
+  <div class="panel__body" style="padding:0;">
+    <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>From</th><th>About</th><th>Message</th><th>Received</th></tr></thead>
+      <tbody>
+        <% recruitMsgs.forEach(function (m) { %>
+        <tr>
+          <td><strong><%= m.name %></strong><div class="muted" style="font-size:.85rem;"><a href="mailto:<%= m.email %>"><%= m.email %></a><% if (m.phone) { %><br /><%= m.phone %><% } %></div></td>
+          <td><%= m.subject.replace(/^Careers:\s*/, '') %><% if (m.home) { %><div class="muted" style="font-size:.85rem;"><%= m.home %></div><% } %></td>
+          <td style="max-width:46ch;"><%= m.message %></td>
+          <td class="muted" style="font-size:.85rem;white-space:nowrap;"><%= new Date(m.createdAt).toLocaleDateString('en-GB') %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+<% } %>
 
 <%- include('../partials/admin-footer') %>

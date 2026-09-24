@@ -1,0 +1,96 @@
+<%- include('../partials/admin-header') %>
+<% var locked = !canEdit || !!protect; var first = p.name.split(' ')[0]; %>
+<div class="hub-crumb"><a href="/admin/people">People &amp; access</a> › <%= p.name %></div>
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1"><%= p.name %></h1>
+    <p class="muted"><%= p.email %> · <%= p.title %></p>
+  </div>
+  <span class="hub-pill <%= { active: 'hub-pill--ok', paused: 'hub-pill--warn', invited: 'hub-pill--info' }[p.status] %>"><%= { active: 'Active', paused: 'Paused', invited: 'Invite not accepted yet' }[p.status] %></span>
+</div>
+
+<% if (protect && canEdit) { %><div class="hub-notice"><strong>🔒 <%= protect %></strong></div><% } %>
+<% if (!canEdit) { %><div class="hub-notice">You can see <%= first %>’s access but can’t change it.</div><% } %>
+<% if (p.status === 'paused') { %><div class="hub-notice hub-notice--warn"><%= first %>’s account is paused, so they can’t sign in.</div><% } %>
+
+<form action="/admin/people/<%= p.id %>/access" method="post" id="accessForm">
+  <fieldset class="hub-fieldset" <%= locked ? 'disabled' : '' %>>
+  <div class="hub-card">
+    <div class="hub-card__head"><h2>Role and homes</h2><% if (isCustom) { %><span class="hub-chip hub-chip--custom">Custom access</span><% } %></div>
+    <div class="hub-card__body hub-grid2">
+      <div class="field">
+        <label for="preset">Access level</label>
+        <select id="preset" name="preset" data-presets='<%- JSON.stringify(PRESETS).replace(/'/g, "&#39;") %>'>
+          <% PRESET_NAMES.forEach(function (n) { if (n === 'Owner' && !grantOwner && p.preset !== 'Owner') return; %><option <%= n === p.preset ? 'selected' : '' %>><%= n %></option><% }) %>
+        </select>
+        <span class="hint">Picking one fills in the choices below. You can still change any of them for <%= first %> only.</span>
+        <label for="title" style="margin-top:.6rem;">Job title</label>
+        <input id="title" name="title" value="<%= p.title %>" />
+      </div>
+      <div class="field">
+        <span class="label">Where they work</span>
+        <div class="hub-checks" data-scope>
+          <label><input type="radio" name="scope" value="all" <%= p.homes === 'all' ? 'checked' : '' %> /> Whole company (head office)</label>
+          <label><input type="radio" name="scope" value="some" <%= p.homes !== 'all' ? 'checked' : '' %> /> Specific homes:</label>
+        </div>
+        <div class="hub-checks" data-homes>
+          <% hubHomes.forEach(function (h) { %><label><input type="checkbox" name="homes" value="<%= h.id %>" <%= p.homes !== 'all' && p.homes.indexOf(h.id) > -1 ? 'checked' : '' %> /> <%= h.name %></label><% }) %>
+        </div>
+        <span class="hint">People covering specific homes only see enquiries, jobs, applications and certificates for those homes.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hub-card">
+    <div class="hub-card__head"><h2>What <%= first %> can do</h2></div>
+    <% AREAS.forEach(function (a) { var cur = p.perms[a.key]; var changed = PRESETS[p.preset] && PRESETS[p.preset][a.key] !== cur; %>
+    <div class="hub-perm">
+      <div><strong><%= a.label %></strong><% if (changed) { %> <span class="hub-chip hub-chip--custom">Changed for <%= first %></span><% } %><div class="hint"><%= a.hint %></div></div>
+      <div class="hub-seg" role="radiogroup" aria-label="<%= a.label %>">
+        <% ['none', 'view', 'edit'].forEach(function (l) { var ok = a.levels.indexOf(l) > -1; %>
+          <% if (ok) { %>
+          <label class="lvl-<%= l %>"><input type="radio" name="perm_<%= a.key %>" value="<%= l %>" <%= cur === l ? 'checked' : '' %> data-area="<%= a.key %>" /><span><%= LEVEL_WORDS[l] %></span></label>
+          <% } else { %><span class="hub-seg__gap" aria-hidden="true"></span><% } %>
+        <% }) %>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% if (!locked) { %>
+  <div class="hub-savebar"><button class="btn btn--primary" type="submit">Save changes</button><span class="hint">Changes apply the next time <%= first %> opens a page.</span></div>
+  <% } %>
+  </fieldset>
+</form>
+
+<% if (canEdit) { %>
+<div class="hub-card">
+  <div class="hub-card__head"><h2>Account</h2></div>
+  <div class="hub-card__body hub-stack">
+    <div class="hub-acct">
+      <% if (p.status === 'paused') { %>
+      <form action="/admin/people/<%= p.id %>/unpause" method="post"><button class="btn btn--ghost" <%= protect ? 'disabled' : '' %>>▶ Unpause account</button></form>
+      <span class="hint">Everything comes back exactly as it was.</span>
+      <% } else { %>
+      <form action="/admin/people/<%= p.id %>/pause" method="post" data-confirm="Pause <%= p.name.replace(/"/g, '') %>? They’ll be signed out straight away."><button class="btn btn--ghost" <%= protect ? 'disabled' : '' %>>⏸ Pause account</button></form>
+      <span class="hint">Signs them out now and stops them signing in. Nothing is lost. Good for leave, long-term sickness or a suspension.</span>
+      <% } %>
+    </div>
+    <div class="hub-acct">
+      <form action="/admin/people/<%= p.id %>/link" method="post"><button class="btn btn--ghost" <%= protect || p.id === me.id ? 'disabled' : '' %>>✉ <%= p.passwordHash ? 'Send a password reset link' : 'Send a new invite link' %></button></form>
+      <span class="hint"><%= p.passwordHash ? 'For when they’ve forgotten their password.' : 'The first link expires after 7 days.' %></span>
+    </div>
+    <div class="hub-acct">
+      <a class="btn btn--danger-ghost<%= protect ? ' is-disabled' : '' %>" href="<%= protect ? '#' : '/admin/people/' + p.id + '/delete' %>" <%- protect ? 'aria-disabled="true" tabindex="-1"' : '' %>>🗑 Delete account</a>
+      <span class="hint">For leavers. Removes their login, profile and certificates for good. The activity log keeps the record of what they did.</span>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<% if (certs.length) { %>
+<div class="hub-card">
+  <div class="hub-card__head"><h2>Training certificates</h2></div>
+  <div class="hub-card__body"><ul class="plain-list"><% certs.forEach(function (c) { %><li><a href="/admin/certificates/<%= c.id %>/file" target="_blank" rel="noopener"><%= c.name %></a><%= c.expiresOn ? ' — expires ' + new Date(c.expiresOn).toLocaleDateString('en-GB') : '' %></li><% }) %></ul></div>
+</div>
+<% } %>
+<%- include('../partials/admin-footer') %>

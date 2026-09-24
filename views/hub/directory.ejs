@@ -1,0 +1,29 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-head"><div>
+  <h1 class="hub-h1">Staff directory</h1>
+  <p class="muted">Who works where. Carers show their name, role and home only — no personal numbers.</p>
+</div></div>
+<div class="hub-filter" role="group" aria-label="Filter by home">
+  <a href="/admin/directory" class="<%= filter === 'everyone' ? 'is-on' : '' %>">Everyone</a>
+  <a href="/admin/directory?home=all" class="<%= filter === 'all' ? 'is-on' : '' %>">Head office</a>
+  <% homes.forEach(function (h) { %><a href="/admin/directory?home=<%= h.id %>" class="<%= filter === h.id ? 'is-on' : '' %>"><%= h.name %></a><% }) %>
+</div>
+<% if (!groups.length) { %><div class="hub-card"><div class="hub-empty"><p class="muted">Nobody here yet.</p></div></div><% } %>
+<% groups.forEach(function (g) { %>
+<h2 class="hub-group"><%= g.label %></h2>
+<div class="hub-dir">
+  <% g.people.forEach(function (p) { var ini = p.name.split(/\s+/).map(function (x) { return x[0]; }).join('').slice(0, 2).toUpperCase(); var showContact = p.preset !== 'Carer / staff'; %>
+  <div class="hub-card hub-person">
+    <div class="hub-who"><span class="hub-avatar"><%= ini %></span><div><strong><%= p.name %></strong><div class="hint"><%= p.title %></div></div></div>
+    <div class="hint">
+      <% if (showContact) { %>
+        <% if (p.phone) { %><a href="tel:<%= p.phone.replace(/\s/g, '') %>" class="tabnum"><%= p.phone %></a><br /><% } %>
+        <a href="mailto:<%= p.email %>"><%= p.email %></a>
+      <% } else { %>Contact via the home manager<% } %>
+    </div>
+    <% if (p.status === 'paused') { %><span class="hub-pill hub-pill--warn">Away</span><% } %>
+  </div>
+  <% }) %>
+</div>
+<% }) %>
+<%- include('../partials/admin-footer') %>

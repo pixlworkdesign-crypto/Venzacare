@@ -1,0 +1,34 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-crumb"><a href="/admin/homes">Homes</a> › Add a home</div>
+<div class="hub-head"><div>
+  <h1 class="hub-h1">Add a home</h1>
+  <p class="muted">The new home starts <strong>hidden</strong> from the website, so you can add fees, the CQC rating and the manager before it goes live.</p>
+</div></div>
+<% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
+<form action="/admin/homes/new" method="post" class="admin-form">
+  <div class="panel"><div class="panel__body">
+    <div class="grid-2">
+      <div class="field"><label for="name">Home name *</label><input id="name" name="name" required value="<%= form.name || '' %>" /></div>
+      <div class="field"><label for="town">Town *</label><input id="town" name="town" required value="<%= form.town || '' %>" /></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" value="<%= form.postcode || '' %>" /></div>
+      <div class="field"><label for="region">Region</label>
+        <select id="region" name="region"><% regions.forEach(function (r) { %><option <%= form.region === r ? 'selected' : '' %>><%= r %></option><% }) %></select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label for="beds">Beds</label><input id="beds" name="beds" type="number" min="1" value="<%= form.beds || '' %>" /></div>
+      <div class="field"><span class="label">Types of care</span>
+        <div class="check-grid"><% careTypes.forEach(function (c) { %><label><input type="checkbox" name="careTypes" value="<%= c %>" checked /> <%= c %></label><% }) %></div>
+      </div>
+    </div>
+    <div class="field"><label for="blurb">Short description</label><textarea id="blurb" name="blurb" rows="3"><%= form.blurb || '' %></textarea></div>
+    <p class="hint">Photos: add them to <code>public/images/&lt;home&gt;/</code> for now — uploading photos from here is coming next.</p>
+  </div></div>
+  <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;">
+    <button class="btn btn--primary" type="submit">Add home</button>
+    <a class="btn btn--muted" href="/admin/homes">Cancel</a>
+  </div>
+</form>
+<%- include('../partials/admin-footer') %>

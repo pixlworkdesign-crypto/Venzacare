@@ -1,5 +1,5 @@
 /* =============================================================
-   Venza Care UK — file storage (CVs, and later home photos)
+   Venza Care UK — private file storage (CVs, staff documents, certificates)
    -------------------------------------------------------------
    Two backends, chosen by environment:
 
@@ -11,7 +11,7 @@
        data/uploads (outside public/, so nothing is served
        statically and CVs can't be fetched by guessing a URL).
 
-   Either way, applicants' CVs are never publicly downloadable.
+   Either way, nothing stored here is ever publicly downloadable.
    ============================================================= */
 
 const fs = require('fs');
@@ -41,11 +41,12 @@ function safeName(original) {
   return Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '-' + cleaned;
 }
 
-/* Save an uploaded file (multer memoryStorage gives us file.buffer).
-   Returns { filename, key } — filename for display, key for retrieval. */
-async function saveCv(file) {
+/* Save an uploaded file (multer memoryStorage gives us file.buffer) under a
+   folder such as 'cvs', 'documents' or 'certificates'. Returns
+   { filename, key } — filename for display, key for retrieval. */
+async function saveFile(folder, file) {
   if (!file || !file.buffer) return { filename: '', key: '' };
-  const key = safeName(file.originalname);
+  const key = (folder ? folder + '/' : '') + safeName(file.originalname);
 
   if (useSupabase) {
     const { error } = await supabase()
@@ -55,29 +56,58 @@ async function saveCv(file) {
         contentType: file.mimetype || 'application/octet-stream',
         upsert: false,
       });
-    if (error) throw new Error('CV upload failed: ' + error.message);
+    if (error) throw new Error('Upload failed: ' + error.message);
     return { filename: file.originalname, key };
   }
 
-  fs.mkdirSync(LOCAL_DIR, { recursive: true });
-  fs.writeFileSync(path.join(LOCAL_DIR, key), file.buffer);
+  const full = localPath(key, true);
+  fs.mkdirSync(path.dirname(full), { recursive: true });
+  fs.writeFileSync(full, file.buffer);
   return { filename: file.originalname, key };
 }
 
-/* A short-lived download link for an admin. Supabase returns a signed
-   URL; locally we stream the file back through the admin route. */
-async function cvDownloadUrl(key, seconds = 120) {
+// CVs keep their original flat layout so existing keys still resolve.
+async function saveCv(file) {
+  return saveFile('', file);
+}
+
+/* A short-lived download link for a signed-in user. Supabase returns a signed
+   URL; locally the caller streams the file from disk instead. */
+async function downloadUrl(key, seconds = 120) {
   if (!key) return null;
-  if (!useSupabase) return null; // caller streams from disk instead
+  if (!useSupabase) return null;
   const { data, error } = await supabase().storage.from(CV_BUCKET).createSignedUrl(key, seconds);
   if (error) throw new Error('Could not create download link: ' + error.message);
   return data.signedUrl;
 }
 
-function localCvPath(key) {
+async function removeFile(key) {
+  if (!key) return;
+  try {
+    if (useSupabase) {
+      await supabase().storage.from(CV_BUCKET).remove([key]);
+    } else {
+      const full = localPath(key);
+      if (full) fs.unlinkSync(full);
+    }
+  } catch (err) {
+    console.error('[storage] could not remove ' + key + ':', err.message);
+  }
+}
+
+/* Resolve a key to a path inside the local upload folder, refusing anything
+   that would escape it (e.g. "../"). */
+function localPath(key, forWriting) {
   if (!key) return null;
-  const full = path.join(LOCAL_DIR, path.basename(key));
+  const full = path.resolve(LOCAL_DIR, key);
+  if (!full.startsWith(path.resolve(LOCAL_DIR) + path.sep)) return null;
+  if (forWriting) return full;
   return fs.existsSync(full) ? full : null;
 }
 
-module.exports = { saveCv, cvDownloadUrl, localCvPath, backendKind: useSupabase ? 'supabase' : 'local' };
+module.exports = {
+  saveFile, saveCv, downloadUrl, removeFile, localPath,
+  cvDownloadUrl: downloadUrl,
+  localCvPath: localPath,
+  backendKind: useSupabase ? 'supabase' : 'local',
+};

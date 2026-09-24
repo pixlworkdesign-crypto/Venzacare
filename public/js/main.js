@@ -190,3 +190,38 @@
     });
   }
 })();
+
+/* ---------- Instant visit booking: pick a day, then a time ---------- */
+(function () {
+  var form = document.getElementById('bookForm');
+  if (!form) return;
+  var dayBar = form.querySelector('.book-days');
+  var chips = Array.prototype.slice.call(form.querySelectorAll('.book-day'));
+  var groups = Array.prototype.slice.call(form.querySelectorAll('.book-times'));
+  if (!dayBar || !chips.length) return;
+  dayBar.hidden = false; // without JavaScript every day's times are simply listed
+  form.classList.add('is-enhanced');
+
+  function show(date, clear) {
+    chips.forEach(function (c) {
+      var on = c.getAttribute('data-day') === date;
+      c.classList.toggle('is-on', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    groups.forEach(function (g) {
+      var on = g.getAttribute('data-times') === date;
+      g.hidden = !on;
+      if (!on && clear) g.querySelectorAll('input').forEach(function (i) { i.checked = false; });
+    });
+  }
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () { show(c.getAttribute('data-day'), true); });
+  });
+  var start = form.querySelector('.book-day.is-on') || chips[0];
+  show(start.getAttribute('data-day'), false);
+
+  form.addEventListener('submit', function () {
+    var btn = document.getElementById('bookBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Booking…'; }
+  });
+})();

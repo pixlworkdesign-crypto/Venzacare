@@ -1,12 +1,16 @@
 <%- include('../partials/admin-header') %>
 <% var d = home.details; function sel(a,b){ return a===b ? 'selected' : ''; } %>
 
-<div class="crumbs" style="color:var(--muted);margin-bottom:.5rem;"><a href="/admin/homes">Homes</a> › <%= home.name %></div>
-<h1 class="admin-h1"><%= home.name %></h1>
-<p class="muted">Anything left blank is simply hidden on the website — nothing is made up.</p>
+<div class="hub-crumb"><a href="/admin/homes">Homes</a> › <%= home.name %></div>
+<div class="hub-head"><div>
+<h1 class="hub-h1"><%= home.name %></h1>
+<p class="muted">Anything left blank is simply hidden on the website — nothing is made up.<% if (!canHomes || !canFees || !canAvail) { %> Greyed-out sections are ones your access doesn’t let you change.<% } %></p>
+</div></div>
+<% if (home.details.archived) { %><div class="hub-notice hub-notice--warn">This home is <strong>archived</strong>, so it’s hidden from the website. <% if (canHomes) { %>When it’s ready, press <strong>Make live</strong> on the Homes list.<% } %></div><% } %>
 
 <form action="/admin/homes/<%= home.id %>" method="post" class="admin-form">
 
+  <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
   <div class="panel" style="margin-top:1.5rem;">
     <div class="panel__head"><h2>Basics</h2></div>
     <div class="panel__body">
@@ -27,6 +31,32 @@
     </div>
   </div>
 
+  </fieldset>
+  <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
+  <div class="panel" id="visiting">
+    <div class="panel__head"><h2>Visit booking</h2></div>
+    <div class="panel__body">
+      <p class="muted" style="margin-top:0;">Families pick one of these times on the website and it’s booked straight away. Booked visits appear in Enquiries.</p>
+      <label class="checkbox" style="display:flex;margin-bottom:1rem;"><input type="checkbox" name="visitsEnabled" <%= visitSettings.enabled ? 'checked' : '' %> /> Let families book visits online</label>
+      <div class="field"><span class="label">Visiting days</span>
+        <div class="check-grid" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr));">
+          <% [1,2,3,4,5,6,0].forEach(function (d) { %><label><input type="checkbox" name="visitDays" value="<%= d %>" <%= visitSettings.days.indexOf(d) > -1 ? 'checked' : '' %> /> <%= DAY_NAMES[d] %></label><% }) %>
+        </div>
+      </div>
+      <div class="field"><label for="visitTimes">Visit start times</label><input id="visitTimes" name="visitTimes" value="<%= visitSettings.times.map(timeLabel).join(', ') %>" /><span class="hint">Separate with commas, e.g. 10am, 11am, 2pm, 3:30pm. Leave out mealtimes and handovers.</span></div>
+      <div class="grid-2">
+        <div class="field"><label for="visitPerSlot">Visits at the same time</label><input id="visitPerSlot" name="visitPerSlot" type="number" min="1" max="10" value="<%= visitSettings.perSlot %>" /></div>
+        <div class="field"><label for="visitNotice">Notice needed (hours)</label><input id="visitNotice" name="visitNotice" type="number" min="0" max="336" value="<%= visitSettings.noticeHours %>" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="visitWeeks">How far ahead (weeks)</label><input id="visitWeeks" name="visitWeeks" type="number" min="1" max="12" value="<%= visitSettings.weeksAhead %>" /></div>
+        <div class="field"><label for="visitClosed">Dates with no visits</label><textarea id="visitClosed" name="visitClosed" rows="2" placeholder="2026-12-25"><%= visitSettings.closedDates.join('\n') %></textarea><span class="hint">One date per line (year-month-day), e.g. bank holidays.</span></div>
+      </div>
+    </div>
+  </div>
+  </fieldset>
+  <% if (seeAvail) { %>
+  <fieldset class="hub-fieldset" <%= canAvail ? "" : "disabled" %>>
   <div class="panel">
     <div class="panel__head"><h2>Availability</h2></div>
     <div class="panel__body">
@@ -44,6 +74,10 @@
     </div>
   </div>
 
+  </fieldset>
+  <% } %>
+  <% if (seeFees) { %>
+  <fieldset class="hub-fieldset" <%= canFees ? "" : "disabled" %>>
   <div class="panel">
     <div class="panel__head"><h2>Weekly fees ("from" prices)</h2></div>
     <div class="panel__body">
@@ -61,6 +95,9 @@
     </div>
   </div>
 
+  </fieldset>
+  <% } %>
+  <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
   <div class="panel">
     <div class="panel__head"><h2>CQC rating</h2></div>
     <div class="panel__body">
@@ -77,6 +114,8 @@
     </div>
   </div>
 
+  </fieldset>
+  <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
   <div class="panel">
     <div class="panel__head"><h2>Home manager</h2></div>
     <div class="panel__body">
@@ -88,6 +127,8 @@
     </div>
   </div>
 
+  </fieldset>
+  <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
   <div class="panel">
     <div class="panel__head"><h2>Reviews &amp; getting here</h2></div>
     <div class="panel__body">
@@ -100,8 +141,9 @@
     </div>
   </div>
 
+  </fieldset>
   <div style="display:flex;gap:.8rem;margin:1.5rem 0 3rem;">
-    <button type="submit" class="btn btn--primary">Save changes</button>
+    <% if (canHomes || canFees || canAvail) { %><button type="submit" class="btn btn--primary">Save changes</button><% } %>
     <a href="/admin/homes" class="btn btn--muted">Cancel</a>
   </div>
 </form>

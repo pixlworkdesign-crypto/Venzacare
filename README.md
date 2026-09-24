@@ -16,14 +16,19 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 - **Fees & funding** — weekly prices per home, what's included, extras, deposits and funding help
 - **CQC ratings** — every home's rating with links to the reports (and the CQC widget when a location ID is set)
 - **FAQs** — common questions plus a "what to bring" checklist
-- **Book a visit** — a form on every home page
+- **Book a visit instantly** — each home page shows free visiting times for the next few weeks; the family picks one and it's confirmed on the spot (with an add-to-calendar link). Double bookings are impossible, even when two people click at once. Each home sets its own days, times, visits per slot, notice and closed dates in the staff hub. "None of these times work?" still sends a request
 
-**Admin backoffice** (`/admin`)
-- Secure login
-- Dashboard with live stats
-- Create / edit / close / delete vacancies — published jobs appear instantly on the public careers page
-- Review all applications (with CV downloads), filterable by role
-- Read contact enquiries
+**Staff hub** (`/admin`, also `/staff`)
+- **Individual accounts** — invite people by email (or pass on the link yourself), passwords hashed with scrypt, forgotten-password links, pause and delete
+- **Access for each person** — an access level (Owner, Admin, Home manager, Recruitment / HR, Reception, Carer / staff) fills in None / View / Edit for each area, and any of them can be changed per person. Each person covers the whole company or chosen homes, and only sees those homes' enquiries, jobs, applications and certificates
+- **Owner accounts are locked** — nobody in the hub can change, pause, delete or reset an owner; only the emergency owner login can. Only owners can make someone an owner. Nobody can change their own access
+- **Homes** — edit details, fees and availability (separate permissions), CQC and managers; add a home; archive / make live
+- **Enquiries** — every visit request, callback and message, moved through Needs a call → Called → Visit booked → Visited → Moved in
+- **Jobs & applications** — as before, now limited to the homes a person covers
+- **Noticeboard** — posts for everyone, a home or a role; pin, must-read with "seen by", optional email
+- **Documents** — policies, handbook and forms with folders, managers-only documents and version history
+- **Training certificates** — everyone uploads their own; managers see their homes'; expiry warnings and optional email reminders
+- **Staff directory** and an **activity log** of every change
 
 ## Run it
 
@@ -36,8 +41,9 @@ Then open:
 - Public site → http://localhost:3000
 - Admin backoffice → http://localhost:3000/admin/login
 
-**Local admin login:** `admin` / `venza2026` — development only. In production
-these must be set in the environment; the app refuses to start otherwise.
+**Local emergency owner login:** `admin` / `venza2026` — development only. Sign
+in with it, open **People & access**, invite yourself as an Owner, and use your
+own account from then on.
 
 With no `DATABASE_URL` set, the app runs on a local JSON file and seeds the four
 care homes from `db.js` so you have something to look at. No vacancies are
@@ -80,11 +86,13 @@ list. At minimum:
 
 | Variable | Why |
 |---|---|
-| `ADMIN_USER`, `ADMIN_PASS` | Admin sign-in. **Required** — without them the public site runs but `/admin` is switched off, because this repo is public |
-| `SESSION_SECRET` | Signs the admin session cookie. Long and random |
+| `SESSION_SECRET` | Signs sign-in cookies. **Required** — without it the staff hub is switched off. Long and random |
+| `ADMIN_USER`, `ADMIN_PASS` | The **emergency owner login**: how you get in on day one, and the only way to change an owner's account. Keep it secret |
 | `DATABASE_URL` | Supabase Postgres. Without it, data is lost on every cold start |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | CV storage |
 
+| `RESEND_API_KEY`, `EMAIL_FROM` | Optional. Sends invite, reset, noticeboard, visit-confirmation and certificate emails through resend.com. Without them, invite and reset links are shown on screen to pass on |
+| `CRON_SECRET` | Optional. Protects `/api/cron/certificates` — point a daily scheduler at it with `Authorization: Bearer <CRON_SECRET>` to email certificate reminders |
 | `SITE_URL` | The live address, e.g. `https://www.venzacare.co.uk` — used for canonical links, the sitemap and social previews |
 
 **4. Check it worked**
@@ -93,11 +101,17 @@ Open `/api/health` on the live site. It says whether the database is connected
 and, if not, what's wrong in plain English. The admin dashboard shows the same
 warning at the top.
 
+### Updating an existing database
+
+The staff hub adds a `hub_records` table. After deploying this version, run
+`sql/schema.sql` again in the Supabase SQL editor (or `npm run migrate`). It's
+safe to re-run: nothing is dropped. `/api/health` tells you if it's missing.
+
 ### "My password isn't working" — checklist
 
-- **The admin password is `ADMIN_PASS`, not your Supabase password.** Supabase's
-  database password only goes inside `DATABASE_URL`. You sign in to `/admin` with
-  `ADMIN_USER` / `ADMIN_PASS` from Vercel's environment variables.
+- **Staff sign in with their email and the password they chose from their invite.**
+  The emergency owner login is `ADMIN_USER` / `ADMIN_PASS` from Vercel — not your
+  Supabase password, which only goes inside `DATABASE_URL`.
 - **Redeploy after changing environment variables.** Vercel only picks up new
   values on the next deployment.
 - **Make sure the Supabase code is what's deployed.** If Vercel deploys `main`,

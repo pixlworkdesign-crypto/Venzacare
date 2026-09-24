@@ -4,7 +4,7 @@
   <meta name="robots" content="noindex" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign in · Venza Care UK Admin</title>
+  <title>Sign in · Venza Care staff hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css" />
@@ -13,15 +13,16 @@
   <div class="login-wrap">
     <div class="login-card">
       <img src="/images/logo.png" alt="Venza Care" class="login-logo" />
-      <h1 style="text-align:center;font-size:1.5rem;margin:1rem 0 0.3rem;">Backoffice sign in</h1>
-      <p class="muted" style="text-align:center;margin-top:0;">Manage vacancies and applications</p>
+      <h1 style="text-align:center;font-size:1.5rem;margin:1rem 0 0.3rem;">Staff hub</h1>
+      <p class="muted" style="text-align:center;margin-top:0;">Sign in with your work account</p>
 
-      <% if (error) { %><div class="alert alert--error"><%= error %></div><% } %>
+      <% if (typeof notice !== 'undefined' && notice) { %><div class="alert alert--success" role="status"><%= notice %></div><% } %>
+      <% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
 
-      <form action="/admin/login" method="post" class="mt-2">
+      <form action="/admin/login<%= typeof query !== 'undefined' ? '' : '' %>" method="post" class="mt-2" id="loginForm">
         <div class="field">
-          <label for="username">Username</label>
-          <input type="text" id="username" name="username" autocomplete="username" required autofocus />
+          <label for="identifier">Email</label>
+          <input type="text" id="identifier" name="identifier" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus value="<%= typeof identifier !== 'undefined' ? identifier : '' %>" />
         </div>
         <div class="field">
           <label for="password">Password</label>
@@ -29,7 +30,13 @@
         </div>
         <button type="submit" class="btn btn--primary btn--block">Sign in</button>
       </form>
-      <% if (typeof showDemo !== 'undefined' && showDemo) { %><p class="hint mt-2" style="text-align:center;">Local development login → <strong>admin</strong> / <strong>venza2026</strong></p><% } %>
+      <p style="text-align:center;margin:1rem 0 0;"><a href="/admin/forgot">Forgotten your password?</a></p>
+      <p class="hint" style="text-align:center;margin-top:1rem;">New here? Use the link in your invite email, or ask your manager to send you one.</p>
+      <% if (typeof showDemo !== 'undefined' && showDemo) { %><p class="hint mt-2" style="text-align:center;">Local development emergency login → <strong>admin</strong> / <strong>venza2026</strong></p><% } %>
+      <script>
+        // Keep the page someone was trying to reach, so they land there after signing in.
+        (function () { var n = new URLSearchParams(location.search).get('next'); if (n) document.getElementById('loginForm').action = '/admin/login?next=' + encodeURIComponent(n); })();
+      </script>
     </div>
   </div>
 </body>
