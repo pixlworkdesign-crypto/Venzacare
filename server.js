@@ -103,7 +103,10 @@ const lower = (s) => (s || '').toLowerCase();
 app.use(wrap(async (req, res, next) => {
   res.locals.SITE = await db.settings();
   // Region filters list the regions the homes are actually in.
-  res.locals.homeRegions = [...new Set((await db.homes()).map((h) => h.region).filter(Boolean))].sort();
+  const liveHomes = await db.homes();
+  res.locals.homeRegions = [...new Set(liveHomes.map((h) => h.region).filter(Boolean))].sort();
+  // …and the "Type of care" filters list the care the homes actually offer.
+  res.locals.homeCareTypes = CARE_TYPES.filter((c) => liveHomes.some((h) => (h.careTypes || []).includes(c)));
   res.locals.year = new Date().getFullYear();
   res.locals.currentPath = req.path;
   res.locals.title = '';

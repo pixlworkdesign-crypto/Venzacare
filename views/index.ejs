@@ -34,7 +34,7 @@
           <label for="f-care">Type of care</label>
           <select id="f-care" name="careType">
             <option value="">Any care</option>
-            <% ['Residential Care','Nursing Care','Dementia Care','Respite Care','End-of-life Care'].forEach(function(c){ %><option value="<%= c %>"><%= c %></option><% }) %>
+            <% homeCareTypes.forEach(function(c){ %><option value="<%= c %>"><%= c %></option><% }) %>
           </select>
         </div>
         <button type="submit" class="btn btn--primary">Search</button>
