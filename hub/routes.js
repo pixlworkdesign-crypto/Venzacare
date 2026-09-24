@@ -197,6 +197,17 @@ module.exports = function mountHub(app, deps) {
     return u;
   }
 
+  /* Links are built from SITE_URL, or else the address the page was opened
+     on. A *.vercel.app deployment or preview address is usually behind
+     Vercel's own login, so a link built from it asks people to sign in to
+     Vercel. Say so, instead of leaving it to be discovered. */
+  function linkWarning(req) {
+    if ((process.env.SITE_URL || '').trim()) return null;
+    const host = (req.get('host') || '').toLowerCase();
+    if (!host.endsWith('.vercel.app')) return null;
+    return host;
+  }
+
   async function issueLink(req, user, kind) {
     const token = auth.newToken();
     user[kind + 'TokenHash'] = auth.hashToken(token);
@@ -999,7 +1010,7 @@ module.exports = function mountHub(app, deps) {
     if (error) return res.render('hub/people', { title: 'People & access', users, canEdit: true, isCustom, error, form: f, grantOwner: canGrantOwner(req.me) });
     const { user, link } = await createPerson(req, { name, email, preset, homes, title: text(f.title, 80) });
     await log(req.me, req.me.name + ' invited ' + name + ' (' + preset + ', ' + homesLabel(user, res.locals.hubHomes) + ')');
-    res.render('hub/link-issued', { title: 'Invite created', person: user, link, kind: 'invite' });
+    res.render('hub/link-issued', { title: 'Invite created', person: user, link, kind: 'invite', linkWarning: linkWarning(req) });
   }));
 
   app.get('/admin/people/bulk', need('people', 'edit'), (req, res) => {
@@ -1115,7 +1126,7 @@ module.exports = function mountHub(app, deps) {
     const kind = p.passwordHash ? 'reset' : 'invite';
     const link = await issueLink(req, p, kind);
     await log(req.me, req.me.name + (kind === 'invite' ? ' sent a new invite link to ' : ' sent a password reset link to ') + p.name);
-    res.render('hub/link-issued', { title: kind === 'invite' ? 'New invite link' : 'Password reset link', person: p, link, kind });
+    res.render('hub/link-issued', { title: kind === 'invite' ? 'New invite link' : 'Password reset link', person: p, link, kind, linkWarning: linkWarning(req) });
   }));
 
   app.get('/admin/people/:id/delete', need('people', 'edit'), wrap(async (req, res) => {

@@ -6,6 +6,13 @@
 <% } else { %>
 <div class="hub-notice hub-notice--warn">Email isn’t set up, so <strong>send this link to <%= person.name.split(' ')[0] %> yourself</strong> — by text or WhatsApp is fine. It only works once, for <%= kind === 'invite' ? '7 days' : '24 hours' %>, and only you can see it now.</div>
 <% } %>
+<% if (typeof linkWarning !== 'undefined' && linkWarning) { %>
+<div class="hub-notice hub-notice--bad" role="alert">
+  <strong>This link may ask people to sign in to Vercel.</strong> It starts with <code><%= linkWarning %></code>, the address you’re using now, and Vercel usually protects these addresses with its own login.
+  To fix it for good: in Vercel, add <code>SITE_URL</code> under <strong>Settings → Environment Variables</strong>, set to your public address (the one under <strong>Domains</strong>), then redeploy.
+  Or turn off <strong>Settings → Deployment Protection → Vercel Authentication</strong>.
+</div>
+<% } %>
 <div class="hub-card"><div class="hub-card__body">
   <label class="label" for="theLink"><%= kind === 'invite' ? 'Invite link' : 'Reset link' %></label>
   <div class="hub-copy"><input id="theLink" value="<%= link.url %>" readonly /><button type="button" class="btn btn--primary" data-copy="#theLink">Copy</button></div>

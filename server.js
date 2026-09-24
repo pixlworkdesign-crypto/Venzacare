@@ -561,6 +561,8 @@ app.get('/api/health', wrap(async (req, res) => {
     ok: h.ok,
     database: h.backend === 'postgres' ? 'Supabase / Postgres' : 'local file (not persistent)',
     deployment: DEPLOY_ENV,
+    linksUse: env('SITE_URL') || 'the address the page was opened on (set SITE_URL to fix this)',
+    openedOn: req.get('host'),
     adminSignIn: HUB_SEALED ? 'disabled — SESSION_SECRET not set on this deployment' : 'enabled',
     emergencyOwnerLogin: ADMIN_PASS ? 'set' : 'not set (ADMIN_PASS)',
     email: require('./mailer').configured() ? 'set up' : 'not set up — invite and reset links are shown on screen instead',
