@@ -1267,6 +1267,10 @@ a.contact-list__value:hover { color: var(--green-500); }
 .hub-compose { padding: 0; }
 .hub-compose > summary { padding: 0.9rem 1.2rem; font-weight: 600; cursor: pointer; color: var(--green-700); }
 .hub-compose[open] > summary { border-bottom: 1px solid var(--line); }
+.hub-compose.is-toggled:not([open]) { display: none; }
+.hub-compose.is-toggled > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.hub-compose.is-toggled > summary::-webkit-details-marker { display: none; }
+.hub-compose.is-toggled > summary::after { content: 'Close ✕'; font-weight: 500; font-size: 0.9rem; color: var(--muted, #667); }
 .hub-compose form { padding: 1.1rem 1.2rem; max-width: none; display: grid; gap: 0.4rem; }
 .hub-post { padding: 1rem 1.2rem; border-bottom: 1px solid var(--line); display: grid; gap: 0.35rem; }
 .hub-post:last-child { border-bottom: 0; }
