@@ -160,7 +160,10 @@ module.exports = function mountHub(app, deps) {
     }
 
     const user = await auth.findByEmail(identifier);
-    if (user && user.passwordHash && (await auth.verifyPassword(password, user.passwordHash))) {
+    // Check a password even when there's no such account, so the reply takes
+    // the same time either way and can't be used to find out who works here.
+    const good = await auth.verifyPassword(password, (user && user.passwordHash) || auth.DUMMY_HASH);
+    if (user && user.passwordHash && good) {
       if (user.status === 'paused') return fail('Your account is paused. Speak to your manager if you think this is a mistake.');
       auth.clearFailures(req, identifier);
       user.lastActive = new Date().toISOString();
@@ -169,8 +172,10 @@ module.exports = function mountHub(app, deps) {
       return res.redirect(safeNext(req.query.next));
     }
     auth.recordFailure(req, identifier);
-    if (user && user.status === 'invited') return fail('You haven’t set a password yet. Use the link in your invite, or ask a manager for a new one.');
-    fail('That email and password don’t match. Check for typos, or use “Forgotten your password?”.');
+    if (auth.isLockedOut(req, identifier)) {
+      await log(null, 'Sign-in locked for 15 minutes after 5 wrong passwords for “' + identifier.slice(0, 120) + '”');
+    }
+    fail('That email and password don’t match. Check for typos, or use “Forgotten your password?”. New here? Use the link in your invite.');
   }));
 
   function safeNext(n) {

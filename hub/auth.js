@@ -44,6 +44,10 @@ function verifyPassword(password, stored) {
   });
 }
 
+// A real scrypt hash of a random password, checked when an email has no
+// account, so a wrong email and a wrong password take the same time.
+const DUMMY_HASH = 'scrypt$16384$' + crypto.randomBytes(16).toString('base64') + '$' + crypto.randomBytes(64).toString('base64');
+
 function passwordProblem(password) {
   if (!password || password.length < 10) return 'Use at least 10 characters.';
   if (password.length > 200) return 'That password is too long.';
@@ -160,7 +164,7 @@ function recordFailure(req, id) {
 function clearFailures(req, id) { attempts.delete(throttleKey(req, id)); }
 
 module.exports = {
-  COOKIE, hashPassword, verifyPassword, passwordProblem, newToken, hashToken,
+  COOKIE, DUMMY_HASH, hashPassword, verifyPassword, passwordProblem, newToken, hashToken,
   setSessionCookie, clearSessionCookie, currentUser,
   allUsers, getUser, findByEmail, saveUser, shapeUser,
   isLockedOut, recordFailure, clearFailures,
