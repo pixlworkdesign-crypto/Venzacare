@@ -43,6 +43,24 @@ function uploader(types) {
 const docUpload = uploader(DOC_TYPES);
 const certUpload = uploader(CERT_TYPES);
 const csvUpload = uploader(['.csv', '.txt']);
+const photoUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).fields([
+  { name: 'photoFile', maxCount: 1 },
+  { name: 'galleryFiles', maxCount: 20 },
+]);
+
+/* Map position from a UK postcode (postcodes.io, free, no key). Best effort. */
+async function geocode(postcode) {
+  const pc = String(postcode || '').replace(/\s+/g, '');
+  if (!pc) return null;
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 4000);
+    const r = await fetch('https://api.postcodes.io/postcodes/' + encodeURIComponent(pc), { signal: ctl.signal });
+    clearTimeout(t);
+    const d = r.ok ? await r.json() : null;
+    return d && d.result ? { lat: d.result.latitude, lng: d.result.longitude } : null;
+  } catch (e) { return null; }
+}
 
 module.exports = function mountHub(app, deps) {
   const { wrap, siteUrl, CARE_TYPES, config } = deps;
@@ -69,6 +87,7 @@ module.exports = function mountHub(app, deps) {
       const me = await auth.currentUser(req, SESSION_SECRET);
       if (!me) return res.redirect('/admin/login?next=' + encodeURIComponent(req.originalUrl));
       req.me = me;
+      retentionSweep(me); // at most once a day; never blocks the page
       await shellLocals(req, res);
       if (area && !(Array.isArray(area) ? area.some((a) => can(me, a, level)) : can(me, area, level))) return deny(res);
       next();
@@ -260,7 +279,7 @@ module.exports = function mountHub(app, deps) {
 
   app.get('/admin/homes/new', need('homes', 'edit'), (req, res) => {
     if (req.me.homes !== 'all') return deny(res, 'Only people who cover the whole company can add a home.');
-    res.render('hub/home-new', { title: 'Add a home', regions: res.locals.SITE.regions || [], careTypes: CARE_TYPES, form: {}, error: null });
+    res.render('hub/home-new', { title: 'Add a home', regions: [...new Set((res.locals.SITE.regions || []).concat(res.locals.hubHomes.map((h) => h.region)).filter(Boolean))].sort(), careTypes: CARE_TYPES, form: {}, error: null });
   });
 
   app.post('/admin/homes/new', need('homes', 'edit'), wrap(async (req, res) => {
@@ -268,14 +287,16 @@ module.exports = function mountHub(app, deps) {
     const f = req.body;
     const name = text(f.name, 80);
     if (!name || !text(f.town)) {
-      return res.render('hub/home-new', { title: 'Add a home', regions: res.locals.SITE.regions || [], careTypes: CARE_TYPES, form: f, error: 'Give the home a name and a town.' });
+      return res.render('hub/home-new', { title: 'Add a home', regions: [...new Set((res.locals.SITE.regions || []).concat(res.locals.hubHomes.map((h) => h.region)).filter(Boolean))].sort(), careTypes: CARE_TYPES, form: f, error: 'Give the home a name and a town.' });
     }
     let id = slug(name);
     const existing = await db.allHomes();
     while (existing.some((h) => h.id === id)) id = slug(name) + '-' + Math.random().toString(36).slice(2, 5);
     const careTypes = [].concat(f.careTypes || []).filter((c) => CARE_TYPES.includes(c));
+    const pt = await geocode(f.postcode);
     await db.saveHome({
       id, name, town: text(f.town, 60), postcode: text(f.postcode, 12).toUpperCase(), region: text(f.region, 40),
+      lat: pt ? pt.lat : null, lng: pt ? pt.lng : null,
       beds: parseInt(f.beds, 10) || null, cqc: 'Registered', careTypes, specialisms: [], blurb: text(f.blurb, 600),
       dementiaNote: '', photo: '', gallery: [], sortOrder: existing.length,
       details: { archived: true },
@@ -290,12 +311,13 @@ module.exports = function mountHub(app, deps) {
     res.render('admin/home-form', {
       title: 'Edit ' + home.name, home, careTypes: CARE_TYPES, error: null,
       visitSettings: visits.settingsFor(home), DAY_NAMES: visits.DAY_NAMES, timeLabel: visits.timeLabel,
+      jobCount: (await db.jobs()).filter((j) => j.homeId === home.id).length,
       canHomes: can(req.me, 'homes', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
       seeFees: can(req.me, 'fees', 'view'), seeAvail: can(req.me, 'availability', 'view'),
     });
   }));
 
-  app.post('/admin/homes/:id', need(['homes', 'fees', 'availability'], 'edit'), wrap(async (req, res) => {
+  app.post('/admin/homes/:id', need(['homes', 'fees', 'availability'], 'edit'), photoUpload, wrap(async (req, res) => {
     const home = await db.anyHome(req.params.id);
     if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
     const me = req.me, f = req.body;
@@ -343,6 +365,31 @@ module.exports = function mountHub(app, deps) {
       });
       const careTypes = [].concat(f.careTypes || []).filter((c) => CARE_TYPES.includes(c));
       const cqc = CQC_OPTIONS.includes(f.cqc) ? f.cqc : home.cqc;
+
+      // Location: an empty map position is looked up from the postcode.
+      const postcode = text(f.postcode, 12).toUpperCase() || home.postcode;
+      const num = (v) => (String(v || '').trim() === '' ? null : Number(v));
+      let lat = num(f.lat), lng = num(f.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || postcode !== home.postcode && f.lat == home.lat) {
+        const pt = await geocode(postcode);
+        if (pt) { lat = pt.lat; lng = pt.lng; } else if (!Number.isFinite(lat) || !Number.isFinite(lng)) { lat = home.lat; lng = home.lng; }
+      }
+
+      // Photos: a new main photo replaces the old one; ticked gallery photos
+      // are kept and new uploads are added after them.
+      let photo = home.photo, gallery = home.gallery || [];
+      if (f.photosSection) {
+        const files = req.files || {};
+        try {
+          if (files.photoFile && files.photoFile[0]) photo = await storage.savePhoto(files.photoFile[0]);
+          const keep = new Set([].concat(f.keepGallery || []));
+          gallery = gallery.filter((g) => keep.has(g));
+          for (const file of files.galleryFiles || []) gallery.push(await storage.savePhoto(file));
+        } catch (err) {
+          return back(res, '/admin/homes/' + home.id + '/edit', err.message);
+        }
+        if (photo !== home.photo || gallery.length !== (home.gallery || []).length) changed.push('photos');
+      }
       if (cqc !== home.cqc) changed.push('CQC rating (now ' + (cqc === 'Registered' ? 'not yet rated' : cqc) + ')');
       Object.assign(next, {
         name: text(f.name, 80) || home.name,
@@ -350,6 +397,13 @@ module.exports = function mountHub(app, deps) {
         beds: parseInt(f.beds, 10) || home.beds,
         cqc,
         careTypes: careTypes.length ? careTypes : home.careTypes,
+        town: text(f.town, 60) || home.town,
+        postcode,
+        region: text(f.region, 40) || home.region,
+        lat, lng,
+        specialisms: String(f.specialisms == null ? (home.specialisms || []).join('\n') : f.specialisms).split(/\r?\n/).map((x) => x.trim()).filter(Boolean).slice(0, 30),
+        dementiaNote: f.dementiaNote == null ? home.dementiaNote : text(f.dementiaNote, 300),
+        photo, gallery,
       });
       changed.push('details');
     }
@@ -374,6 +428,18 @@ module.exports = function mountHub(app, deps) {
     });
     return [...out].sort();
   }
+
+  app.post('/admin/homes/:id/delete', need('homes', 'edit'), wrap(async (req, res) => {
+    const home = await db.anyHome(req.params.id);
+    if (!home || req.me.homes !== 'all') return res.redirect('/admin/homes');
+    if (!home.details.archived) return back(res, '/admin/homes/' + home.id + '/edit', 'Archive the home before deleting it');
+    const attached = (await db.jobs()).filter((j) => j.homeId === home.id).length;
+    if (attached) return back(res, '/admin/homes/' + home.id + '/edit', home.name + ' still has ' + attached + ' job(s) attached');
+    if (text(req.body.confirm, 120).toLowerCase() !== home.name.toLowerCase()) return back(res, '/admin/homes/' + home.id + '/edit', 'Type the home’s name exactly to delete it');
+    await db.removeHome(home.id);
+    await log(req.me, req.me.name + ' deleted the home ' + home.name);
+    back(res, '/admin/homes', 'Deleted ' + home.name);
+  }));
 
   for (const [action, archived] of [['archive', true], ['restore', false]]) {
     app.post('/admin/homes/:id/' + action, need('homes', 'edit'), wrap(async (req, res) => {
@@ -566,10 +632,27 @@ module.exports = function mountHub(app, deps) {
     const jobId = text(req.query.job, 80);
     const jobs = (await db.jobs()).filter((j) => jobInScope(req.me, j));
     const ids = new Set(jobs.map((j) => j.id));
-    const apps = (await db.applications(jobId)).filter((a) => ids.has(a.jobId));
+    const status = text(req.query.status, 20);
+    const inScope = (await db.applications(jobId)).filter((a) => ids.has(a.jobId));
+    const apps = status ? inScope.filter((a) => (a.status || 'new') === status) : inScope;
     // Messages sent through the careers "Contact HR" form.
     const recruitMsgs = (await db.messages()).filter((m) => isCareers(m) && covers(req.me, (res.locals.hubHomes.find((h) => h.name === m.home) || {}).id));
-    res.render('admin/applications', { title: 'Applications', applications: apps, jobs, jobId, recruitMsgs });
+    res.render('admin/applications', {
+      title: 'Applications', applications: apps, jobs, jobId, recruitMsgs, status,
+      STATUSES: db.APPLICATION_STATUSES, canEdit: can(req.me, 'applications', 'edit'),
+      statusCounts: db.APPLICATION_STATUSES.reduce((m, x) => (m[x.value] = inScope.filter((a) => (a.status || 'new') === x.value).length, m), {}),
+    });
+  }));
+
+  app.post('/admin/applications/:id', need('applications', 'edit'), wrap(async (req, res) => {
+    const application = (await db.applications()).find((a) => a.id === req.params.id);
+    const job = application && (await db.job(application.jobId));
+    if (!application || !job || !jobInScope(req.me, job)) return deny(res, 'That application isn’t available to you.');
+    const updated = await db.updateApplication(application.id, { status: req.body.status, notes: req.body.notes });
+    const label = (db.APPLICATION_STATUSES.find((x) => x.value === updated.status) || {}).label || updated.status;
+    if (updated.status !== application.status) await log(req.me, req.me.name + ' moved ' + application.name + '’s application for ' + application.jobTitle + ' to “' + label + '”');
+    const q = new URLSearchParams({ job: text(req.body.job, 80), status: text(req.body.filter, 20) }).toString();
+    back(res, '/admin/applications?' + q, 'Saved ' + application.name);
   }));
 
   app.get('/admin/applications/:id/cv', need('applications', 'view'), wrap(async (req, res) => {
@@ -1053,6 +1136,73 @@ module.exports = function mountHub(app, deps) {
     await db.records.remove('users', p.id);
     await log(req.me, req.me.name + ' deleted ' + p.name + '’s account' + (certs.length ? ' and ' + certs.length + ' certificate' + (certs.length > 1 ? 's' : '') : ''));
     back(res, '/admin/people', 'Deleted ' + p.name + '’s account');
+  }));
+
+  /* ---------- Data requests (UK GDPR) ----------
+     Find everything held about a family member or applicant, download it
+     for a subject access request, or delete it — CVs included. Job
+     applications are also cleared out automatically after RETENTION_DAYS
+     (365 by default; 0 switches it off). */
+  const RETENTION_DAYS = process.env.RETENTION_DAYS === undefined ? 365 : parseInt(process.env.RETENTION_DAYS, 10) || 0;
+  let lastSweep = 0;
+
+  async function clearOld(actor) {
+    const removed = await db.expireApplications(RETENTION_DAYS);
+    for (const key of removed.cvPaths) await storage.removeFile(key);
+    if (removed.count) await log(actor, (actor ? actor.name : 'Automatic clear-out') + ' removed ' + removed.count + ' job application(s) older than ' + RETENTION_DAYS + ' days');
+    return removed.count;
+  }
+  function retentionSweep(actor) {
+    if (!RETENTION_DAYS || Date.now() - lastSweep < 86400000) return;
+    lastSweep = Date.now();
+    clearOld(null).catch((err) => console.error('[retention] sweep failed:', err.message));
+  }
+
+  function personQuery(src) {
+    return { email: text(src.email, 200), phone: text(src.phone, 40) };
+  }
+
+  app.get('/admin/data', need('privacy', 'view'), wrap(async (req, res) => {
+    const query = personQuery(req.query);
+    const searched = !!(query.email || query.phone);
+    const found = searched ? await db.findPersonData(query) : null;
+    res.render('hub/data', { title: 'Data requests', query, found, searched, retentionDays: RETENTION_DAYS, canEdit: can(req.me, 'privacy', 'edit') });
+  }));
+
+  app.get('/admin/data/export', need('privacy', 'view'), wrap(async (req, res) => {
+    const query = personQuery(req.query);
+    if (!query.email && !query.phone) return res.redirect('/admin/data');
+    const found = await db.findPersonData(query);
+    await log(req.me, req.me.name + ' downloaded the personal data held for ' + (query.email || query.phone));
+    const who = (query.email || query.phone).replace(/[^a-z0-9.@-]/gi, '_');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="venza-data-' + who + '.json"');
+    res.send(JSON.stringify({
+      searchedFor: query, exportedAt: new Date().toISOString(), exportedBy: req.me.name,
+      jobApplications: found.applications.map((a) => Object.assign({}, a, { cvPath: undefined, cv: a.cvFilename ? a.cvFilename + ' (download separately from the staff hub)' : '' })),
+      enquiriesAndVisits: found.messages,
+      enquiryProgress: found.progress,
+    }, null, 2));
+  }));
+
+  app.post('/admin/data/delete', need('privacy', 'edit'), wrap(async (req, res) => {
+    const query = personQuery(req.body);
+    if (!query.email && !query.phone) return res.redirect('/admin/data');
+    if (text(req.body.confirm, 20).toLowerCase() !== 'delete') {
+      return back(res, '/admin/data?email=' + encodeURIComponent(query.email) + '&phone=' + encodeURIComponent(query.phone), 'Type DELETE to confirm');
+    }
+    const removed = await db.deletePersonData(query);
+    for (const key of removed.cvPaths) await storage.removeFile(key);
+    for (const id of removed.claimIds) await visits.release(id);
+    await log(req.me, req.me.name + ' deleted the personal data held for ' + (query.email || query.phone) + ' — ' + removed.applications + ' application(s), ' + removed.messages + ' enquiry/visit record(s)');
+    back(res, '/admin/data', 'Deleted ' + (removed.applications + removed.messages) + ' record(s). Nothing about that person remains.');
+  }));
+
+  app.post('/admin/data/sweep', need('privacy', 'edit'), wrap(async (req, res) => {
+    if (!RETENTION_DAYS) return res.redirect('/admin/data');
+    const n = await clearOld(req.me);
+    lastSweep = Date.now();
+    back(res, '/admin/data', n ? 'Removed ' + n + ' job application(s) older than ' + RETENTION_DAYS + ' days.' : 'Nothing was old enough to remove.');
   }));
 
   /* ---------- Activity log ---------- */

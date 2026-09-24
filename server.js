@@ -87,12 +87,23 @@ function siteUrl(req) {
   return proto + '://' + req.get('host');
 }
 
+// Tell the enquiries inbox about a new submission (only if email is set up).
+function alert(req, res, subject, rows, replyTo, path) {
+  if (!mailer.configured()) return;
+  mailer.alertInbox(res.locals.SITE.email, {
+    subject, heading: subject, rows, replyTo,
+    link: { label: 'Open the staff hub', url: siteUrl(req) + (path || '/admin/enquiries') },
+  });
+}
+
 const CARE_TYPES = ['Residential Care', 'Nursing Care', 'Dementia Care', 'Respite Care', 'End-of-life Care'];
 const lower = (s) => (s || '').toLowerCase();
 
 // Shared locals available to every view
 app.use(wrap(async (req, res, next) => {
   res.locals.SITE = await db.settings();
+  // Region filters list the regions the homes are actually in.
+  res.locals.homeRegions = [...new Set((await db.homes()).map((h) => h.region).filter(Boolean))].sort();
   res.locals.year = new Date().getFullYear();
   res.locals.currentPath = req.path;
   res.locals.title = '';
@@ -249,6 +260,7 @@ app.post('/care-homes/:id/visit', wrap(async (req, res) => {
       (f.careType ? ` Care needed: ${f.careType}.` : '') +
       (f.notes ? ` Notes: ${String(f.notes).slice(0, 2000)}` : ''),
   });
+  alert(req, res, 'Visit request — ' + home.name, [['Name', name], ['Phone', phone], ['Email', email], ['Preferred', when], ['Care needed', f.careType], ['Notes', f.notes]], email);
   res.render('home', await homeLocals(req, res, home, { visitSent: true }));
 }));
 
@@ -301,6 +313,7 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
       button: { label: 'Get directions', url: directions },
     }).catch(() => {});
   }
+  alert(req, res, 'Visit booked online — ' + home.name + ', ' + when, [['Name', name], ['Phone', phone], ['Email', email], ['Care needed', f.careType], ['Notes', f.notes]], email, '/admin/enquiries?tab=progress');
   if (mailer.configured()) {
     const hubAuth = require('./hub/auth'), access = require('./hub/access');
     const staff = (await hubAuth.allUsers()).filter((u) => u.status === 'active' && u.email && access.can(u, 'enquiries', 'view') && access.covers(u, home.id));
@@ -387,6 +400,7 @@ app.post('/careers/contact', wrap(async (req, res) => {
     home: f.home || '',
     message: (f.role ? `Role of interest: ${String(f.role).slice(0, 120)}. ` : '') + message.slice(0, 4000),
   });
+  alert(req, res, 'Careers question: ' + (f.topic || 'General question'), [['Name', name], ['Email', email], ['Phone', f.phone], ['Role', f.role], ['Home', f.home], ['Message', message]], email, '/admin/applications');
   res.render('careers-contact', { title: 'Contact our recruitment team', homes, form: {}, sent: true, error: null });
 }));
 
@@ -430,6 +444,7 @@ app.post('/careers/:id/apply', upload.single('cv'), wrap(async (req, res) => {
     cvFilename: cv.filename,
     cvPath: cv.key,
   });
+  alert(req, res, 'New application: ' + job.title, [['Name', name], ['Email', email], ['Phone', phone], ['Right to work', rightToWork], ['CV', cv.filename ? 'Uploaded — open it in the staff hub' : 'None'], ['Message', message]], email, '/admin/applications?job=' + encodeURIComponent(job.id));
 
   res.render('apply-success', { title: 'Application received', job });
 }));
@@ -450,6 +465,7 @@ app.post('/contact', wrap(async (req, res) => {
   const { name, email, phone, subject, message } = req.body;
   if (name && email && message) {
     await db.addMessage({ name, email, phone, subject, message });
+    alert(req, res, 'New enquiry: ' + (subject || 'General enquiry'), [['Name', name], ['Email', email], ['Phone', phone], ['Message', message]], email);
     return res.render('contact', await contactLocals({ sent: true }));
   }
   res.render('contact', await contactLocals({ form: req.body }));
@@ -468,6 +484,7 @@ app.post('/callback', wrap(async (req, res) => {
       home: home || '',
       message: `Please call me back. Best time: ${time || 'Anytime'}.` + (home ? ` Home of interest: ${home}.` : ''),
     });
+    alert(req, res, 'Callback request: ' + name, [['Name', name], ['Phone', phone], ['Best time', time || 'Anytime'], ['Home', home]]);
     return res.render('contact', await contactLocals({ callbackSent: true }));
   }
   res.render('contact', await contactLocals({ cbForm: req.body }));

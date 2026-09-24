@@ -7,7 +7,7 @@
    data-region="<%= h.region %>"
    data-care="<%= h.careTypes.join('|') %>"
    data-lat="<%= h.lat %>" data-lng="<%= h.lng %>"<%- (typeof hidden !== 'undefined' && hidden) ? ' style="display:none"' : '' %>>
-  <div class="home-card__media<%= h.photo ? ' has-photo' : '' %>"<% if (h.photo) { %> style="background-image:url('/images/<%= h.photo %>'); background-repeat:no-repeat; background-position:center; background-size:cover;"<% } %>>
+  <div class="home-card__media<%= h.photo ? ' has-photo' : '' %>"<% if (h.photo) { %> style="background-image:url('<%= photoSrc(h.photo) %>'); background-repeat:no-repeat; background-position:center; background-size:cover;"<% } %>>
     <span class="home-card__rating <%= cqcClass(h) %>">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Z"/></svg>
       CQC: <%= cqcLabel(h) %>

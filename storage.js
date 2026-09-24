@@ -105,7 +105,32 @@ function localPath(key, forWriting) {
   return fs.existsSync(full) ? full : null;
 }
 
+/* ---------- Home photos (public, unlike everything above) ----------
+   Supabase: a PUBLIC bucket (SUPABASE_PHOTO_BUCKET, default "home-photos"),
+   returning its public URL. Locally: public/images/uploads, served by the
+   site. On Vercel without Supabase there's nowhere lasting to put them. */
+const PHOTO_BUCKET = process.env.SUPABASE_PHOTO_BUCKET || 'home-photos';
+const PHOTO_DIR = path.join(__dirname, 'public', 'images', 'uploads');
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+
+async function savePhoto(file) {
+  if (!file || !file.buffer) return '';
+  if (!PHOTO_TYPES.includes(file.mimetype)) throw new Error('Photos must be JPEG, PNG, WebP or AVIF images.');
+  const key = safeName(file.originalname);
+  if (useSupabase) {
+    const { error } = await supabase().storage.from(PHOTO_BUCKET)
+      .upload(key, file.buffer, { contentType: file.mimetype, upsert: false, cacheControl: '31536000' });
+    if (error) throw new Error('Photo upload failed: ' + error.message + ' — check a PUBLIC bucket called "' + PHOTO_BUCKET + '" exists in Supabase Storage.');
+    return supabase().storage.from(PHOTO_BUCKET).getPublicUrl(key).data.publicUrl;
+  }
+  if (process.env.VERCEL) throw new Error('Photo uploads need Supabase Storage set up (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY).');
+  fs.mkdirSync(PHOTO_DIR, { recursive: true });
+  fs.writeFileSync(path.join(PHOTO_DIR, key), file.buffer);
+  return '/images/uploads/' + key;
+}
+
 module.exports = {
+  savePhoto,
   saveFile, saveCv, downloadUrl, removeFile, localPath,
   cvDownloadUrl: downloadUrl,
   localCvPath: localPath,

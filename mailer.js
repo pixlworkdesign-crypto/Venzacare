@@ -31,14 +31,17 @@ function render({ heading, lines = [], button }) {
 }
 
 /* Send one email. Returns true if it was accepted for delivery. */
-async function send({ to, subject, heading, lines, button }) {
+async function send({ to, subject, heading, lines, button, replyTo }) {
   if (!configured() || !to) return false;
   const body = render({ heading: heading || subject, lines, button });
   try {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { authorization: 'Bearer ' + API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ from: FROM, to: [to], subject, html: body.html, text: body.text }),
+      body: JSON.stringify(Object.assign(
+        { from: FROM, to: [to], subject, html: body.html, text: body.text },
+        replyTo ? { reply_to: replyTo } : {}
+      )),
     });
     if (!r.ok) console.error('[mail] send failed', r.status, await r.text().catch(() => ''));
     return r.ok;
@@ -73,4 +76,14 @@ async function sendMany(recipients, message) {
   return sent;
 }
 
-module.exports = { configured, send, sendMany };
+/* A short alert to the enquiries inbox when a family or applicant gets in
+   touch. Reply-To is the sender, so replying in the inbox answers them.
+   CVs are never attached — the link goes to the staff hub, which needs a
+   sign-in. Best effort: a failed email never fails the form. */
+function alertInbox(inbox, { subject, heading, rows, replyTo, link }) {
+  const to = (process.env.ALERT_EMAIL || '').trim() || inbox;
+  const lines = (rows || []).filter((r) => r[1]).map((r) => r[0] + ': ' + r[1]);
+  return send({ to, subject, heading, lines, replyTo: replyTo || undefined, button: link }).catch(() => false);
+}
+
+module.exports = { configured, send, sendMany, alertInbox };

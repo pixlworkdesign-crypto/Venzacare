@@ -25,7 +25,7 @@
           <label for="region">Region</label>
           <select id="region" name="region">
             <option value="">All regions</option>
-            <% SITE.regions.forEach(function(r){ %><option value="<%= r %>" <%= region===r?'selected':'' %>><%= r %></option><% }) %>
+            <% homeRegions.forEach(function(r){ %><option value="<%= r %>" <%= region===r?'selected':'' %>><%= r %></option><% }) %>
           </select>
         </div>
         <div class="field">
