@@ -202,10 +202,9 @@ module.exports = function mountHub(app, deps) {
      Vercel's own login, so a link built from it asks people to sign in to
      Vercel. Say so, instead of leaving it to be discovered. */
   function linkWarning(req) {
-    if ((process.env.SITE_URL || '').trim()) return null;
-    const host = (req.get('host') || '').toLowerCase();
-    if (!host.endsWith('.vercel.app')) return null;
-    return host;
+    let host = '';
+    try { host = new URL(siteUrl(req)).host; } catch (e) { return null; }
+    return deps.isOneOffVercelHost(host) ? host : null;
   }
 
   async function issueLink(req, user, kind) {
