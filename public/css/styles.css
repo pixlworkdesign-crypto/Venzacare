@@ -1335,3 +1335,16 @@ a.hub-who:hover strong { text-decoration: underline; }
 }
 .check-grid label, .hub-checks label { flex-direction: row; width: auto; }
 .check-grid input, .hub-checks input { width: 17px; height: 17px; flex: none; margin: 0; }
+
+/* Contact: form card and the right-hand column end on the same line.
+   Both columns stretch to the taller one, and the message box grows to
+   take up any spare height so the Send button sits at the bottom. */
+@media (min-width: 961px) {
+  .contact-grid { align-items: stretch; }
+  .contact-aside { position: static; }
+  .contact-panel { display: flex; flex-direction: column; }
+  .contact-form { flex: 1; display: flex; flex-direction: column; }
+  .contact-form .field:has(textarea) { flex: 1; display: flex; flex-direction: column; }
+  .contact-form textarea { flex: 1; }
+  .contact-next { flex: 1; }
+}
