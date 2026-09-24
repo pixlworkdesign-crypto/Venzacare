@@ -21,7 +21,10 @@
   });
 
   // "+ New post" / "+ Invite" buttons open their <details> panel.
+  // The panel stays hidden until its button is clicked, so it isn't shown twice.
   document.querySelectorAll('[data-open]').forEach(function (a) {
+    var panel = document.getElementById(a.getAttribute('data-open'));
+    if (panel) panel.classList.add('is-toggled');
     a.addEventListener('click', function (e) {
       var d = document.getElementById(a.getAttribute('data-open'));
       if (!d) return;
