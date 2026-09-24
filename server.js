@@ -80,9 +80,33 @@ function sameText(a, b) {
 
 /* The public address of the site, for canonical links, the sitemap and
    social cards. Set SITE_URL in production; otherwise use the request host. */
+/* Vercel gives every deployment its own address (project-abc123xyz-team…)
+   and every branch a preview address (project-git-branch-team…). Both are
+   usually behind Vercel's login and never change to newer versions, so
+   they must not be used for links people are sent. */
+function isOneOffVercelHost(host) {
+  return /^[a-z0-9-]+-(git-[a-z0-9-]+|[a-z0-9]{9})-[a-z0-9-]+\.vercel\.app$/i.test(String(host || ''));
+}
+
+// SITE_URL as set, tidied: "https://" added if missing, trailing "/" removed.
+function configuredSiteUrl() {
+  let v = env('SITE_URL').replace(/\/+$/, '');
+  if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v;
+  return v;
+}
+function siteUrlProblem() {
+  const v = configuredSiteUrl();
+  if (!v) return null;
+  let host = '';
+  try { host = new URL(v).host; } catch (e) { return 'SITE_URL (' + v + ') isn’t a valid web address, so it’s being ignored.'; }
+  if (isOneOffVercelHost(host)) {
+    return 'SITE_URL is set to ' + host + ', which is a single Vercel deployment or preview (behind Vercel’s login), so it’s being ignored. Set it to your main address, e.g. https://venzacare.vercel.app, and redeploy.';
+  }
+  return null;
+}
+
 function siteUrl(req) {
-  const fixed = env('SITE_URL').replace(/\/$/, '');
-  if (fixed) return fixed;
+  if (configuredSiteUrl() && !siteUrlProblem()) return configuredSiteUrl();
   const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0];
   return proto + '://' + req.get('host');
 }
@@ -557,11 +581,13 @@ app.get('/sitemap.xml', wrap(async (req, res) => {
 // Is the database connected? Plain-English answers, no secrets.
 app.get('/api/health', wrap(async (req, res) => {
   const h = await db.health();
+  const siteProblem = siteUrlProblem();
+  if (siteProblem) h.problems.push(siteProblem);
   res.status(h.ok ? 200 : 503).json({
     ok: h.ok,
     database: h.backend === 'postgres' ? 'Supabase / Postgres' : 'local file (not persistent)',
     deployment: DEPLOY_ENV,
-    linksUse: env('SITE_URL') || 'the address the page was opened on (set SITE_URL to fix this)',
+    linksUse: siteUrl(req) + (configuredSiteUrl() && !siteUrlProblem() ? '' : ' (the address this page was opened on — set SITE_URL to your main address)'),
     openedOn: req.get('host'),
     adminSignIn: HUB_SEALED ? 'disabled — SESSION_SECRET not set on this deployment' : 'enabled',
     emergencyOwnerLogin: ADMIN_PASS ? 'set' : 'not set (ADMIN_PASS)',
@@ -721,6 +747,7 @@ app.post('/api/chat', async (req, res) => {
 mountHub(app, {
   wrap,
   siteUrl,
+  isOneOffVercelHost,
   sameText,
   CARE_TYPES,
   config: { ADMIN_USER, ADMIN_PASS, SESSION_SECRET, IS_PROD, SEALED: HUB_SEALED, sealedHint: adminSetupHint },

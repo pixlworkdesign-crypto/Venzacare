@@ -8,8 +8,8 @@
 <% } %>
 <% if (typeof linkWarning !== 'undefined' && linkWarning) { %>
 <div class="hub-notice hub-notice--bad" role="alert">
-  <strong>This link may ask people to sign in to Vercel.</strong> It starts with <code><%= linkWarning %></code>, the address you’re using now, and Vercel usually protects these addresses with its own login.
-  To fix it for good: in Vercel, add <code>SITE_URL</code> under <strong>Settings → Environment Variables</strong>, set to your public address (the one under <strong>Domains</strong>), then redeploy.
+  <strong>This link may ask people to sign in to Vercel.</strong> It starts with <code><%= linkWarning %></code>, a single Vercel deployment or preview address, and Vercel usually protects these with its own login.
+  To fix it for good: in Vercel, set <code>SITE_URL</code> under <strong>Settings → Environment Variables</strong> to your main address (e.g. <code>https://venzacare.vercel.app</code>), then redeploy.
   Or turn off <strong>Settings → Deployment Protection → Vercel Authentication</strong>.
 </div>
 <% } %>
