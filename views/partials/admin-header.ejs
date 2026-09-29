@@ -19,8 +19,7 @@
       { href: '/admin', key: 'overview', label: 'Overview', show: true, icon: 'M3 12 12 4l9 8M5 10v10h14V10' },
       { href: '/admin/homes', key: 'homes', label: 'Homes', show: hubCan('homes') || hubCan('fees') || hubCan('availability'), icon: 'M3 21h18M5 21V8l7-5 7 5v13M10 21v-6h4v6' },
       { href: '/admin/enquiries', key: 'enquiries', label: 'Enquiries', show: hubCan('enquiries'), count: navCounts.enquiries, icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
-      { href: '/admin/jobs', key: 'jobs', label: 'Jobs', show: hubCan('jobs') || hubCan('applications'), icon: 'M3 7h18v13H3zM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2' },
-      { href: '/admin/applications', key: 'applications', label: 'Applications', show: hubCan('applications'), icon: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5' }
+      { href: '/admin/recruitment', key: 'recruitment', label: 'Recruitment', show: hubCan('jobs') || hubCan('applications'), count: navCounts.recruitment, also: ['/admin/jobs', '/admin/applications'], icon: 'M3 7h18v13H3zM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2' }
     ]},
     { label: 'Staff hub', items: [
       { href: '/admin/noticeboard', key: 'noticeboard', label: 'Noticeboard', show: true, count: navCounts.noticeboard, icon: 'M4 4h16v12H8l-4 4zM8 8h8M8 12h5' },
@@ -35,14 +34,14 @@
   ];
   function isOn(it) {
     if (it.href === '/admin') return currentPath === '/admin';
-    return currentPath === it.href || currentPath.indexOf(it.href + '/') === 0;
+    return [it.href].concat(it.also || []).some(function (h) { return currentPath === h || currentPath.indexOf(h + '/') === 0; });
   }
   var initials = me.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase();
 %>
   <a class="skip-link" href="#hub-main">Skip to main content</a>
   <div class="hub-top">
     <a href="/admin" class="hub-top__brand"><img src="/images/logo-white.png" alt="Venza Care" /><span>Staff hub</span></a>
-    <button type="button" class="hub-menu" aria-controls="hubNav" aria-expanded="false">Menu<% if (navCounts.noticeboard + navCounts.enquiries) { %> <span class="hub-count"><%= navCounts.noticeboard + navCounts.enquiries %></span><% } %></button>
+    <button type="button" class="hub-menu" aria-controls="hubNav" aria-expanded="false">Menu<% var navTotal = navCounts.noticeboard + navCounts.enquiries + navCounts.recruitment; if (navTotal) { %> <span class="hub-count"><%= navTotal %></span><% } %></button>
   </div>
   <div class="hub">
     <aside class="hub-nav" id="hubNav" aria-label="Staff hub">

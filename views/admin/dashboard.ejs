@@ -1,12 +1,6 @@
 <%- include('../partials/admin-header') %>
 
-<div class="hub-head">
-  <div>
-    <h1 class="hub-h1">Jobs</h1>
-    <p class="muted">Vacancies on the careers site<%= me.homes === 'all' ? '' : ' for ' + homesLabel(me) %>. Anything open appears on the website straight away.</p>
-  </div>
-  <% if (canEdit) { %><a href="/admin/jobs/new" class="btn btn--primary">+ Post a job</a><% } %>
-</div>
+<%- include('../partials/recruit-tabs', { intro: 'Vacancies on the careers site' + (me.homes === 'all' ? '' : ' for ' + homesLabel(me)) + '. Anything open appears on the website straight away.' }) %>
 
 <div class="hub-card">
   <% if (jobs.length) { %>
@@ -25,7 +19,7 @@
         <td><span class="badge <%= job.status === 'open' ? 'badge--open' : 'badge--closed' %>"><%= job.status %></span></td>
         <td>
           <% if (!canApps) { %><span class="muted">—</span>
-          <% } else if (counts[job.id]) { %><a href="/admin/applications?job=<%= job.id %>"><strong><%= counts[job.id] %></strong> view</a>
+          <% } else if (counts[job.id]) { var c = counts[job.id]; %><a href="/admin/applications?job=<%= job.id %>"><strong><%= c.total %></strong> application<%= c.total === 1 ? '' : 's' %></a><% if (c.fresh) { %> <span class="hub-chip"><%= c.fresh %> new</span><% } %>
           <% } else { %><span class="muted">0</span><% } %>
         </td>
         <td class="muted" style="font-size:.85rem;"><%= new Date(job.postedAt).toLocaleDateString('en-GB') %></td>
