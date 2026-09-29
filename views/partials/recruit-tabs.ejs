@@ -1,0 +1,13 @@
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1">Recruitment</h1>
+    <p class="muted"><%= intro %></p>
+  </div>
+  <% if (recruitTab === 'jobs' && hubCan('jobs', 'edit')) { %><a href="/admin/jobs/new" class="btn btn--primary">+ Post a job</a><% } %>
+</div>
+<% if (hubCan('applications') && hubCan('jobs')) { %>
+<nav class="hub-tabs" aria-label="Recruitment">
+  <a href="/admin/applications" class="<%= recruitTab === 'applications' ? 'is-on' : '' %>"<%- recruitTab === 'applications' ? ' aria-current="page"' : '' %>>Applications<% if (navCounts.recruitment) { %> <span class="hub-chip"><%= navCounts.recruitment %> new</span><% } %></a>
+  <a href="/admin/jobs" class="<%= recruitTab === 'jobs' ? 'is-on' : '' %>"<%- recruitTab === 'jobs' ? ' aria-current="page"' : '' %>>Jobs</a>
+</nav>
+<% } %>
