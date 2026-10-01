@@ -7,7 +7,8 @@
   function sel(a,b){ return a===b ? 'selected' : ''; }
 %>
 
-<div class="hub-crumb"><a href="/admin/jobs">Jobs</a> › <%= mode === 'edit' ? 'Edit vacancy' : 'New vacancy' %></div>
+<div class="hub-crumb"><a href="/admin/recruitment">Recruitment</a> › <a href="/admin/jobs">Jobs</a> › <%= mode === 'edit' ? 'Edit vacancy' : 'New vacancy' %></div>
+<% if (mode === 'edit' && typeof applicationCount === 'number') { %><p class="hint" style="margin:-.4rem 0 1rem;"><% if (applicationCount) { %><a href="/admin/applications?job=<%= j.id %>">See the <%= applicationCount %> application<%= applicationCount === 1 ? '' : 's' %> for this job →</a><% } else { %>No applications for this job yet.<% } %></p><% } %>
 <h1 class="hub-h1"><%= mode === 'edit' ? 'Edit vacancy' : 'Post a new job' %></h1>
 <p class="muted">Anything you publish here appears instantly on the public <a href="/careers" target="_blank" rel="noopener">careers page</a>.</p>
 

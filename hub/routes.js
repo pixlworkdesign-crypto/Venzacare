@@ -102,12 +102,18 @@ module.exports = function mountHub(app, deps) {
     if (can(me, 'enquiries', 'view')) {
       newEnquiries = (await enquiryList(me)).filter((e) => e.stage === 'New').length;
     }
+    let newApplications = 0;
+    if (can(me, 'applications', 'view')) {
+      const ids = new Set((await db.jobs()).filter((j) => covers(me, j.homeId)).map((j) => j.id));
+      newApplications = (await db.applications()).filter((a) => ids.has(a.jobId) && (a.status || 'new') === 'new').length;
+    }
     Object.assign(res.locals, {
       me,
       hubCan: (a, l) => can(me, a, l),
       navCounts: {
         noticeboard: posts.filter((p) => p.mustRead && !readSet.has(p.id)).length,
         enquiries: newEnquiries,
+        recruitment: newApplications,
       },
       homesLabel: (u) => homesLabel(u, res.locals.hubHomes),
       hubHomes: await db.allHomes(),
@@ -578,9 +584,23 @@ module.exports = function mountHub(app, deps) {
   /* ---------- Jobs & applications ---------- */
   const jobInScope = (me, job) => covers(me, job.homeId);
 
-  app.get('/admin/jobs', need(['jobs', 'applications'], 'view'), wrap(async (req, res) => {
+  // Jobs and applications share one "Recruitment" tab; open whichever part they can see.
+  app.get('/admin/recruitment', need(['jobs', 'applications'], 'view'), (req, res) => {
+    res.redirect(can(req.me, 'applications', 'view') ? '/admin/applications' : '/admin/jobs');
+  });
+
+  app.get('/admin/jobs', need('jobs', 'view'), wrap(async (req, res) => {
     const jobs = (await db.jobs()).filter((j) => jobInScope(req.me, j));
-    res.render('admin/dashboard', { title: 'Jobs', jobs, counts: await db.applicationCounts(), canEdit: can(req.me, 'jobs', 'edit'), canApps: can(req.me, 'applications', 'view') });
+    const canApps = can(req.me, 'applications', 'view');
+    const counts = {};
+    if (canApps) {
+      (await db.applications()).forEach((a) => {
+        const c = counts[a.jobId] || (counts[a.jobId] = { total: 0, fresh: 0 });
+        c.total++;
+        if ((a.status || 'new') === 'new') c.fresh++;
+      });
+    }
+    res.render('admin/dashboard', { title: 'Jobs', recruitTab: 'jobs', jobs, counts, canEdit: can(req.me, 'jobs', 'edit'), canApps });
   }));
 
   function jobHomes(me, homes) { return homes.filter((h) => covers(me, h.id)); }
@@ -614,7 +634,8 @@ module.exports = function mountHub(app, deps) {
   app.get('/admin/jobs/:id/edit', need('jobs', 'edit'), wrap(async (req, res) => {
     const job = await scopedJob(req);
     if (!job) return res.redirect('/admin/jobs');
-    res.render('admin/job-form', { title: 'Edit vacancy', mode: 'edit', job, homes: jobHomes(req.me, await db.allHomes()), allowNoHome: req.me.homes === 'all' });
+    const applicationCount = can(req.me, 'applications', 'view') ? (await db.applications(job.id)).length : null;
+    res.render('admin/job-form', { title: 'Edit vacancy', mode: 'edit', job, applicationCount, homes: jobHomes(req.me, await db.allHomes()), allowNoHome: req.me.homes === 'all' });
   }));
 
   app.post('/admin/jobs/:id', need('jobs', 'edit'), wrap(async (req, res) => {
@@ -653,7 +674,7 @@ module.exports = function mountHub(app, deps) {
     // Messages sent through the careers "Contact HR" form.
     const recruitMsgs = (await db.messages()).filter((m) => isCareers(m) && covers(req.me, (res.locals.hubHomes.find((h) => h.name === m.home) || {}).id));
     res.render('admin/applications', {
-      title: 'Applications', applications: apps, jobs, jobId, recruitMsgs, status,
+      title: 'Applications', recruitTab: 'applications', applications: apps, jobs, jobId, recruitMsgs, status,
       STATUSES: db.APPLICATION_STATUSES, canEdit: can(req.me, 'applications', 'edit'),
       statusCounts: db.APPLICATION_STATUSES.reduce((m, x) => (m[x.value] = inScope.filter((a) => (a.status || 'new') === x.value).length, m), {}),
     });

@@ -1,9 +1,6 @@
 <%- include('../partials/admin-header') %>
 
-<div class="hub-head"><div>
-<h1 class="hub-h1">Applications</h1>
-<p class="muted">Applications for jobs<%= me.homes === 'all' ? '' : ' at ' + homesLabel(me) %>, plus messages sent to the recruitment team.</p>
-</div></div>
+<%- include('../partials/recruit-tabs', { intro: 'Applications for jobs' + (me.homes === 'all' ? '' : ' at ' + homesLabel(me)) + ', plus messages sent to the recruitment team.' }) %>
 
 <div class="hub-filter" role="group" aria-label="Filter by stage">
   <a href="/admin/applications?job=<%= encodeURIComponent(jobId) %>" class="<%= !status ? 'is-on' : '' %>">All</a>
