@@ -82,6 +82,8 @@
 <div class="hub-card">
   <div class="hub-card__head"><h2>Account</h2></div>
   <div class="hub-card__body hub-stack">
+    <% if (p.id === me.id) { %><div class="hub-notice">🔒 This is your own account, so you can’t pause, reset or delete it — that stops anyone locking themselves out. To change your password, go to <a href="/admin/account">My account</a>.</div>
+    <% } else if (protect) { %><div class="hub-notice">🔒 <%= protect %></div><% } %>
     <div class="hub-acct">
       <% if (p.status === 'paused') { %>
       <form action="/admin/people/<%= p.id %>/unpause" method="post"><button class="btn btn--ghost" <%= protect ? 'disabled' : '' %>>▶ Unpause account</button></form>
