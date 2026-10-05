@@ -91,7 +91,8 @@
   <div class="panel" id="visiting">
     <div class="panel__head"><h2>Visit booking</h2></div>
     <div class="panel__body">
-      <label class="checkbox" style="display:flex;margin-bottom:1rem;"><input type="checkbox" name="visitsEnabled" <%= visitSettings.enabled ? 'checked' : '' %> /> Let families book visits online</label>
+      <label class="checkbox" style="display:flex;margin-bottom:1rem;"><input type="checkbox" name="visitsEnabled" data-reveal="visitSettings" <%= visitSettings.enabled ? 'checked' : '' %> /> Let families book visits online</label>
+      <div id="visitSettings"<%= visitSettings.enabled ? '' : ' hidden' %>>
       <div class="field"><span class="label">Visiting days</span>
         <div class="check-grid" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr));">
           <% [1,2,3,4,5,6,0].forEach(function (d) { %><label><input type="checkbox" name="visitDays" value="<%= d %>" <%= visitSettings.days.indexOf(d) > -1 ? 'checked' : '' %> /> <%= DAY_NAMES[d] %></label><% }) %>
@@ -106,24 +107,25 @@
         <div class="field"><label for="visitWeeks">How far ahead (weeks)</label><input id="visitWeeks" name="visitWeeks" type="number" min="1" max="12" value="<%= visitSettings.weeksAhead %>" /></div>
         <div class="field"><label for="visitClosed">Dates with no visits</label><textarea id="visitClosed" name="visitClosed" rows="2" placeholder="2026-12-25"><%= visitSettings.closedDates.join('\n') %></textarea><span class="hint">One per line</span></div>
       </div>
+      </div>
     </div>
   </div>
   </fieldset>
   <% if (seeAvail) { %>
   <fieldset class="hub-fieldset" <%= canAvail ? "" : "disabled" %>>
   <div class="panel">
-    <div class="panel__head"><h2>Availability</h2></div>
+    <div class="panel__head"><h2>Room availability</h2></div>
     <div class="panel__body">
       <div class="grid-2">
-        <div class="field"><label for="availability">Status shown on the website</label>
+        <div class="field"><label for="availability">Does this home have free rooms?</label>
           <select id="availability" name="availability">
-            <option value="" <%= sel(d.availability,'') %>>Don't show</option>
-            <option value="available" <%= sel(d.availability,'available') %>>Rooms available now</option>
-            <option value="limited" <%= sel(d.availability,'limited') %>>Limited availability</option>
-            <option value="waitlist" <%= sel(d.availability,'waitlist') %>>Waiting list</option>
+            <option value="" <%= sel(d.availability,'') %>>Don’t say on the website</option>
+            <option value="available" <%= sel(d.availability,'available') %>>Yes — rooms free now</option>
+            <option value="limited" <%= sel(d.availability,'limited') %>>Only one or two free</option>
+            <option value="waitlist" <%= sel(d.availability,'waitlist') %>>No — full, taking a waiting list</option>
           </select>
         </div>
-        <div class="field"><label for="availabilityNote">Short note (optional)</label><input type="text" id="availabilityNote" name="availabilityNote" value="<%= d.availabilityNote %>" placeholder="e.g. Two en-suite rooms free from October" /></div>
+        <div class="field"><label for="availabilityNote">Extra detail for families (optional)</label><input type="text" id="availabilityNote" name="availabilityNote" value="<%= d.availabilityNote %>" placeholder="e.g. Two en-suite rooms free from October" /></div>
       </div>
     </div>
   </div>
@@ -189,14 +191,20 @@
   </fieldset>
   <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
   <div class="panel">
-    <div class="panel__head"><h2>Reviews &amp; getting here</h2></div>
+    <div class="panel__head"><h2>Reviews from carehome.co.uk</h2></div>
     <div class="panel__body">
-      <div class="field"><label for="carehomeUrl">carehome.co.uk page</label><input type="url" id="carehomeUrl" name="carehomeUrl" value="<%= d.carehomeUrl %>" placeholder="https://www.carehome.co.uk/carehome.cfm/searchazref/…" /></div>
+      <div class="field"><label for="carehomeUrl">Link to this home on carehome.co.uk</label><input type="url" id="carehomeUrl" name="carehomeUrl" value="<%= d.carehomeUrl %>" placeholder="https://www.carehome.co.uk/carehome.cfm/searchazref/…" /></div>
       <div class="grid-2">
-        <div class="field"><label for="reviewScore">Review score (out of 10)</label><input type="text" id="reviewScore" name="reviewScore" value="<%= d.reviewScore %>" placeholder="e.g. 9.6" /></div>
-        <div class="field"><label for="reviewCount">Number of reviews</label><input type="text" id="reviewCount" name="reviewCount" value="<%= d.reviewCount %>" placeholder="e.g. 42" /></div>
+        <div class="field"><label for="reviewScore">Score shown there (out of 10)</label><input type="text" id="reviewScore" name="reviewScore" value="<%= d.reviewScore %>" placeholder="e.g. 9.6" /></div>
+        <div class="field"><label for="reviewCount">Number of reviews shown there</label><input type="text" id="reviewCount" name="reviewCount" value="<%= d.reviewCount %>" placeholder="e.g. 42" /></div>
       </div>
-      <div class="field"><label for="parking">Parking &amp; directions note</label><textarea id="parking" name="parking" rows="2" placeholder="e.g. Free visitor parking on site. 5 minutes' walk from East Croydon station."><%= d.parking %></textarea></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Getting here</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="parking">Parking and travel</label><textarea id="parking" name="parking" rows="2" style="min-height:4.5rem;" placeholder="e.g. Free visitor parking on site. 5 minutes' walk from East Croydon station."><%= d.parking %></textarea></div>
     </div>
   </div>
 

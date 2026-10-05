@@ -4,8 +4,18 @@
 
   // Ask before destructive actions: <form data-confirm="Are you sure?">
   document.addEventListener('submit', function (e) {
-    var msg = e.target.getAttribute && e.target.getAttribute('data-confirm');
+    var by = e.submitter && e.submitter.getAttribute('data-confirm');
+    var msg = by || (e.target.getAttribute && e.target.getAttribute('data-confirm'));
     if (msg && !window.confirm(msg)) e.preventDefault();
+  });
+
+  // A checkbox that shows or hides a section: <input type="checkbox" data-reveal="sectionId">
+  document.querySelectorAll('[data-reveal]').forEach(function (box) {
+    var target = document.getElementById(box.getAttribute('data-reveal'));
+    if (!target) return;
+    var sync = function () { target.hidden = !box.checked; };
+    box.addEventListener('change', sync);
+    sync();
   });
 
   // Copy buttons: <button data-copy="#inputId">

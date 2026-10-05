@@ -64,6 +64,43 @@ function siteImage(SITE, key) {
   return photoSrc(custom || (slot ? slot.file : ''));
 }
 
+/* ---------- Types of care ----------
+   The main types of care, managed in the staff hub (Types of care) and kept
+   in site settings as SITE.careTypes. Each has a description and picture
+   for the Our care page; the picture is an uploaded URL or a Site images
+   slot key. SITE.specialistCare is the list of extra conditions a home can
+   tick (ABI, ARBD…). Blank settings mean these defaults. */
+const DEFAULT_CARE_TYPES = [
+  { name: 'Residential Care', image: 'careResidential', position: 'center 22%',
+    description: 'For people who no longer manage easily at home, residential care offers help with everyday things — washing, dressing, meals and medication — in a comfortable home, with a team on hand day and night. You keep your own routines and as much independence as you like.' },
+  { name: 'Nursing Care', image: 'careNursing', position: 'center 22%',
+    description: 'When health needs go beyond day-to-day support, our registered nurses provide care around the clock — for long-term conditions, recovery after a hospital stay, and ongoing clinical needs — working closely with local GPs and community health teams.' },
+  { name: 'Dementia Care', image: 'careDementia', position: 'center 22%',
+    description: 'Our teams are experienced in caring for people living with dementia, in calm, familiar surroundings designed to feel safe. We take time to learn each resident\'s history and routines, so they are known and understood — including on the harder days. At Fieldway in Mitcham, a dedicated floor specialises in dementia care.' },
+  { name: 'Respite Care', image: 'careRespite', position: 'center',
+    description: 'A short stay — to recover after a hospital visit, to give a family carer a break, or simply to try a home before deciding. Respite guests get exactly the same care, meals and activities as everyone else, for as long or short a stay as you need, subject to a room being free.' },
+  { name: 'End-of-life Care', image: 'carePalliative', position: 'center',
+    description: 'In someone\'s final months, our focus is comfort, dignity and choice. We work closely with your GP, district nurses and family to manage symptoms and make sure no one is alone.' },
+];
+const DEFAULT_SPECIALIST_CARE = [
+  'Acquired brain injury (ABI)', 'Alcohol-related brain damage (ARBD)', 'Alcohol & substance misuse', 'Bariatric care',
+  'Cancer care', 'Complex care', 'Convalescent care', 'COPD & pulmonary disease', 'Diabetes', 'Epilepsy',
+  'Huntington’s disease', 'Learning disabilities', 'Mental health support', 'Motor neurone disease', 'Multiple sclerosis',
+  'Parkinson’s disease', 'Physical disability', 'Stroke recovery', 'Visual & hearing impairment', 'Younger adults (18–65)',
+];
+function careTypesOf(SITE) {
+  return (SITE && Array.isArray(SITE.careTypes) && SITE.careTypes.length) ? SITE.careTypes : DEFAULT_CARE_TYPES;
+}
+function careTypeNames(SITE) { return careTypesOf(SITE).map((c) => c.name); }
+function specialistCareOf(SITE) {
+  return (SITE && Array.isArray(SITE.specialistCare)) ? SITE.specialistCare : DEFAULT_SPECIALIST_CARE;
+}
+// A care type's picture: an uploaded one, a Site images slot, or none.
+function careImage(SITE, c) {
+  if (!c.image) return '';
+  return SITE_IMAGES.some((s) => s.key === c.image) ? siteImage(SITE, c.image) : photoSrc(c.image);
+}
+
 /* ---------- Fees ---------- */
 const FEE_ROWS = [
   { key: 'residential', label: 'Residential care' },
@@ -247,6 +284,7 @@ function ldScript(obj) {
 module.exports = {
   CQC_RATINGS, cqcLabel, cqcClass, cqcReportUrl, homeAddress,
   photoSrc, photoAbs, SITE_IMAGES, siteImage,
+  DEFAULT_CARE_TYPES, DEFAULT_SPECIALIST_CARE, careTypesOf, careTypeNames, specialistCareOf, careImage,
   FEE_ROWS, gbp, fromPrice, INCLUDED, EXTRAS,
   FEE_FAQS, GENERAL_FAQS, WHAT_TO_BRING,
   faqJsonLd, orgJsonLd, homeJsonLd, ldScript,

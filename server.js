@@ -120,14 +120,6 @@ function alert(req, res, subject, rows, replyTo, path) {
   });
 }
 
-const CARE_TYPES = ['Residential Care', 'Nursing Care', 'Dementia Care', 'Respite Care', 'End-of-life Care'];
-// Conditions and needs a home can tick as well as the main types of care.
-const SPECIALIST_CARE = [
-  'Acquired brain injury (ABI)', 'Alcohol-related brain damage (ARBD)', 'Alcohol & substance misuse', 'Bariatric care',
-  'Cancer care', 'Complex care', 'Convalescent care', 'COPD & pulmonary disease', 'Diabetes', 'Epilepsy',
-  'Huntington’s disease', 'Learning disabilities', 'Mental health support', 'Motor neurone disease', 'Multiple sclerosis',
-  'Parkinson’s disease', 'Physical disability', 'Stroke recovery', 'Visual & hearing impairment', 'Younger adults (18–65)',
-];
 const lower = (s) => (s || '').toLowerCase();
 
 // Shared locals available to every view
@@ -137,7 +129,7 @@ app.use(wrap(async (req, res, next) => {
   const liveHomes = await db.homes();
   res.locals.homeRegions = [...new Set(liveHomes.map((h) => h.region).filter(Boolean))].sort();
   // …and the "Type of care" filters list the care the homes actually offer.
-  res.locals.homeCareTypes = CARE_TYPES.filter((c) => liveHomes.some((h) => (h.careTypes || []).includes(c)));
+  res.locals.homeCareTypes = content.careTypeNames(res.locals.SITE).filter((c) => liveHomes.some((h) => (h.careTypes || []).includes(c)));
   // The "Our team" page shows only if an admin hasn't hidden it and someone has been added.
   res.locals.hasTeam = !res.locals.SITE.teamHidden && (await db.teamMembers()).length > 0;
   res.locals.year = new Date().getFullYear();
@@ -808,8 +800,6 @@ mountHub(app, {
   siteUrl,
   isOneOffVercelHost,
   sameText,
-  CARE_TYPES,
-  SPECIALIST_CARE,
   config: { ADMIN_USER, ADMIN_PASS, SESSION_SECRET, IS_PROD, SEALED: HUB_SEALED, sealedHint: adminSetupHint },
 });
 

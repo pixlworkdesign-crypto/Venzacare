@@ -1,0 +1,60 @@
+<%- include('../partials/admin-header') %>
+
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1">Types of care</h1>
+  </div>
+</div>
+
+<form action="/admin/care-types" method="post" class="admin-form" enctype="multipart/form-data">
+  <% types.forEach(function (c, i) { var img = careImage(SITE, c); %>
+  <div class="panel care-type">
+    <div class="panel__head care-type__head">
+      <h2><%= c.name %></h2>
+      <div class="care-type__tools">
+        <button type="submit" name="move" value="<%= i %>:up" class="btn btn--muted btn--sm" aria-label="Move <%= c.name %> up" formnovalidate <%= i === 0 ? 'disabled' : '' %>>↑</button>
+        <button type="submit" name="move" value="<%= i %>:down" class="btn btn--muted btn--sm" aria-label="Move <%= c.name %> down" formnovalidate <%= i === types.length - 1 ? 'disabled' : '' %>>↓</button>
+        <button type="submit" name="remove" value="<%= i %>" class="btn btn--muted btn--sm" formnovalidate data-confirm="Remove <%= c.name.replace(/"/g, '') %>? It will be taken off every home that offers it.">Remove</button>
+      </div>
+    </div>
+    <div class="panel__body care-type__body">
+      <input type="hidden" name="orig_<%= i %>" value="<%= c.name %>" />
+      <div>
+        <div class="field"><label for="name_<%= i %>">Name</label><input id="name_<%= i %>" name="name_<%= i %>" value="<%= c.name %>" maxlength="60" required /></div>
+        <div class="field"><label for="desc_<%= i %>">Description on the Our care page</label><textarea id="desc_<%= i %>" name="desc_<%= i %>" rows="4"><%= c.description %></textarea></div>
+      </div>
+      <div class="field care-type__pic">
+        <span class="label">Picture</span>
+        <% if (img) { %><img src="<%= img %>" alt="" loading="lazy" /><% } %>
+        <input type="file" id="img_<%= i %>" name="img_<%= i %>" accept="image/jpeg,image/png,image/webp,image/avif" aria-label="New picture for <%= c.name %>" />
+      </div>
+    </div>
+  </div>
+  <% }) %>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Add a type of care</h2></div>
+    <div class="panel__body care-type__body">
+      <div>
+        <div class="field"><label for="name_new">Name</label><input id="name_new" name="name_new" maxlength="60" placeholder="e.g. Complex care" /></div>
+        <div class="field"><label for="desc_new">Description on the Our care page</label><textarea id="desc_new" name="desc_new" rows="4"></textarea></div>
+      </div>
+      <div class="field care-type__pic">
+        <span class="label">Picture</span>
+        <input type="file" id="img_new" name="img_new" accept="image/jpeg,image/png,image/webp,image/avif" aria-label="Picture for the new type of care" />
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Specialist care</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="specialist">One per line</label><textarea id="specialist" name="specialist" rows="12"><%= specialist.join('\n') %></textarea></div>
+    </div>
+  </div>
+
+  <p class="hint">Pictures: JPEG, PNG or WebP, up to 10 MB.</p>
+  <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;"><button type="submit" class="btn btn--primary">Save changes</button></div>
+</form>
+
+<%- include('../partials/admin-footer') %>

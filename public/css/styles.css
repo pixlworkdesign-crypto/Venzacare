@@ -1483,3 +1483,10 @@ a.hub-who:hover strong { text-decoration: underline; }
 /* Keep the floating chat button from covering the footer's last links (e.g. Staff login) */
 .footer__bottom, .careers-footer__bottom { padding-right: 4.5rem; }
 .hub-card > p.muted:only-child { margin: 0; padding: 1rem 1.2rem; }
+
+/* Staff hub: Types of care */
+.care-type__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.care-type__tools { display: flex; gap: 0.4rem; }
+.care-type__body { display: grid; grid-template-columns: 1fr 260px; gap: 1.5rem; align-items: start; }
+.care-type__pic img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; margin-bottom: 0.5rem; }
+@media (max-width: 720px) { .care-type__body { grid-template-columns: 1fr; } }

@@ -16,7 +16,7 @@ const db = require('../db');
 const storage = require('../storage');
 const mailer = require('../mailer');
 const visits = require('../visits');
-const { SITE_IMAGES } = require('../content');
+const { SITE_IMAGES, careTypesOf, careTypeNames, specialistCareOf } = require('../content');
 const auth = require('./auth');
 const access = require('./access');
 
@@ -67,7 +67,8 @@ async function geocode(postcode) {
 }
 
 module.exports = function mountHub(app, deps) {
-  const { wrap, siteUrl, CARE_TYPES, SPECIALIST_CARE, config } = deps;
+  const { wrap, siteUrl, config } = deps;
+  const careNames = (res) => careTypeNames(res.locals.SITE);
   const { ADMIN_USER, ADMIN_PASS, SESSION_SECRET, SEALED, sealedHint } = config;
 
   /* ---------- Shared helpers ---------- */
@@ -420,12 +421,76 @@ module.exports = function mountHub(app, deps) {
     back(res, '/admin/team', member ? 'Removed ' + member.name + ' from the Our team page.' : 'Already removed.');
   }));
 
+  /* ---------- Types of care ----------
+     The main types of care (name, Our care description and picture, order)
+     and the specialist care list. Renaming a type renames it on every home;
+     removing one takes it off every home. Whole-company home editors only. */
+  const careUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).any();
+  const needCare = [need('homes', 'edit'), (req, res, next) => (req.me.homes === 'all' ? next() : deny(res, 'Only people who cover the whole company can change the types of care.'))];
+
+  app.get('/admin/care-types', ...needCare, (req, res) => {
+    res.render('admin/care-types', { title: 'Types of care', types: careTypesOf(res.locals.SITE), specialist: specialistCareOf(res.locals.SITE) });
+  });
+
+  app.post('/admin/care-types', ...needCare, careUpload, wrap(async (req, res) => {
+    const f = req.body;
+    const old = careTypesOf(res.locals.SITE);
+    const file = (field) => (req.files || []).find((x) => x.fieldname === field);
+    const renames = {}, removed = [];
+    const newName = text(f.name_new, 60);
+    let types = [];
+    try {
+      for (let i = 0; i < old.length; i++) {
+        const prev = old.find((c) => c.name === f['orig_' + i]);
+        if (!prev) continue;
+        if (f.remove === String(i)) { removed.push(prev.name); continue; }
+        const name = text(f['name_' + i], 60) || prev.name;
+        if (name !== prev.name) renames[prev.name] = name;
+        const upload = file('img_' + i);
+        types.push({ name, description: text(f['desc_' + i], 1200), image: upload ? await storage.savePhoto(upload) : prev.image || '', position: prev.position || '' });
+      }
+      if (newName) {
+        const upload = file('img_new');
+        types.push({ name: newName, description: text(f.desc_new, 1200), image: upload ? await storage.savePhoto(upload) : '', position: 'center' });
+      }
+    } catch (err) {
+      return back(res, '/admin/care-types', err.message);
+    }
+    const seen = new Set();
+    for (const c of types) {
+      if (seen.has(c.name.toLowerCase())) return back(res, '/admin/care-types', '“' + c.name + '” is listed twice.');
+      seen.add(c.name.toLowerCase());
+    }
+    if (!types.length) return back(res, '/admin/care-types', 'Keep at least one type of care.');
+    const [mi, dir] = String(f.move || '').split(':');
+    const i = parseInt(mi, 10), j = i + (dir === 'up' ? -1 : 1);
+    if (f.move && types[i] && types[j]) [types[i], types[j]] = [types[j], types[i]];
+
+    const specialistCare = [...new Set(String(f.specialist || '').split(/\r?\n/).map((s) => text(s, 60)).filter(Boolean))];
+
+    // Carry renames and removals through to every home.
+    if (Object.keys(renames).length || removed.length) {
+      for (const h of await db.allHomes()) {
+        const next = (h.careTypes || []).filter((c) => !removed.includes(c)).map((c) => renames[c] || c);
+        if (JSON.stringify(next) !== JSON.stringify(h.careTypes || [])) await db.saveHome(Object.assign({}, h, { careTypes: next }));
+      }
+    }
+    await db.saveSettings({ careTypes: types, specialistCare });
+    const what = [].concat(
+      Object.entries(renames).map(([a, b]) => 'renamed ' + a + ' to ' + b),
+      removed.map((r) => 'removed ' + r),
+      newName ? ['added ' + newName] : []
+    );
+    await log(req.me, req.me.name + ' updated the types of care' + (what.length ? ' — ' + what.join(', ') : ''));
+    back(res, '/admin/care-types', f.move ? 'Order saved.' : 'Saved. The website shows the change within 30 seconds.');
+  }));
+
   /* ---------- Site images ----------
      The fixed pictures on the public pages (homepage banner, Our care…).
      Only people with "Website photos" access (Site administrators and Admins) can
      see or change them. */
   app.get('/admin/images', need('photos', 'edit'), (req, res) => {
-    res.render('admin/images', { title: 'Site images', slots: SITE_IMAGES, canEdit: true });
+    res.render('admin/images', { title: 'Site images', slots: SITE_IMAGES.filter((s) => !/^care[A-Z]/.test(s.key)), canEdit: true });
   });
 
   app.post('/admin/images', need('photos', 'edit'), siteImageUpload, wrap(async (req, res) => {
@@ -455,7 +520,7 @@ module.exports = function mountHub(app, deps) {
 
   app.get('/admin/homes/new', need('homes', 'edit'), (req, res) => {
     if (req.me.homes !== 'all') return deny(res, 'Only people who cover the whole company can add a home.');
-    res.render('hub/home-new', { title: 'Add a home', regions: [...new Set((res.locals.SITE.regions || []).concat(res.locals.hubHomes.map((h) => h.region)).filter(Boolean))].sort(), careTypes: CARE_TYPES, form: {}, error: null });
+    res.render('hub/home-new', { title: 'Add a home', regions: [...new Set((res.locals.SITE.regions || []).concat(res.locals.hubHomes.map((h) => h.region)).filter(Boolean))].sort(), careTypes: careNames(res), form: {}, error: null });
   });
 
   app.post('/admin/homes/new', need('homes', 'edit'), wrap(async (req, res) => {
@@ -463,12 +528,12 @@ module.exports = function mountHub(app, deps) {
     const f = req.body;
     const name = text(f.name, 80);
     if (!name || !text(f.town)) {
-      return res.render('hub/home-new', { title: 'Add a home', regions: [...new Set((res.locals.SITE.regions || []).concat(res.locals.hubHomes.map((h) => h.region)).filter(Boolean))].sort(), careTypes: CARE_TYPES, form: f, error: 'Give the home a name and a town.' });
+      return res.render('hub/home-new', { title: 'Add a home', regions: [...new Set((res.locals.SITE.regions || []).concat(res.locals.hubHomes.map((h) => h.region)).filter(Boolean))].sort(), careTypes: careNames(res), form: f, error: 'Give the home a name and a town.' });
     }
     let id = slug(name);
     const existing = await db.allHomes();
     while (existing.some((h) => h.id === id)) id = slug(name) + '-' + Math.random().toString(36).slice(2, 5);
-    const careTypes = [].concat(f.careTypes || []).filter((c) => CARE_TYPES.includes(c));
+    const careTypes = [].concat(f.careTypes || []).filter((c) => careNames(res).includes(c));
     const pt = await geocode(f.postcode);
     await db.saveHome({
       id, name, town: text(f.town, 60), postcode: text(f.postcode, 12).toUpperCase(), region: text(f.region, 40),
@@ -485,7 +550,7 @@ module.exports = function mountHub(app, deps) {
     const home = await db.anyHome(req.params.id);
     if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
     res.render('admin/home-form', {
-      title: 'Edit ' + home.name, home, careTypes: CARE_TYPES, specialistCare: SPECIALIST_CARE, error: null,
+      title: 'Edit ' + home.name, home, careTypes: careNames(res), specialistCare: specialistCareOf(res.locals.SITE), error: null,
       visitSettings: visits.settingsFor(home), DAY_NAMES: visits.DAY_NAMES, timeLabel: visits.timeLabel,
       jobCount: (await db.jobs()).filter((j) => j.homeId === home.id).length,
       canHomes: can(req.me, 'homes', 'edit'), canPhotos: can(req.me, 'homes', 'edit') && can(req.me, 'photos', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
@@ -540,7 +605,7 @@ module.exports = function mountHub(app, deps) {
           closedDates: String(f.visitClosed || '').split(/[\s,]+/).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)),
         },
       });
-      const careTypes = [].concat(f.careTypes || []).filter((c) => CARE_TYPES.includes(c));
+      const careTypes = [].concat(f.careTypes || []).filter((c) => careNames(res).includes(c));
       const cqc = CQC_OPTIONS.includes(f.cqc) ? f.cqc : home.cqc;
 
       // Map pin: worked out from the postcode whenever it changes (or is missing).
@@ -587,7 +652,7 @@ module.exports = function mountHub(app, deps) {
         region: text(f.region, 40) || home.region,
         lat, lng,
         // Ticked specialist care, then anything typed under "Other" (comma-separated).
-        specialisms: [...new Set([].concat(f.specialisms || []).filter((s) => SPECIALIST_CARE.includes(s))
+        specialisms: [...new Set([].concat(f.specialisms || []).filter((s) => specialistCareOf(res.locals.SITE).includes(s))
           .concat(String(f.specialismsOther || '').split(/[,\n]/).map((x) => text(x, 60)).filter(Boolean)))].slice(0, 40),
         photo, gallery,
       });

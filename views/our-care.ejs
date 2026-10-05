@@ -15,22 +15,16 @@
          return homes.filter(function(h){ return h.careTypes.indexOf(type) > -1; }).map(function(h){ return h.name + ' (' + h.town + ')'; });
        }
        function listNames(a) { return a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a.join(''); }
-       var care=[
-      {t:'Residential care',filter:'Residential Care',img:'careResidential',d:'For people who no longer manage easily at home, residential care offers help with everyday things — washing, dressing, meals and medication — in a comfortable home, with a team on hand day and night. You keep your own routines and as much independence as you like.'},
-      {t:'Nursing care',filter:'Nursing Care',img:'careNursing',d:'When health needs go beyond day-to-day support, our registered nurses provide care around the clock — for long-term conditions, recovery after a hospital stay, and ongoing clinical needs — working closely with local GPs and community health teams.'},
-      {t:'Dementia care',filter:'Dementia Care',img:'careDementia',d:'Our teams are experienced in caring for people living with dementia, in calm, familiar surroundings designed to feel safe. We take time to learn each resident\'s history and routines, so they are known and understood — including on the harder days. At Fieldway in Mitcham, a dedicated floor specialises in dementia care.'},
-      {t:'Respite care',filter:'Respite Care',img:'careRespite',pos:'center',d:'A short stay — to recover after a hospital visit, to give a family carer a break, or simply to try a home before deciding. Respite guests get exactly the same care, meals and activities as everyone else, for as long or short a stay as you need, subject to a room being free.'},
-      {t:'End-of-life care',filter:'End-of-life Care',img:'carePalliative',pos:'center',d:'In someone\'s final months, our focus is comfort, dignity and choice. We work closely with your GP, district nurses and family to manage symptoms and make sure no one is alone.'}
-    ];
+       var care = careTypesOf(SITE);
     care.forEach(function(c, idx){ %>
-    <% var where = homesWith(c.filter); var anchor = c.t.toLowerCase().replace(/[^a-z]+/g, '-'); %>
+    <% var where = homesWith(c.name); var anchor = c.name.toLowerCase().replace(/[^a-z]+/g, '-'); var img = careImage(SITE, c); %>
     <div class="split <%= idx % 2 ? 'split--reverse' : '' %>" id="<%= anchor %>" style="margin-bottom: 3.5rem;scroll-margin-top:96px;">
-      <div class="split__media split__media--bordered has-photo" style="background-image:url('<%= siteImage(SITE, c.img) %>'); background-position: <%= c.pos || 'center 22%' %>;"></div>
+      <% if (img) { %><div class="split__media split__media--bordered has-photo" style="background-image:url('<%= img %>'); background-position: <%= c.position || 'center 22%' %>;"></div><% } else { %><div class="split__media split__media--bordered"></div><% } %>
       <div>
-        <h2 class="h2" style="font-size:1.9rem;"><%= c.t %></h2>
-        <p class="lead" style="font-size:1.05rem;"><%= c.d %></p>
+        <h2 class="h2" style="font-size:1.9rem;"><%= c.name %></h2>
+        <% if (c.description) { %><p class="lead" style="font-size:1.05rem;"><%= c.description %></p><% } %>
         <% if (where.length) { %><p class="muted" style="margin-top:-.4rem;"><strong style="color:var(--green-800)">Available at:</strong> <%= where.length === homes.length ? 'all our homes — ' + listNames(where) : listNames(where) %>.</p><% } %>
-        <a href="/care-homes?careType=<%= encodeURIComponent(c.filter) %>" class="btn btn--ghost mt-1">Find <%= c.t.toLowerCase() %> homes</a>
+        <a href="/care-homes?careType=<%= encodeURIComponent(c.name) %>" class="btn btn--ghost mt-1">Find <%= c.name.toLowerCase() %> homes</a>
       </div>
     </div>
     <% }) %>
