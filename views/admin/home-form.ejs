@@ -47,9 +47,11 @@
     </div>
   </div>
 
+  <fieldset class="hub-fieldset" <%= canPhotos ? "" : "disabled" %>>
   <div class="panel" id="photos">
     <div class="panel__head"><h2>Photos</h2></div>
     <div class="panel__body">
+      <% if (!canPhotos) { %><p class="hint" style="margin-top:0;">Only admins can change photos.</p><% } %>
       <div class="home-photos">
         <div class="home-photos__main">
           <span class="label">Main photo (outside the home)</span>
@@ -72,6 +74,7 @@
     </div>
   </div>
   <input type="hidden" name="photosSection" value="1" />
+  </fieldset>
 
   </fieldset>
   <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
@@ -167,10 +170,12 @@
       <div class="field manager-photo">
         <span class="label">Photo (optional)</span>
         <% if (d.managerPhoto) { %><img src="<%= photoSrc(d.managerPhoto) %>" alt="Current photo of <%= d.managerName || 'the manager' %>" width="96" height="96" /><% } %>
+        <% if (canPhotos) { %>
         <label for="managerPhotoFile" class="label"><%= d.managerPhoto ? 'Replace it' : 'Add a photo' %></label>
         <input type="file" id="managerPhotoFile" name="managerPhotoFile" accept="image/jpeg,image/png,image/webp,image/avif" />
         <% if (d.managerPhoto) { %><label class="check-inline"><input type="checkbox" name="removeManagerPhoto" value="1" /> Remove the photo (shows their initials instead)</label><% } %>
         <span class="hint">A head-and-shoulders photo works best. JPEG, PNG or WebP, up to 10 MB.</span>
+        <% } else { %><span class="hint"><%= d.managerPhoto ? '' : 'No photo yet. ' %>Only admins can change photos.</span><% } %>
       </div>
       <div class="field"><label for="managerBio">A few words from or about them</label><textarea id="managerBio" name="managerBio" rows="3"><%= d.managerBio %></textarea></div>
     </div>

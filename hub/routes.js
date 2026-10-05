@@ -302,24 +302,19 @@ module.exports = function mountHub(app, deps) {
   }));
 
   /* ---------- Our team ----------
-     The people on the public Our team page. Same rule as site images:
-     anyone with Homes access can look; changing it needs Homes "edit" and
-     cover of the whole company. */
+     The people on the public Our team page. Like site images, only people
+     with "Website photos" access (Owner and Admin) can see or change it. */
   const teamUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).single('photoFile');
-  const canTeam = (me) => can(me, 'homes', 'edit') && me.homes === 'all';
-  const TEAM_DENIED = 'Only people with Homes “edit” access for the whole company can change the Our team page.';
 
-  app.get('/admin/team', need('homes', 'view'), wrap(async (req, res) => {
-    res.render('admin/team', { title: 'Our team', team: await db.teamMembers(), canEdit: canTeam(req.me) });
+  app.get('/admin/team', need('photos', 'edit'), wrap(async (req, res) => {
+    res.render('admin/team', { title: 'Our team', team: await db.teamMembers(), canEdit: true });
   }));
 
-  app.get('/admin/team/new', need('homes', 'edit'), wrap(async (req, res) => {
-    if (!canTeam(req.me)) return deny(res, TEAM_DENIED);
+  app.get('/admin/team/new', need('photos', 'edit'), wrap(async (req, res) => {
     res.render('admin/team-form', { title: 'Add a team member', member: { order: (await db.teamMembers()).length + 1 }, mode: 'new' });
   }));
 
-  app.get('/admin/team/:id/edit', need('homes', 'edit'), wrap(async (req, res) => {
-    if (!canTeam(req.me)) return deny(res, TEAM_DENIED);
+  app.get('/admin/team/:id/edit', need('photos', 'edit'), wrap(async (req, res) => {
     const member = await db.records.get('team', req.params.id);
     if (!member) return res.redirect('/admin/team');
     res.render('admin/team-form', { title: 'Edit ' + member.name, member, mode: 'edit' });
@@ -327,7 +322,6 @@ module.exports = function mountHub(app, deps) {
 
   // One handler for add (no id) and edit (id).
   async function saveTeamMember(req, res) {
-    if (!canTeam(req.me)) return deny(res, TEAM_DENIED);
     const f = req.body;
     const existing = req.params.id ? await db.records.get('team', req.params.id) : null;
     if (req.params.id && !existing) return res.redirect('/admin/team');
@@ -351,11 +345,10 @@ module.exports = function mountHub(app, deps) {
     await log(req.me, req.me.name + (existing ? ' updated ' : ' added ') + name + ' on the Our team page');
     back(res, '/admin/team', (existing ? 'Saved ' : 'Added ') + name + '. The Our team page shows the change straight away.');
   }
-  app.post('/admin/team', need('homes', 'edit'), teamUpload, wrap(saveTeamMember));
-  app.post('/admin/team/:id', need('homes', 'edit'), teamUpload, wrap(saveTeamMember));
+  app.post('/admin/team', need('photos', 'edit'), teamUpload, wrap(saveTeamMember));
+  app.post('/admin/team/:id', need('photos', 'edit'), teamUpload, wrap(saveTeamMember));
 
-  app.post('/admin/team/:id/delete', need('homes', 'edit'), wrap(async (req, res) => {
-    if (!canTeam(req.me)) return deny(res, TEAM_DENIED);
+  app.post('/admin/team/:id/delete', need('photos', 'edit'), wrap(async (req, res) => {
     const member = await db.records.get('team', req.params.id);
     if (member) {
       await db.records.remove('team', member.id);
@@ -366,17 +359,13 @@ module.exports = function mountHub(app, deps) {
 
   /* ---------- Site images ----------
      The fixed pictures on the public pages (homepage banner, Our care…).
-     Anyone who can see homes can look; changing them is company-wide, so it
-     needs Homes "edit" and cover of the whole company. */
-  app.get('/admin/images', need('homes', 'view'), (req, res) => {
-    res.render('admin/images', {
-      title: 'Site images', slots: SITE_IMAGES,
-      canEdit: can(req.me, 'homes', 'edit') && req.me.homes === 'all',
-    });
+     Only people with "Website photos" access (Owner and Admin) can see or
+     change them. */
+  app.get('/admin/images', need('photos', 'edit'), (req, res) => {
+    res.render('admin/images', { title: 'Site images', slots: SITE_IMAGES, canEdit: true });
   });
 
-  app.post('/admin/images', need('homes', 'edit'), siteImageUpload, wrap(async (req, res) => {
-    if (req.me.homes !== 'all') return deny(res, 'Only people who cover the whole company can change the website’s pictures.');
+  app.post('/admin/images', need('photos', 'edit'), siteImageUpload, wrap(async (req, res) => {
     const files = req.files || {};
     const reset = new Set([].concat(req.body.reset || []));
     const images = Object.assign({}, res.locals.SITE.images);
@@ -436,7 +425,7 @@ module.exports = function mountHub(app, deps) {
       title: 'Edit ' + home.name, home, careTypes: CARE_TYPES, error: null,
       visitSettings: visits.settingsFor(home), DAY_NAMES: visits.DAY_NAMES, timeLabel: visits.timeLabel,
       jobCount: (await db.jobs()).filter((j) => j.homeId === home.id).length,
-      canHomes: can(req.me, 'homes', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
+      canHomes: can(req.me, 'homes', 'edit'), canPhotos: can(req.me, 'homes', 'edit') && can(req.me, 'photos', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
       seeFees: can(req.me, 'fees', 'view'), seeAvail: can(req.me, 'availability', 'view'),
     });
   }));
@@ -472,7 +461,7 @@ module.exports = function mountHub(app, deps) {
         cqcRatedOn: text(f.cqcRatedOn, 40),
         managerName: text(f.managerName, 80),
         managerBio: text(f.managerBio, 800),
-        managerPhoto: f.removeManagerPhoto ? '' : home.details.managerPhoto || '',
+        managerPhoto: can(me, 'photos', 'edit') && f.removeManagerPhoto ? '' : home.details.managerPhoto || '',
         carehomeUrl: /^https:\/\/(www\.)?carehome\.co\.uk\//.test(text(f.carehomeUrl, 300)) ? text(f.carehomeUrl, 300) : '',
         reviewScore: text(f.reviewScore, 6),
         reviewCount: text(f.reviewCount, 8),
@@ -502,7 +491,7 @@ module.exports = function mountHub(app, deps) {
       // Photos: a new main photo replaces the old one; ticked gallery photos
       // are kept and new uploads are added after them.
       let photo = home.photo, gallery = home.gallery || [];
-      if (f.photosSection) {
+      if (f.photosSection && can(me, 'photos', 'edit')) {
         const files = req.files || {};
         try {
           if (files.photoFile && files.photoFile[0]) photo = await storage.savePhoto(files.photoFile[0]);
@@ -516,7 +505,7 @@ module.exports = function mountHub(app, deps) {
       }
       // Manager photo: a new upload replaces it; "remove" (above) clears it.
       const managerFile = ((req.files || {}).managerPhotoFile || [])[0];
-      if (managerFile) {
+      if (managerFile && can(me, 'photos', 'edit')) {
         try { details.managerPhoto = await storage.savePhoto(managerFile); } catch (err) { return back(res, '/admin/homes/' + home.id + '/edit', err.message); }
       }
       if (details.managerPhoto !== (home.details.managerPhoto || '')) changed.push('manager photo');

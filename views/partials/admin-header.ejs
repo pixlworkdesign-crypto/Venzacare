@@ -18,8 +18,8 @@
     { label: 'Work', items: [
       { href: '/admin', key: 'overview', label: 'Overview', show: true, icon: 'M3 12 12 4l9 8M5 10v10h14V10' },
       { href: '/admin/homes', key: 'homes', label: 'Homes', show: hubCan('homes') || hubCan('fees') || hubCan('availability'), icon: 'M3 21h18M5 21V8l7-5 7 5v13M10 21v-6h4v6' },
-      { href: '/admin/images', key: 'images', label: 'Site images', show: hubCan('homes'), icon: 'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15.5 9.5a1.5 1.5 0 1 0 0-.01' },
-      { href: '/admin/team', key: 'team', label: 'Our team', show: hubCan('homes'), icon: 'M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M17 11a3 3 0 1 0-1-5.8M21.5 20a5.5 5.5 0 0 0-4-5.3' },
+      { href: '/admin/images', key: 'images', label: 'Site images', show: hubCan('photos', 'edit'), icon: 'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15.5 9.5a1.5 1.5 0 1 0 0-.01' },
+      { href: '/admin/team', key: 'team', label: 'Our team', show: hubCan('photos', 'edit'), icon: 'M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M17 11a3 3 0 1 0-1-5.8M21.5 20a5.5 5.5 0 0 0-4-5.3' },
       { href: '/admin/enquiries', key: 'enquiries', label: 'Enquiries', show: hubCan('enquiries'), count: navCounts.enquiries, icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
       { href: '/admin/recruitment', key: 'recruitment', label: 'Recruitment', show: hubCan('jobs') || hubCan('applications'), count: navCounts.recruitment, also: ['/admin/jobs', '/admin/applications'], icon: 'M3 7h18v13H3zM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2' }
     ]},
