@@ -62,7 +62,11 @@ async function geocode(postcode) {
     const r = await fetch('https://api.postcodes.io/postcodes/' + encodeURIComponent(pc), { signal: ctl.signal });
     clearTimeout(t);
     const d = r.ok ? await r.json() : null;
-    return d && d.result ? { lat: d.result.latitude, lng: d.result.longitude } : null;
+    if (!d || !d.result) return null;
+    // Region for the Find a home filter: the county, or London, or the wider region.
+    const x = d.result;
+    const region = x.region === 'London' ? 'London' : x.admin_county || x.region || '';
+    return { lat: x.latitude, lng: x.longitude, region };
   } catch (e) { return null; }
 }
 
@@ -558,7 +562,7 @@ module.exports = function mountHub(app, deps) {
     const careTypes = [].concat(f.careTypes || []).filter((c) => careNames(res).includes(c));
     const pt = await geocode(f.postcode);
     await db.saveHome({
-      id, name, town: text(f.town, 60), postcode: text(f.postcode, 12).toUpperCase(), region: text(f.region, 40),
+      id, name, town: text(f.town, 60), postcode: text(f.postcode, 12).toUpperCase(), region: pt ? pt.region : '',
       lat: pt ? pt.lat : null, lng: pt ? pt.lng : null,
       beds: parseInt(f.beds, 10) || null, cqc: 'Registered', careTypes, specialisms: [], blurb: text(f.blurb, 600),
       dementiaNote: '', photo: '', gallery: [], sortOrder: existing.length,
@@ -645,10 +649,10 @@ module.exports = function mountHub(app, deps) {
 
       // Map pin: worked out from the postcode whenever it changes (or is missing).
       const postcode = text(f.postcode, 12).toUpperCase() || home.postcode;
-      let lat = home.lat, lng = home.lng;
-      if (postcode !== home.postcode || lat == null || lng == null) {
+      let lat = home.lat, lng = home.lng, region = home.region;
+      if (postcode !== home.postcode || lat == null || lng == null || !region) {
         const pt = await geocode(postcode);
-        if (pt) { lat = pt.lat; lng = pt.lng; } else if (postcode !== home.postcode) pinWarning = ' We couldn’t find that postcode, so the map pin hasn’t moved — check it’s right.';
+        if (pt) { lat = pt.lat; lng = pt.lng; region = pt.region || region; } else if (postcode !== home.postcode) pinWarning = ' We couldn’t find that postcode, so the map pin and region haven’t changed — check it’s right.';
       }
 
       // Photos: a new main photo replaces the old one; ticked gallery photos
@@ -684,7 +688,7 @@ module.exports = function mountHub(app, deps) {
         careTypes: careTypes.length ? careTypes : home.careTypes,
         town: text(f.town, 60) || home.town,
         postcode,
-        region: text(f.region, 40) || home.region,
+        region,
         lat, lng,
         // Ticked specialist care, then anything typed under "Other" (comma-separated).
         specialisms: [...new Set([].concat(f.specialisms || []).filter((s) => specialistCareOf(res.locals.SITE).includes(s))

@@ -35,9 +35,6 @@
         <div class="field"><label for="town">Town</label><input id="town" name="town" autocomplete="address-level2" value="<%= home.town %>" /></div>
         <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" autocomplete="postal-code" value="<%= home.postcode %>" style="max-width:12rem;" /></div>
       </div>
-      <div class="grid-2">
-        <div class="field"><label for="region">Region</label><input id="region" name="region" value="<%= home.region %>" list="regionList" /><datalist id="regionList"><% (SITE.regions || []).forEach(function (r) { %><option value="<%= r %>"><% }) %></datalist></div>
-      </div>
     </div>
   </div>
 

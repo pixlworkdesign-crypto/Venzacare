@@ -20,10 +20,6 @@
         <div class="field"><label for="town">Town *</label><input id="town" name="town" required autocomplete="address-level2" value="<%= form.town || '' %>" placeholder="e.g. Worksop" /></div>
         <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" autocomplete="postal-code" value="<%= form.postcode || '' %>" placeholder="e.g. S80 2BJ" style="max-width:12rem;" /></div>
       </div>
-      <div class="field"><label for="region">Region</label>
-        <input id="region" name="region" list="regionList" value="<%= form.region || '' %>" placeholder="e.g. Nottinghamshire" style="max-width:24rem;" />
-        <datalist id="regionList"><% regions.forEach(function (r) { %><option value="<%= r %>"><% }) %></datalist>
-      </div>
     </div>
   </div>
   <div class="panel">
