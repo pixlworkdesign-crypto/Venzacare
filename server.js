@@ -271,6 +271,28 @@ app.get('/care-homes', wrap(async (req, res) => {
 }));
 
 // Individual home
+// Compare up to three homes side by side (?h=id1,id2,id3)
+app.get('/compare', wrap(async (req, res) => {
+  const all = await db.homes();
+  let ids = String(req.query.h || '').split(',').filter((id) => all.some((h) => h.id === id));
+  ids = [...new Set(ids)].slice(0, 3);
+  for (const h of all) { if (ids.length >= Math.min(2, all.length)) break; if (!ids.includes(h.id)) ids.push(h.id); }
+  const picked = await Promise.all(ids.map((id) => withManager(all.find((h) => h.id === id))));
+  res.render('compare', {
+    title: 'Compare our care homes',
+    description: 'Compare Venza Care UK homes side by side — weekly fees, CQC ratings, types of care, specialist care and facilities.',
+    all, picked,
+  });
+}));
+
+// A one-page printable brochure for a home (print or save as PDF from the browser).
+app.get('/care-homes/:id/brochure', wrap(async (req, res) => {
+  const found = await db.home(req.params.id);
+  if (!found) return notFound(res);
+  const home = await withManager(found);
+  res.render('brochure', { home, pageUrl: res.locals.baseUrl + '/care-homes/' + home.id });
+}));
+
 app.get('/care-homes/:id', wrap(async (req, res) => {
   const home = await db.home(req.params.id);
   if (!home) return notFound(res);
@@ -633,7 +655,7 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const base = siteUrl(req);
-  const paths = ['/', '/our-care', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/fees-and-funding', '/cqc-ratings', '/faqs', '/careers', '/contact',
+  const paths = ['/', '/our-care', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/fees-and-funding', '/cqc-ratings', '/faqs', '/careers', '/contact',
     '/privacy', '/cookies', '/accessibility'];
   (await db.homes()).forEach((h) => paths.push('/care-homes/' + h.id));
   (await db.openJobs()).forEach((j) => paths.push('/careers/' + j.id));

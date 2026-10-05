@@ -1546,3 +1546,26 @@ a.hub-who:hover strong { text-decoration: underline; }
 .qa-row { display: grid; gap: 0.4rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
 .qa-row:last-child { border-bottom: 0; padding-bottom: 0; }
 .qa-row input { font-weight: 600; }
+
+/* Compare homes */
+.cmp-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.cmp-remove { font-size: 0.85rem; margin-top: 0.3rem; }
+.cmp-wrap { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow-x: auto; }
+.cmp { width: 100%; border-collapse: collapse; min-width: 560px; }
+.cmp th, .cmp td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; font-size: 0.93rem; }
+.cmp thead th { vertical-align: bottom; font-size: 1rem; }
+.cmp thead img { display: block; width: 100%; max-width: 220px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; margin-bottom: 0.5rem; }
+.cmp thead a { font-weight: 700; color: var(--green-900); }
+.cmp-town { display: block; font-weight: 400; color: var(--muted); font-size: 0.88rem; }
+.cmp tbody th { font-weight: 500; color: var(--ink); width: 30%; }
+.cmp td svg { color: var(--green-600); }
+.cmp-no { color: #b9c4c1; }
+.cmp-sub { color: var(--muted); font-size: 0.8rem; }
+.cmp-group th { background: var(--sage-100); font-weight: 700; color: var(--green-800); font-size: 0.9rem; }
+.cqc-pill { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 700; font-size: 0.82rem; background: var(--cream); color: var(--green-800); }
+.cqc-pill.is-outstanding { background: var(--gold-400); color: var(--green-900); }
+.cqc-pill.is-ri { background: #fdf0d8; color: #7a4b00; }
+.cqc-pill.is-inadequate { background: #fbe3e0; color: #8f2f26; }
+.cqc-pill.is-unrated { color: var(--muted); }
+.home-aside__more { text-align: center; font-size: 0.88rem; margin: 0.9rem 0 0; }
+@media print { .site-header, .site-footer, .footer, .cmp-pick, .chat-launcher { display: none !important; } }

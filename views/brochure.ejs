@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= home.name %> — brochure · <%= SITE.name %></title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --teal: #0d4f5c; --teal2: #16808f; --ink: #20312c; --muted: #5c6b66; --line: #e3ebe9; --soft: #eef6f4; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #e9efee; color: var(--ink); font: 400 9.6pt/1.4 Inter, system-ui, sans-serif; }
+    .sheet { width: 210mm; min-height: 297mm; margin: 12px auto; background: #fff; padding: 10mm 12mm; display: flex; flex-direction: column; gap: 4mm; box-shadow: 0 6px 30px rgba(0,0,0,.12); }
+    .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8mm; border-bottom: 2px solid var(--teal); padding-bottom: 4mm; }
+    .top img { height: 13mm; }
+    h1 { font: 700 22pt/1.1 Poppins, sans-serif; color: var(--teal); margin: 0; }
+    .addr { color: var(--muted); margin-top: 1mm; }
+    .contact { text-align: right; font-size: 9.5pt; }
+    .contact strong { display: block; font-size: 12pt; color: var(--teal); }
+    .hero { display: grid; grid-template-columns: 1.15fr 1fr; gap: 6mm; }
+    .hero img.photo { width: 100%; height: 52mm; object-fit: cover; border-radius: 3mm; }
+    .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5mm; align-content: start; }
+    .fact { background: var(--soft); border-radius: 2.5mm; padding: 2.5mm 3mm; }
+    .fact span { display: block; font-size: 8pt; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .fact b { font-size: 11.5pt; color: var(--teal); }
+    .blurb { margin: 0; font-size: 10.2pt; }
+    h2 { font: 600 11.5pt Poppins, sans-serif; color: var(--teal); margin: 0 0 1.5mm; }
+    .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+    ul { margin: 0; padding-left: 4mm; } li { margin: .2mm 0; }
+    .fac { columns: 3; column-gap: 6mm; font-size: 8.8pt; }
+    .fac h3 { font: 600 9pt Inter, sans-serif; color: var(--teal2); margin: 0 0 .5mm; break-after: avoid; }
+    .fac div { break-inside: avoid; margin-bottom: 2mm; }
+    .fac ul { padding-left: 3.5mm; }
+    .quote { background: var(--soft); border-left: 3px solid var(--teal2); padding: 3mm 4mm; font-style: italic; }
+    .quote small { display: block; font-style: normal; color: var(--muted); margin-top: 1mm; }
+    .bottom { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 6mm; border-top: 1px solid var(--line); padding-top: 4mm; font-size: 9pt; color: var(--muted); }
+    .bottom img { width: 22mm; height: 22mm; }
+    .bottom strong { color: var(--teal); font-size: 11pt; }
+    .bar { position: sticky; top: 0; display: flex; justify-content: center; gap: 10px; padding: 10px; background: var(--teal); }
+    .bar button, .bar a { font: 600 14px Inter, sans-serif; padding: 9px 16px; border-radius: 999px; border: 0; cursor: pointer; text-decoration: none; background: #fff; color: var(--teal); }
+    @page { size: A4; margin: 0; }
+    @media print { html, body { background: #fff; } .bar { display: none; } .sheet { margin: 0; box-shadow: none; height: 296mm; min-height: 0; overflow: hidden; } }
+    @media screen and (max-width: 820px) { .sheet { width: auto; min-height: 0; margin: 0; padding: 16px; } .hero, .cols { grid-template-columns: 1fr; } .fac { columns: 1; } }
+  </style>
+</head>
+<body>
+<% var d = home.details || {}; var phone = d.phone || SITE.phone; var from = fromPrice(home);
+   var availWords = { available: 'Rooms free now', limited: 'One or two rooms free', waitlist: 'Waiting list' };
+   var fl = feeLists(SITE, home); var facs = homeFacilities(SITE, home); var quote = (d.testimonials || [])[0]; %>
+<div class="bar"><button type="button" onclick="window.print()">Print or save as PDF</button><a href="/care-homes/<%= home.id %>">Back to <%= home.name %></a></div>
+<main class="sheet">
+  <header class="top">
+    <div>
+      <img src="/images/logo.png" alt="<%= SITE.name %>" />
+      <h1><%= home.name %></h1>
+      <div class="addr"><%= homeAddress(home) %></div>
+    </div>
+    <div class="contact"><strong><%= phone %></strong><%= d.email || SITE.email %></div>
+  </header>
+
+  <section class="hero">
+    <% if (home.photo) { %><img class="photo" src="<%= photoSrc(home.photo) %>" alt="" /><% } else { %><div></div><% } %>
+    <div class="facts">
+      <div class="fact"><span>CQC rating</span><b><%= cqcLabel(home) %></b></div>
+      <div class="fact"><span>Beds</span><b><%= home.beds || '—' %></b></div>
+      <div class="fact"><span>Weekly fees</span><b><%= from ? 'from ' + gbp(from) : 'Call us' %></b></div>
+      <div class="fact"><span>Rooms</span><b><%= availWords[d.availability] || 'Call us' %></b></div>
+      <% if (d.managerName) { %><div class="fact"><span>Home manager</span><b><%= d.managerName %></b></div><% } %>
+      <% if (d.visitingHours) { %><div class="fact"><span>Visiting</span><b><%= d.visitingHours %></b></div><% } %>
+    </div>
+  </section>
+
+  <% if (home.blurb) { %><p class="blurb"><%= home.blurb %></p><% } %>
+
+  <section class="cols">
+    <div><h2>Types of care</h2><ul><% home.careTypes.forEach(function (c) { %><li><%= c %></li><% }) %></ul></div>
+    <% if (home.specialisms && home.specialisms.length) { %><div><h2>Specialist care</h2><ul><% home.specialisms.slice(0, 10).forEach(function (s) { %><li><%= s %></li><% }) %></ul></div><% } %>
+    <div><h2>Weekly fees from</h2><ul><% FEE_ROWS.forEach(function (r) { var v = d.fees && d.fees[r.key]; if (v) { %><li><%= r.label %>: <b><%= gbp(v) %></b></li><% } }) %><% if (!from) { %><li>Call us for current prices</li><% } %></ul></div>
+  </section>
+
+  <% if (facs.length) { %>
+  <section>
+    <h2>Facilities &amp; daily life</h2>
+    <div class="fac"><% facs.forEach(function (g) { %><div><h3><%= g.group %></h3><ul><% g.items.forEach(function (x) { %><li><%= x %></li><% }) %></ul></div><% }) %></div>
+  </section>
+  <% } %>
+
+  <section class="cols" style="grid-template-columns:1fr 1fr;">
+    <% if (fl.included.length) { %><div><h2>Included in the fee</h2><ul><% fl.included.forEach(function (x) { %><li><%= x %></li><% }) %></ul></div><% } %>
+    <% if (fl.extras.length) { %><div><h2>Optional extras</h2><ul><% fl.extras.forEach(function (x) { %><li><%= x %></li><% }) %></ul></div><% } %>
+  </section>
+
+  <% if (quote) { %><div class="quote">“<%= quote.quote %>”<% if (quote.by) { %><small>— <%= quote.by %></small><% } %></div><% } %>
+
+  <footer class="bottom">
+    <div><strong>Come and see us — book a visit</strong><br />Call <%= phone %> or visit <%= pageUrl.replace(/^https?:\/\//, '') %><br /><%= SITE.legalName || SITE.name %> · Regulated by the Care Quality Commission</div>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=<%= encodeURIComponent(pageUrl) %>" alt="QR code for this home's web page" />
+  </footer>
+</main>
+</body>
+</html>
