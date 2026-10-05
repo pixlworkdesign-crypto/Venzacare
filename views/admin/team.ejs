@@ -8,6 +8,20 @@
   <% if (canEdit) { %><a href="/admin/team/new" class="btn btn--primary">+ Add a team member</a><% } %>
 </div>
 
+<% var live = !hidden && team.length; %>
+<div class="hub-card team-visibility">
+  <div>
+    <strong>On the website:</strong>
+    <% if (live) { %><span class="hub-pill hub-pill--ok">Showing</span> <span class="muted">Visitors see the page, and it’s in the menu and footer.</span>
+    <% } else if (hidden) { %><span class="hub-pill hub-pill--warn">Hidden</span> <span class="muted">The page and its menu link are hidden from visitors.</span>
+    <% } else { %><span class="hub-pill hub-pill--plain">Hidden until you add someone</span> <span class="muted">It will appear once there’s at least one person.</span><% } %>
+  </div>
+  <form action="/admin/team/visibility" method="post" class="inline-form">
+    <input type="hidden" name="show" value="<%= hidden ? '1' : '0' %>" />
+    <button type="submit" class="btn btn--sm <%= hidden ? 'btn--primary' : 'btn--ghost' %>"><%= hidden ? 'Show on website' : 'Hide from website' %></button>
+  </form>
+</div>
+
 <div class="hub-card">
   <% if (team.length) { %>
   <div class="table-wrap">

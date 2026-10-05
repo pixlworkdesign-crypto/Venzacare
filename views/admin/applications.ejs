@@ -11,7 +11,7 @@
   <div class="panel__head">
     <h2><%= applications.length %> application<%= applications.length===1?'':'s' %></h2>
     <form action="/admin/applications" method="get" class="admin-filter"><input type="hidden" name="status" value="<%= status %>" />
-      <select name="job" onchange="this.form.submit()">
+      <select name="job" aria-label="Filter by role" onchange="this.form.submit()">
         <option value="">All roles</option>
         <% jobs.forEach(function(jb){ %><option value="<%= jb.id %>" <%= jobId===jb.id?'selected':'' %>><%= jb.title %></option><% }) %>
       </select>

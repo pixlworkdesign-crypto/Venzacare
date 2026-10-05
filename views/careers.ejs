@@ -4,15 +4,21 @@
   <div class="container">
     <span class="eyebrow hero__eyebrow">Venza Care UK Careers</span>
     <h1>Caring careers, close to home</h1>
+    <% if (anyOpen) { %>
     <p>We're hiring carers, nurses, chefs and managers across our care homes. Funded qualifications, real progression, and a team that has your back. Find a role and apply in minutes.</p>
     <div class="careers-hero__stats">
       <span><strong><%= jobs.length %></strong> open roles</span>
       <span><strong><%= locations.length %></strong> locations</span>
       <span><strong>100%</strong> funded training</span>
     </div>
+    <% } else { %>
+    <p>We'd love to have you on our team. We don't have any roles open right now, but we're always happy to hear from caring people — send us your details and we'll be in touch as soon as something comes up.</p>
+    <div class="careers-hero__cta"><a href="/careers/contact?topic=interest" class="btn btn--gold">Send us your details</a></div>
+    <% } %>
   </div>
 </section>
 
+<% if (anyOpen) { %>
 <section class="section" style="padding-top:2.5rem;">
   <div class="container">
 
@@ -80,6 +86,7 @@
     <% } %>
   </div>
 </section>
+<% } %>
 
 <!-- Why join us -->
 <section id="why" class="section section--alt">
