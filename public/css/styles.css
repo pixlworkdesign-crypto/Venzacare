@@ -1569,3 +1569,12 @@ a.hub-who:hover strong { text-decoration: underline; }
 .cqc-pill.is-unrated { color: var(--muted); }
 .home-aside__more { text-align: center; font-size: 0.88rem; margin: 0.9rem 0 0; }
 @media print { .site-header, .site-footer, .footer, .cmp-pick, .chat-launcher { display: none !important; } }
+/* Staff hub: filters and CSV export */
+.hub-filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.8rem; padding: 1rem 1.2rem; align-items: end; }
+.hub-filters .field { margin: 0; }
+.hub-filters__btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.hub-export { position: relative; }
+.hub-export summary { list-style: none; }
+.hub-export summary::-webkit-details-marker { display: none; }
+.hub-export__form { position: absolute; right: 0; top: calc(100% + 0.4rem); z-index: 5; background: var(--paper); box-shadow: var(--shadow-md); border-radius: 14px; padding: 1rem; display: grid; gap: 0.6rem; width: 15rem; }
+.hub-export__form .field { margin: 0; }

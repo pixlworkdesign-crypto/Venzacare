@@ -1652,9 +1652,53 @@ module.exports = function mountHub(app, deps) {
   }));
 
   /* ---------- Activity log ---------- */
+  // CSV with a header row; every cell quoted (and formula-safe for Excel).
+  const csv = (rows) => '\ufeff' + rows.map((r) => r.map((v) => {
+    let s = String(v == null ? '' : v);
+    if (/^[=+\-@]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  }).join(',')).join('\r\n');
+  const sendCsv = (res, name, rows) => {
+    res.set('Content-Type', 'text/csv; charset=utf-8');
+    res.set('Content-Disposition', 'attachment; filename="' + name + '"');
+    res.send(csv(rows));
+  };
+
   app.get('/admin/activity', need('activity', 'view'), wrap(async (req, res) => {
-    const entries = (await db.records.list('activity')).sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 500);
-    res.render('hub/activity', { title: 'Activity log', entries });
+    const all = (await db.records.list('activity')).sort((a, b) => new Date(b.at) - new Date(a.at));
+    const people = [...new Map(all.filter((e) => e.actorName).map((e) => [e.actorId || e.actorName, e.actorName])).entries()]
+      .map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+    const homes = res.locals.hubHomes;
+    const f = { person: text(req.query.person, 80), home: text(req.query.home, 80), q: text(req.query.q, 80), from: text(req.query.from, 10), to: text(req.query.to, 10) };
+    const home = homes.find((h) => h.id === f.home);
+    const entries = all.filter((e) =>
+      (!f.person || (e.actorId || e.actorName) === f.person) &&
+      (!home || (e.text || '').toLowerCase().includes(home.name.toLowerCase())) &&
+      (!f.q || (e.text || '').toLowerCase().includes(f.q.toLowerCase())) &&
+      (!/^\d{4}-\d{2}-\d{2}$/.test(f.from) || e.at >= f.from) &&
+      (!/^\d{4}-\d{2}-\d{2}$/.test(f.to) || e.at.slice(0, 10) <= f.to));
+    if (req.query.format === 'csv') {
+      return sendCsv(res, 'activity-log.csv', [['When', 'Who', 'What']].concat(entries.map((e) => [new Date(e.at).toLocaleString('en-GB'), e.actorName, e.text])));
+    }
+    res.render('hub/activity', { title: 'Activity log', entries: entries.slice(0, 500), total: entries.length, people, homes, f });
+  }));
+
+  // Enquiries for a date range as a spreadsheet, for monthly reporting.
+  app.get('/admin/enquiries.csv', need('enquiries', 'view'), wrap(async (req, res) => {
+    const from = /^\d{4}-\d{2}-\d{2}$/.test(req.query.from) ? req.query.from : '';
+    const to = /^\d{4}-\d{2}-\d{2}$/.test(req.query.to) ? req.query.to : '';
+    const list = (await enquiryList(req.me))
+      .filter((e) => (!from || e.createdAt >= from) && (!to || String(e.createdAt).slice(0, 10) <= to))
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    const kind = { visit: 'Visit request', callback: 'Call back', enquiry: 'Message' };
+    const rows = [['Received', 'Name', 'Phone', 'Email', 'Home', 'Type', 'Subject', 'Message', 'Best time', 'Stage', 'Visit', 'Booked online', 'Note', 'Last updated']]
+      .concat(list.map((e) => [
+        new Date(e.createdAt).toLocaleString('en-GB'), e.name, e.phone, e.email, e.home, kind[e.kind] || 'Message', e.subject, e.message, e.bestTime,
+        e.stage, e.visitAt ? new Date(e.visitAt).toLocaleString('en-GB') : '', e.online ? 'Yes' : '', e.note,
+        e.stageUpdatedAt ? new Date(e.stageUpdatedAt).toLocaleString('en-GB') : '',
+      ]));
+    await log(req.me, req.me.name + ' downloaded ' + list.length + ' enquir' + (list.length === 1 ? 'y' : 'ies') + (from || to ? ' (' + (from || '…') + ' to ' + (to || '…') + ')' : ''));
+    sendCsv(res, 'enquiries' + (from ? '-' + from : '') + (to ? '-to-' + to : '') + '.csv', rows);
   }));
 
   /* ---------- Certificate reminders (daily, optional) ----------

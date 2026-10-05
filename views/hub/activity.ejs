@@ -2,10 +2,27 @@
 <div class="hub-head"><div>
   <h1 class="hub-h1">Activity log</h1>
 </div></div>
+<form class="hub-card hub-filters" method="get" action="/admin/activity">
+  <div class="field"><label for="a-person">Person</label>
+    <select id="a-person" name="person"><option value="">Everyone</option><% people.forEach(function (p) { %><option value="<%= p.id %>" <%= f.person === p.id ? 'selected' : '' %>><%= p.name %></option><% }) %></select>
+  </div>
+  <div class="field"><label for="a-home">Home</label>
+    <select id="a-home" name="home"><option value="">All homes</option><% homes.forEach(function (h) { %><option value="<%= h.id %>" <%= f.home === h.id ? 'selected' : '' %>><%= h.name %></option><% }) %></select>
+  </div>
+  <div class="field"><label for="a-from">From</label><input id="a-from" name="from" type="date" value="<%= f.from %>" /></div>
+  <div class="field"><label for="a-to">To</label><input id="a-to" name="to" type="date" value="<%= f.to %>" /></div>
+  <div class="field"><label for="a-q">Search</label><input id="a-q" name="q" value="<%= f.q %>" placeholder="e.g. fees" /></div>
+  <div class="hub-filters__btns">
+    <button class="btn btn--primary btn--sm">Filter</button>
+    <button class="btn btn--ghost btn--sm" name="format" value="csv">Download CSV</button>
+    <% if (f.person || f.home || f.q || f.from || f.to) { %><a class="btn btn--muted btn--sm" href="/admin/activity">Clear</a><% } %>
+  </div>
+</form>
 <div class="hub-card">
-  <% if (!entries.length) { %><div class="hub-empty"><p class="muted">Nothing yet.</p></div><% } %>
+  <% if (!entries.length) { %><div class="hub-empty"><p class="muted"><%= total === 0 && !(f.person || f.home || f.q || f.from || f.to) ? 'Nothing yet.' : 'Nothing matches.' %></p></div><% } %>
   <ul class="hub-log">
     <% entries.forEach(function (e) { %><li><time datetime="<%= e.at %>"><%= new Date(e.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></time><span><%= e.text %></span></li><% }) %>
   </ul>
+  <% if (total > entries.length) { %><p class="hint" style="padding:0 1.2rem 1rem;">Showing the latest <%= entries.length %> of <%= total %>. Download the CSV for all of them.</p><% } %>
 </div>
 <%- include('../partials/admin-footer') %>

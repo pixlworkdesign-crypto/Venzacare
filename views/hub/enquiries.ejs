@@ -2,7 +2,17 @@
 <% var NEXT_LABEL = { New: 'I’ve called them', Called: 'Book a visit', 'Visit booked': 'They’ve visited', Visited: 'They’re moving in' }; %>
 <div class="hub-head"><div>
   <h1 class="hub-h1">Enquiries &amp; visit requests</h1>
-</div></div>
+</div>
+<% var now = new Date(), y = now.getFullYear(), m = now.getMonth(); function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); } %>
+<details class="hub-export">
+  <summary class="btn btn--ghost btn--sm">Download CSV</summary>
+  <form method="get" action="/admin/enquiries.csv" class="hub-export__form">
+    <div class="field"><label for="x-from">From</label><input id="x-from" name="from" type="date" value="<%= iso(new Date(y, m - 1, 1)) %>" /></div>
+    <div class="field"><label for="x-to">To</label><input id="x-to" name="to" type="date" value="<%= iso(new Date(y, m, 0)) %>" /></div>
+    <button class="btn btn--primary btn--sm">Download</button>
+  </form>
+</details>
+</div>
 
 <div class="hub-tabs" role="tablist">
   <% [['todo', 'Need a call'], ['progress', 'In progress'], ['done', 'Finished']].forEach(function (t) { %>
