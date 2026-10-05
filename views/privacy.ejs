@@ -12,36 +12,58 @@
 <section class="section">
   <div class="container">
     <div class="prose" style="max-width:800px;">
-      <p class="muted">Last updated: <%= year %>.</p>
+      <p class="muted">Last updated: <%= updated %>.</p>
 
       <h2>1. Who we are</h2>
-      <p><%= SITE.name %> ("we", "us", "our") is the data controller responsible for your personal data. You can contact us at <a href="mailto:<%= SITE.email %>"><%= SITE.email %></a>, by phone on <%= SITE.phone %>, or by post at <%= SITE.address %>.</p>
+      <p><%= SITE.name %> ("we", "us") is the data controller for the personal information described here. Contact us at <a href="mailto:<%= SITE.email %>"><%= SITE.email %></a>, on <%= SITE.phone %>, or by post at <%= SITE.address %>.</p>
 
-      <h2>2. The information we collect</h2>
+      <h2>2. What we collect</h2>
       <ul>
-        <li><strong>Enquiries:</strong> your name, contact details and the details of your enquiry when you use our contact form or call us.</li>
-        <li><strong>Job applications:</strong> your name, contact details, right-to-work information, cover message and any CV you upload.</li>
-        <li><strong>Prospective &amp; current residents:</strong> health, care-needs and next-of-kin information needed to assess and provide care.</li>
-        <li><strong>Website usage:</strong> basic technical information needed to operate the site securely.</li>
+        <li><strong>Enquiries, callback requests and visit bookings:</strong> your name, phone number and/or email, the home you’re interested in, the type of care, when suits you, and anything you write in your message. If you tell us about someone’s health or care needs, we hold that too.</li>
+        <li><strong>Job applications and careers questions:</strong> your name, contact details, the role, your answer about your right to work in the UK, your message and any CV you upload.</li>
+        <li><strong>Residents and people we’re assessing:</strong> the health, care and next-of-kin information we need to assess and provide care. This is gathered in person, not through this website.</li>
+        <li><strong>Our chat assistant:</strong> the questions you type into it (see section 6).</li>
+        <li><strong>Our staff:</strong> if you work for us and use our staff hub, your name, work email, job title, the homes you work at, a work phone number if you add one, your photo if you choose to upload one, your training certificates, and a record of changes you make in the hub.</li>
+        <li><strong>Technical information:</strong> our servers keep short-lived logs (such as IP address and pages requested) to keep the site running and secure.</li>
       </ul>
 
-      <h2>3. How we use your information &amp; our lawful basis</h2>
-      <p>We process your data to respond to enquiries, arrange visits, assess and deliver care, manage recruitment, and meet our legal and regulatory duties. Depending on the activity, our lawful basis is consent, legitimate interests, performance of a contract, legal obligation, or — for health information — the provision of health and social care.</p>
+      <h2>3. Why we use it, and our lawful basis</h2>
+      <ul>
+        <li><strong>Answering enquiries and arranging visits:</strong> our legitimate interest in helping people find care, and taking steps you’ve asked for before any contract. Health information you share is used to provide health and social care.</li>
+        <li><strong>Recruitment:</strong> taking steps before a possible employment contract, and our legal duty to check the right to work in the UK.</li>
+        <li><strong>Caring for residents:</strong> our contract with the resident or their funder, and the provision of health and social care, with the confidentiality that requires.</li>
+        <li><strong>Running our staff hub:</strong> the employment relationship and our legitimate interest in running our homes. Staff photos are used only with the person’s consent, which they can withdraw at any time by removing the photo.</li>
+        <li><strong>Legal and regulatory duties:</strong> for example, records the Care Quality Commission requires.</li>
+      </ul>
 
-      <h2>4. Sharing your information</h2>
-      <p>We may share information with healthcare professionals involved in your care (GPs, district nurses, hospitals), local authorities and the NHS, our regulators (such as the Care Quality Commission), and trusted service providers who help us run our homes and website. We never sell your data.</p>
+      <h2>4. Who we share it with</h2>
+      <p>Only with people who need it: health and care professionals involved in someone’s care (such as GPs, district nurses and hospitals), local authorities and the NHS, and our regulators such as the Care Quality Commission. We also use service providers who handle data on our behalf and only on our instructions:</p>
+      <ul>
+        <li>our website hosting, database and secure file storage providers (we use Supabase for our database and file storage);</li>
+        <li>our email provider (Resend), which delivers emails such as visit confirmations and staff sign-in links;</li>
+        <li>our chat assistant provider (Anthropic), which receives only what you type into the chat.</li>
+      </ul>
+      <p>Some of these providers may process data outside the UK. Where they do, we make sure the transfer is protected by safeguards recognised under UK law. We never sell your data.</p>
 
       <h2>5. How long we keep it</h2>
-      <p>We keep personal data only as long as necessary for the purpose it was collected and to meet legal and regulatory requirements, after which it is securely deleted.</p>
-      <p><strong>Job applications</strong>, including any CV you upload, are deleted automatically twelve months after you apply, unless you join us or we have a legal reason to keep them longer. CVs are stored privately and can only be opened by a member of our team who is signed in to our recruitment system — they are never published or shared with anyone outside Venza Care.</p>
-      <p><strong>Enquiries and callback requests</strong> are kept while we are helping you and for a reasonable period afterwards, so we can pick up where we left off if you come back to us.</p>
+      <% if (retentionDays) { %><p><strong>Job applications</strong>, including any CV, are deleted automatically <%= retentionDays %> days after you apply, unless you join us or we have a legal reason to keep them longer.</p><% } else { %><p><strong>Job applications</strong>, including any CV, are kept only as long as we need them for recruitment, then deleted.</p><% } %>
+      <p><strong>Enquiries and visit bookings</strong> are kept while we’re helping you and for a reasonable time afterwards, so we can pick up where we left off if you come back to us.</p>
+      <p><strong>Staff hub accounts</strong> are deleted when someone leaves, along with their photo and certificates. A record of changes made in the hub is kept for accountability.</p>
+      <p><strong>Residents’ care records</strong> are kept for as long as the law and care regulations require.</p>
+      <p>CVs, certificates and staff photos are stored privately: they can only be opened by members of our team who are signed in, and are never published.</p>
 
-      <h2>6. Your rights</h2>
-      <p>Under UK data protection law you have the right to access, correct, erase, restrict or object to our use of your data, and to data portability. To exercise any of these rights, contact us using the details above.</p>
-      <p>If you ask us what we hold about you, we can produce a complete copy of it. If you ask us to delete it, we delete every application, enquiry and visit booking linked to your email address or phone number, along with any CV you sent — permanently, not merely hidden. We aim to respond to any such request within one month, as the law requires.</p>
+      <h2>6. Our chat assistant</h2>
+      <p>The chat assistant on this website answers questions using the information published on the site. What you type is sent to our provider, Anthropic, to produce the reply. We don’t save chat conversations. Please don’t type in health details or other sensitive information — call us instead and we’ll be glad to talk it through.</p>
 
-      <h2>7. Complaints</h2>
-      <p>If you have a concern we can't resolve, you can complain to the Information Commissioner's Office (ICO) at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a>.</p>
+      <h2>7. Your rights</h2>
+      <p>Under UK data protection law you can ask to see the information we hold about you, have it corrected or deleted, restrict or object to how we use it, and receive a copy to take elsewhere. Where we rely on your consent, you can withdraw it at any time. To do any of these, contact us using the details above.</p>
+      <p>If you ask what we hold about you, we’ll send a complete copy. If you ask us to delete it, we permanently delete every application, enquiry and visit booking linked to your email address or phone number, including any CV. We reply within one month, as the law requires.</p>
+
+      <h2>8. Complaints</h2>
+      <p>If you have a concern, please tell us first and we’ll try to put it right. You can also complain to the Information Commissioner’s Office (ICO) at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a> or on 0303 123 1113.</p>
+
+      <h2>9. Changes</h2>
+      <p>We update this notice when the way we use information changes. The date at the top shows when it was last updated.</p>
 
       <p style="margin-top:2rem;"><a href="/cookies" class="care-card__link">See our cookie policy →</a></p>
     </div>

@@ -657,14 +657,16 @@ app.get('/api/health', wrap(async (req, res) => {
 }));
 
 // Legal / policy pages
+const LEGAL_UPDATED = '5 October 2026'; // change when the privacy, cookie or accessibility wording changes
+const RETENTION_DAYS = process.env.RETENTION_DAYS === undefined ? 365 : parseInt(process.env.RETENTION_DAYS, 10) || 0;
 app.get('/privacy', (req, res) => {
-  res.render('privacy', { title: 'Privacy policy' });
+  res.render('privacy', { title: 'Privacy policy', updated: LEGAL_UPDATED, retentionDays: RETENTION_DAYS });
 });
 app.get('/cookies', (req, res) => {
-  res.render('cookies', { title: 'Cookie policy' });
+  res.render('cookies', { title: 'Cookie policy', updated: LEGAL_UPDATED });
 });
 app.get('/accessibility', (req, res) => {
-  res.render('accessibility', { title: 'Accessibility statement' });
+  res.render('accessibility', { title: 'Accessibility statement', updated: LEGAL_UPDATED });
 });
 
 /* =============================================================

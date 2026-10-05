@@ -89,7 +89,11 @@ const DEFAULT_SPECIALIST_CARE = [
   'Parkinson’s disease', 'Physical disability', 'Stroke recovery', 'Visual & hearing impairment', 'Younger adults (18–65)',
 ];
 function careTypesOf(SITE) {
-  return (SITE && Array.isArray(SITE.careTypes) && SITE.careTypes.length) ? SITE.careTypes : DEFAULT_CARE_TYPES;
+  const list = (SITE && Array.isArray(SITE.careTypes) && SITE.careTypes.length) ? SITE.careTypes : DEFAULT_CARE_TYPES;
+  // The original dementia text named one home; drop that sentence if it was saved.
+  return list.map((c) => (c.description && c.description.includes('Fieldway in Mitcham')
+    ? Object.assign({}, c, { description: c.description.replace(/\s*At Fieldway in Mitcham, a dedicated floor specialises in dementia care\./, '') })
+    : c));
 }
 function careTypeNames(SITE) { return careTypesOf(SITE).map((c) => c.name); }
 function specialistCareOf(SITE) {
