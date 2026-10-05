@@ -7,7 +7,6 @@
   </div>
 </div>
 
-<% if (!canEdit) { %><p class="hint">You can see these pictures, but changing them needs Homes “edit” access for the whole company.</p><% } %>
 
 <form action="/admin/images" method="post" class="admin-form" enctype="multipart/form-data">
   <fieldset class="hub-fieldset" <%= canEdit ? '' : 'disabled' %>>
