@@ -198,12 +198,20 @@ module.exports = function mountHub(app, deps) {
   });
 
   /* ---------- Invite & reset links ---------- */
+  /* A person can hold several live links of a kind at once, so sending a
+     new one doesn't break one already passed on. They all stop working
+     once a password is set. (Older accounts may still have the single
+     xTokenHash / xExpires pair.) */
+  function liveLinks(u, kind) {
+    const now = new Date();
+    const list = (u[kind + 'Links'] || []).slice();
+    if (u[kind + 'TokenHash']) list.push({ hash: u[kind + 'TokenHash'], expires: u[kind + 'Expires'] });
+    return list.filter((l) => l.hash && l.expires && new Date(l.expires) > now);
+  }
+
   async function userByToken(kind, token) {
     const h = auth.hashToken(token);
-    const u = (await auth.allUsers()).find((x) => x[kind + 'TokenHash'] === h);
-    if (!u) return null;
-    if (!u[kind + 'Expires'] || new Date(u[kind + 'Expires']) < new Date()) return null;
-    return u;
+    return (await auth.allUsers()).find((x) => liveLinks(x, kind).some((l) => l.hash === h)) || null;
   }
 
   /* Links are built from SITE_URL, or else the address the page was opened
@@ -218,8 +226,9 @@ module.exports = function mountHub(app, deps) {
 
   async function issueLink(req, user, kind) {
     const token = auth.newToken();
-    user[kind + 'TokenHash'] = auth.hashToken(token);
-    user[kind + 'Expires'] = new Date(Date.now() + (kind === 'invite' ? 7 : 1) * 86400000).toISOString();
+    const link = { hash: auth.hashToken(token), expires: new Date(Date.now() + (kind === 'invite' ? 7 : 1) * 86400000).toISOString() };
+    user[kind + 'Links'] = liveLinks(user, kind).concat(link).slice(-5); // keep the latest five
+    delete user[kind + 'TokenHash']; delete user[kind + 'Expires'];
     await auth.saveUser(user);
     const url = siteUrl(req) + '/admin/' + kind + '/' + token;
     const emailed = await mailer.send({
@@ -247,6 +256,7 @@ module.exports = function mountHub(app, deps) {
       if (problem) return res.render('hub/set-password', { title: 'Set your password', kind, user, error: problem });
       user.passwordHash = await auth.hashPassword(pw);
       delete user.inviteTokenHash; delete user.inviteExpires; delete user.resetTokenHash; delete user.resetExpires;
+      delete user.inviteLinks; delete user.resetLinks;
       if (user.status === 'invited') user.status = 'active';
       user.sessionVersion = (user.sessionVersion || 0) + 1; // signs out any other devices
       user.lastActive = new Date().toISOString();

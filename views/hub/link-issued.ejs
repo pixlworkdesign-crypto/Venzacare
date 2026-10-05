@@ -4,7 +4,7 @@
 <% if (link.emailed) { %>
 <div class="hub-notice hub-notice--ok">We’ve emailed <%= person.email %> a link to <%= kind === 'invite' ? 'set their password' : 'choose a new password' %>. You can also pass on the link below.</div>
 <% } else { %>
-<div class="hub-notice hub-notice--warn">Email isn’t set up, so <strong>send this link to <%= person.name.split(' ')[0] %> yourself</strong> — by text or WhatsApp is fine. It only works once, for <%= kind === 'invite' ? '7 days' : '24 hours' %>, and only you can see it now.</div>
+<div class="hub-notice hub-notice--warn">Email isn’t set up, so <strong>send this link to <%= person.name.split(' ')[0] %> yourself</strong> — by text or WhatsApp is fine. It works for <%= kind === 'invite' ? '7 days' : '24 hours' %>, until they’ve set their password. Sending another link later won’t stop this one working.</div>
 <% } %>
 <% if (typeof linkWarning !== 'undefined' && linkWarning) { %>
 <div class="hub-notice hub-notice--bad" role="alert">
