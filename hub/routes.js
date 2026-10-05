@@ -325,7 +325,38 @@ module.exports = function mountHub(app, deps) {
   const teamUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).single('photoFile');
 
   app.get('/admin/team', need('photos', 'edit'), wrap(async (req, res) => {
-    res.render('admin/team', { title: 'Our team', team: await db.teamMembers(), canEdit: true, hidden: !!(await db.settings()).teamHidden });
+    const team = await db.teamMembers();
+    const onTeam = new Set(team.map((m) => m.userId).filter(Boolean));
+    const staff = (await auth.allUsers())
+      .filter((u) => u.status !== 'invited' && !onTeam.has(u.id))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    res.render('admin/team', { title: 'Our team', team, staff, canEdit: true, hidden: !!(await db.settings()).teamHidden });
+  }));
+
+  // Put someone from the staff directory on the page, at the end.
+  app.post('/admin/team/from-directory', need('photos', 'edit'), wrap(async (req, res) => {
+    const user = await auth.getUser(text(req.body.userId, 80));
+    if (!user || user.builtin || user.status === 'invited') return back(res, '/admin/team', 'Choose someone from the list.');
+    const team = await db.teamMembers();
+    if (team.some((m) => m.userId === user.id)) return back(res, '/admin/team', user.name + ' is already on the page.');
+    const order = team.reduce((n, m) => Math.max(n, m.order || 0), 0) + 1;
+    await db.records.put('team', db.uid('team'), { userId: user.id, name: user.name, role: text(user.title, 100), bio: '', order, photo: '' });
+    await log(req.me, req.me.name + ' added ' + user.name + ' to the Our team page');
+    back(res, '/admin/team', 'Added ' + user.name + '.');
+  }));
+
+  // Move someone one place up or down; renumbers everyone 1, 2, 3…
+  app.post('/admin/team/:id/move', need('photos', 'edit'), wrap(async (req, res) => {
+    const team = await db.teamMembers();
+    const i = team.findIndex((m) => m.id === req.params.id);
+    const j = i + (req.body.dir === 'up' ? -1 : 1);
+    if (i > -1 && j > -1 && j < team.length) [team[i], team[j]] = [team[j], team[i]];
+    for (let n = 0; n < team.length; n++) {
+      if (team[n].order === n + 1) continue;
+      const rec = await db.records.get('team', team[n].id);
+      if (rec) await db.records.put('team', rec.id, Object.assign(rec, { order: n + 1 }));
+    }
+    res.redirect('/admin/team');
   }));
 
   // Show or hide the whole Our team page (and its menu and footer links).
@@ -337,12 +368,15 @@ module.exports = function mountHub(app, deps) {
   }));
 
   app.get('/admin/team/new', need('photos', 'edit'), wrap(async (req, res) => {
-    res.render('admin/team-form', { title: 'Add a team member', member: { order: (await db.teamMembers()).length + 1 }, mode: 'new' });
+    res.render('admin/team-form', { title: 'Add a team member', member: { order: (await db.teamMembers()).reduce((n, m) => Math.max(n, m.order || 0), 0) + 1 }, mode: 'new' });
   }));
 
   app.get('/admin/team/:id/edit', need('photos', 'edit'), wrap(async (req, res) => {
     const member = await db.records.get('team', req.params.id);
     if (!member) return res.redirect('/admin/team');
+    const linked = member.userId ? await auth.getUser(member.userId) : null;
+    if (member.userId && !linked) return res.redirect('/admin/team');
+    if (linked) Object.assign(member, { name: linked.name, staffPhoto: linked.photoKey ? '/admin/staff-photo/' + linked.id : '' });
     res.render('admin/team-form', { title: 'Edit ' + member.name, member, mode: 'edit' });
   }));
 
@@ -352,7 +386,8 @@ module.exports = function mountHub(app, deps) {
     const existing = req.params.id ? await db.records.get('team', req.params.id) : null;
     if (req.params.id && !existing) return res.redirect('/admin/team');
     const formUrl = existing ? '/admin/team/' + existing.id + '/edit' : '/admin/team/new';
-    const name = text(f.name, 80);
+    const linked = existing && existing.userId ? await auth.getUser(existing.userId) : null;
+    const name = linked ? linked.name : text(f.name, 80);
     if (!name) return back(res, formUrl, 'Give the team member a name.');
     let photo = existing ? existing.photo || '' : '';
     if (f.removePhoto) photo = '';
@@ -360,6 +395,7 @@ module.exports = function mountHub(app, deps) {
       try { photo = await storage.savePhoto(req.file); } catch (err) { return back(res, formUrl, err.message); }
     }
     const member = {
+      ...(existing && existing.userId ? { userId: existing.userId } : {}),
       name,
       role: text(f.role, 100),
       bio: text(f.bio, 600),
@@ -1333,6 +1369,7 @@ module.exports = function mountHub(app, deps) {
     if (p.photoKey) await storage.removeFile(p.photoKey);
     for (const r of (await db.records.list('post_reads')).filter((x) => x.userId === p.id)) await db.records.remove('post_reads', r.id);
     await db.records.remove('users', p.id);
+    for (const m of (await db.records.list('team')).filter((x) => x.userId === p.id)) await db.records.remove('team', m.id);
     await log(req.me, req.me.name + ' deleted ' + p.name + '’s account' + (certs.length ? ' and ' + certs.length + ' certificate' + (certs.length > 1 ? 's' : '') : ''));
     back(res, '/admin/people', 'Deleted ' + p.name + '’s account');
   }));

@@ -8,19 +8,20 @@
   <div class="panel">
     <div class="panel__body">
       <div class="grid-2">
-        <div class="field"><label for="name">Name</label><input type="text" id="name" name="name" value="<%= m.name || '' %>" required maxlength="80" /></div>
+        <div class="field"><label for="name">Name</label><input type="text" id="name" name="name" value="<%= m.name || '' %>" required maxlength="80" <%= m.userId ? 'readonly' : '' %> /></div>
         <div class="field"><label for="role">Role</label><input type="text" id="role" name="role" value="<%= m.role || '' %>" maxlength="100" placeholder="e.g. Home manager, Albany Lodge" /></div>
       </div>
       <div class="field"><label for="bio">A few words about them (optional)</label><textarea id="bio" name="bio" rows="3" maxlength="600"><%= m.bio || '' %></textarea></div>
       <div class="field manager-photo">
         <span class="label">Photo</span>
-        <% if (m.photo) { %><img src="<%= photoSrc(m.photo) %>" alt="Current photo of <%= m.name %>" width="96" height="96" /><% } %>
-        <label for="photoFile" class="label"><%= m.photo ? 'Replace it' : 'Add a photo' %></label>
+        <% if (m.photo) { %><img src="<%= photoSrc(m.photo) %>" alt="Current photo of <%= m.name %>" width="96" height="96" />
+        <% } else if (m.staffPhoto) { %><img src="<%= m.staffPhoto %>" alt="Directory photo of <%= m.name %>" width="96" height="96" /><% } %>
+        <label for="photoFile" class="label"><%= m.photo || m.staffPhoto ? 'Replace it' : 'Add a photo' %></label>
         <input type="file" id="photoFile" name="photoFile" accept="image/jpeg,image/png,image/webp,image/avif" />
-        <% if (m.photo) { %><label class="check-inline"><input type="checkbox" name="removePhoto" value="1" /> Remove the photo (shows their initials instead)</label><% } %>
+        <% if (m.photo) { %><label class="check-inline"><input type="checkbox" name="removePhoto" value="1" /> Remove the photo <%= m.userId ? '(uses their directory photo)' : '(shows their initials instead)' %></label><% } %>
         <span class="hint">JPEG, PNG or WebP, up to 10 MB.</span>
       </div>
-      <div class="field" style="max-width:160px;"><label for="order">Position on the page</label><input type="number" id="order" name="order" value="<%= m.order || '' %>" min="0" /></div>
+      <input type="hidden" name="order" value="<%= m.order || '' %>" />
     </div>
   </div>
   <div style="display:flex;gap:.8rem;margin:1.5rem 0 3rem;">

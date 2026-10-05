@@ -4,8 +4,21 @@
   <div>
     <h1 class="hub-h1">Our team</h1>
   </div>
-  <% if (canEdit) { %><a href="/admin/team/new" class="btn btn--primary">+ Add a team member</a><% } %>
+  <% if (canEdit) { %><a href="/admin/team/new" class="btn btn--ghost">+ Add someone not in the directory</a><% } %>
 </div>
+
+<% if (canEdit) { %>
+<form action="/admin/team/from-directory" method="post" class="hub-card team-pick">
+  <label for="pick-user" class="label">Add from the staff directory</label>
+  <div class="team-pick__row">
+    <select id="pick-user" name="userId" required <%= staff.length ? '' : 'disabled' %>>
+      <option value=""><%= staff.length ? 'Choose a person…' : 'Everyone in the directory is already on the page' %></option>
+      <% staff.forEach(function (u) { %><option value="<%= u.id %>"><%= u.name %><%= u.title ? ' — ' + u.title : '' %></option><% }) %>
+    </select>
+    <button type="submit" class="btn btn--primary" <%= staff.length ? '' : 'disabled' %>>Add to the page</button>
+  </div>
+</form>
+<% } %>
 
 <% var live = !hidden && team.length; %>
 <div class="hub-card team-visibility">
@@ -27,11 +40,17 @@
     <table class="table">
       <thead><tr><th>Order</th><th>Photo</th><th>Name</th><th>Role</th><th></th></tr></thead>
       <tbody>
-        <% team.forEach(function (m) { %>
+        <% team.forEach(function (m, i) { var src = m.photo && m.photo.indexOf('/team-photo/') === 0 ? '/admin/staff-photo/' + m.userId : photoSrc(m.photo); %>
         <tr>
-          <td class="muted"><%= m.order || '—' %></td>
-          <td><% if (m.photo) { %><img class="team-thumb" src="<%= photoSrc(m.photo) %>" alt="" width="44" height="44" /><% } else { %><span class="muted">None</span><% } %></td>
-          <td><strong><%= m.name %></strong></td>
+          <td style="white-space:nowrap;">
+            <span class="muted tabnum"><%= i + 1 %></span>
+            <% if (canEdit) { %>
+            <form action="/admin/team/<%= m.id %>/move" method="post" class="inline-form"><input type="hidden" name="dir" value="up" /><button type="submit" class="btn btn--muted btn--sm" aria-label="Move <%= m.name %> up" <%= i === 0 ? 'disabled' : '' %>>↑</button></form>
+            <form action="/admin/team/<%= m.id %>/move" method="post" class="inline-form"><input type="hidden" name="dir" value="down" /><button type="submit" class="btn btn--muted btn--sm" aria-label="Move <%= m.name %> down" <%= i === team.length - 1 ? 'disabled' : '' %>>↓</button></form>
+            <% } %>
+          </td>
+          <td><% if (src) { %><img class="team-thumb" src="<%= src %>" alt="" width="44" height="44" /><% } else { %><span class="muted">None</span><% } %></td>
+          <td><strong><%= m.name %></strong><% if (m.userId) { %> <span class="hub-pill hub-pill--plain">Directory</span><% } %></td>
           <td><%= m.role || '' %></td>
           <td style="white-space:nowrap;">
             <% if (canEdit) { %>
@@ -47,7 +66,7 @@
     </table>
   </div>
   <% } else { %>
-  <p class="muted">No one on the Our team page yet.<% if (canEdit) { %> <a href="/admin/team/new">Add the first team member</a>.<% } %></p>
+  <p class="muted">No one on the Our team page yet.</p>
   <% } %>
 </div>
 

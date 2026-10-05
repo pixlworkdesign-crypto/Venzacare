@@ -1472,6 +1472,9 @@ a.hub-who:hover strong { text-decoration: underline; }
 /* Staff hub: Our team show/hide bar */
 .team-visibility { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 1rem 1.2rem; }
 .team-visibility .muted { font-size: 0.9rem; }
+.team-pick { padding: 1rem 1.2rem; }
+.team-pick__row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.4rem; }
+.team-pick__row select { flex: 1 1 260px; width: auto; }
 
 /* Careers: friendly note when no roles are open */
 .careers-hero__cta { margin-top: 1.6rem; }

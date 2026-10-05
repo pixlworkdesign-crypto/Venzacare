@@ -1029,9 +1029,25 @@ const records = {
 
 /* ---------- Our team ----------
    People shown on the public Our team page, kept as hub records and listed
-   in the order the admin chose (then by name). */
+   in the order the admin chose (then by name). A member picked from the
+   staff directory (userId) takes their name from it, and their directory
+   photo when no separate website photo has been uploaded. Members whose
+   account has been deleted drop off. */
 async function teamMembers() {
-  return (await records.list('team')).sort((a, b) => (a.order || 0) - (b.order || 0) || String(a.name).localeCompare(String(b.name)));
+  const list = await records.list('team');
+  const users = list.some((m) => m.userId) ? await records.list('users') : [];
+  return list
+    .map((m) => {
+      if (!m.userId) return m;
+      const u = users.find((x) => x.id === m.userId);
+      if (!u) return null;
+      return Object.assign({}, m, {
+        name: u.name || m.name,
+        photo: m.photo || (u.photoKey ? '/team-photo/' + m.id : ''),
+      });
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a.order || 0) - (b.order || 0) || String(a.name).localeCompare(String(b.name)));
 }
 
 async function messageById(id) {

@@ -174,6 +174,20 @@ app.get('/', wrap(async (req, res) => {
   });
 }));
 
+// A linked team member's directory photo. Staff photos sit in private
+// storage, so this hands out only those of people on the Our team page.
+app.get('/team-photo/:id', wrap(async (req, res) => {
+  const member = res.locals.hasTeam && (await db.records.get('team', req.params.id));
+  const user = member && member.userId && (await db.records.get('users', member.userId));
+  if (!user || !user.photoKey) return res.status(404).end();
+  res.set('Cache-Control', 'public, max-age=300');
+  const url = await storage.downloadUrl(user.photoKey, 3600);
+  if (url) return res.redirect(url);
+  const local = storage.localPath(user.photoKey);
+  if (!local) return res.status(404).end();
+  res.sendFile(local);
+}));
+
 // Our care
 app.get('/our-team', wrap(async (req, res, next) => {
   if (!res.locals.hasTeam) return next(); // hidden → page not found
