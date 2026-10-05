@@ -1,0 +1,33 @@
+<%- include('../partials/admin-header') %>
+
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1">Site images</h1>
+    <p class="muted">The pictures on the homepage and the Our care page. Choose a new picture for any of them and press Save — the website shows it within 30 seconds. Each home’s own photos are changed on that home’s page under <a href="/admin/homes">Homes</a>.</p>
+  </div>
+</div>
+
+<% if (!canEdit) { %><p class="hint">You can see these pictures, but changing them needs Homes “edit” access for the whole company.</p><% } %>
+
+<form action="/admin/images" method="post" class="admin-form" enctype="multipart/form-data">
+  <fieldset class="hub-fieldset" <%= canEdit ? '' : 'disabled' %>>
+  <div class="hub-card">
+    <div class="site-images">
+      <% slots.forEach(function (s) { var custom = SITE.images && SITE.images[s.key]; %>
+      <div class="site-image">
+        <img src="<%= siteImage(SITE, s.key) %>" alt="Current <%= s.label.toLowerCase() %> picture" loading="lazy" />
+        <h2><%= s.label %><% if (custom) { %> <span class="hub-chip">Changed</span><% } %></h2>
+        <p class="muted"><%= s.where %></p>
+        <label for="img_<%= s.key %>" class="label">New picture</label>
+        <input type="file" id="img_<%= s.key %>" name="img_<%= s.key %>" accept="image/jpeg,image/png,image/webp,image/avif" />
+        <% if (custom) { %><label class="check-inline"><input type="checkbox" name="reset" value="<%= s.key %>" /> Go back to the original picture</label><% } %>
+      </div>
+      <% }) %>
+    </div>
+    <p class="hint" style="margin-top:1rem;">JPEG, PNG or WebP, up to 10 MB each. Wide (landscape) photos look best.</p>
+  </div>
+  <% if (canEdit) { %><div style="display:flex;gap:.8rem;margin:1.5rem 0 3rem;"><button type="submit" class="btn btn--primary">Save pictures</button></div><% } %>
+  </fieldset>
+</form>
+
+<%- include('../partials/admin-footer') %>

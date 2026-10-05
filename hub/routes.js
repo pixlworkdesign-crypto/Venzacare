@@ -16,6 +16,7 @@ const db = require('../db');
 const storage = require('../storage');
 const mailer = require('../mailer');
 const visits = require('../visits');
+const { SITE_IMAGES } = require('../content');
 const auth = require('./auth');
 const access = require('./access');
 
@@ -46,7 +47,9 @@ const csvUpload = uploader(['.csv', '.txt']);
 const photoUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).fields([
   { name: 'photoFile', maxCount: 1 },
   { name: 'galleryFiles', maxCount: 20 },
+  { name: 'managerPhotoFile', maxCount: 1 },
 ]);
+const siteImageUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).fields(SITE_IMAGES.map((s) => ({ name: 'img_' + s.key, maxCount: 1 })));
 
 /* Map position from a UK postcode (postcodes.io, free, no key). Best effort. */
 async function geocode(postcode) {
@@ -298,6 +301,106 @@ module.exports = function mountHub(app, deps) {
     res.render('admin/homes', { title: 'Homes', homes: list });
   }));
 
+  /* ---------- Our team ----------
+     The people on the public Our team page. Same rule as site images:
+     anyone with Homes access can look; changing it needs Homes "edit" and
+     cover of the whole company. */
+  const teamUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).single('photoFile');
+  const canTeam = (me) => can(me, 'homes', 'edit') && me.homes === 'all';
+  const TEAM_DENIED = 'Only people with Homes “edit” access for the whole company can change the Our team page.';
+
+  app.get('/admin/team', need('homes', 'view'), wrap(async (req, res) => {
+    res.render('admin/team', { title: 'Our team', team: await db.teamMembers(), canEdit: canTeam(req.me) });
+  }));
+
+  app.get('/admin/team/new', need('homes', 'edit'), wrap(async (req, res) => {
+    if (!canTeam(req.me)) return deny(res, TEAM_DENIED);
+    res.render('admin/team-form', { title: 'Add a team member', member: { order: (await db.teamMembers()).length + 1 }, mode: 'new' });
+  }));
+
+  app.get('/admin/team/:id/edit', need('homes', 'edit'), wrap(async (req, res) => {
+    if (!canTeam(req.me)) return deny(res, TEAM_DENIED);
+    const member = await db.records.get('team', req.params.id);
+    if (!member) return res.redirect('/admin/team');
+    res.render('admin/team-form', { title: 'Edit ' + member.name, member, mode: 'edit' });
+  }));
+
+  // One handler for add (no id) and edit (id).
+  async function saveTeamMember(req, res) {
+    if (!canTeam(req.me)) return deny(res, TEAM_DENIED);
+    const f = req.body;
+    const existing = req.params.id ? await db.records.get('team', req.params.id) : null;
+    if (req.params.id && !existing) return res.redirect('/admin/team');
+    const formUrl = existing ? '/admin/team/' + existing.id + '/edit' : '/admin/team/new';
+    const name = text(f.name, 80);
+    if (!name) return back(res, formUrl, 'Give the team member a name.');
+    let photo = existing ? existing.photo || '' : '';
+    if (f.removePhoto) photo = '';
+    if (req.file) {
+      try { photo = await storage.savePhoto(req.file); } catch (err) { return back(res, formUrl, err.message); }
+    }
+    const member = {
+      name,
+      role: text(f.role, 100),
+      bio: text(f.bio, 600),
+      order: parseInt(f.order, 10) || 0,
+      photo,
+    };
+    const id = existing ? existing.id : db.uid('team');
+    await db.records.put('team', id, member);
+    await log(req.me, req.me.name + (existing ? ' updated ' : ' added ') + name + ' on the Our team page');
+    back(res, '/admin/team', (existing ? 'Saved ' : 'Added ') + name + '. The Our team page shows the change straight away.');
+  }
+  app.post('/admin/team', need('homes', 'edit'), teamUpload, wrap(saveTeamMember));
+  app.post('/admin/team/:id', need('homes', 'edit'), teamUpload, wrap(saveTeamMember));
+
+  app.post('/admin/team/:id/delete', need('homes', 'edit'), wrap(async (req, res) => {
+    if (!canTeam(req.me)) return deny(res, TEAM_DENIED);
+    const member = await db.records.get('team', req.params.id);
+    if (member) {
+      await db.records.remove('team', member.id);
+      await log(req.me, req.me.name + ' removed ' + member.name + ' from the Our team page');
+    }
+    back(res, '/admin/team', member ? 'Removed ' + member.name + ' from the Our team page.' : 'Already removed.');
+  }));
+
+  /* ---------- Site images ----------
+     The fixed pictures on the public pages (homepage banner, Our care…).
+     Anyone who can see homes can look; changing them is company-wide, so it
+     needs Homes "edit" and cover of the whole company. */
+  app.get('/admin/images', need('homes', 'view'), (req, res) => {
+    res.render('admin/images', {
+      title: 'Site images', slots: SITE_IMAGES,
+      canEdit: can(req.me, 'homes', 'edit') && req.me.homes === 'all',
+    });
+  });
+
+  app.post('/admin/images', need('homes', 'edit'), siteImageUpload, wrap(async (req, res) => {
+    if (req.me.homes !== 'all') return deny(res, 'Only people who cover the whole company can change the website’s pictures.');
+    const files = req.files || {};
+    const reset = new Set([].concat(req.body.reset || []));
+    const images = Object.assign({}, res.locals.SITE.images);
+    const changed = [];
+    try {
+      for (const slot of SITE_IMAGES) {
+        const file = (files['img_' + slot.key] || [])[0];
+        if (file) {
+          images[slot.key] = await storage.savePhoto(file);
+          changed.push(slot.label);
+        } else if (reset.has(slot.key) && images[slot.key]) {
+          delete images[slot.key];
+          changed.push(slot.label + ' (back to the original)');
+        }
+      }
+    } catch (err) {
+      return back(res, '/admin/images', err.message);
+    }
+    if (!changed.length) return back(res, '/admin/images', 'Nothing changed — choose a new picture first.');
+    await db.saveSettings({ images });
+    await log(req.me, req.me.name + ' changed site images — ' + changed.join(', '));
+    back(res, '/admin/images', 'Saved. The website shows the new pictures within 30 seconds.');
+  }));
+
   app.get('/admin/homes/new', need('homes', 'edit'), (req, res) => {
     if (req.me.homes !== 'all') return deny(res, 'Only people who cover the whole company can add a home.');
     res.render('hub/home-new', { title: 'Add a home', regions: [...new Set((res.locals.SITE.regions || []).concat(res.locals.hubHomes.map((h) => h.region)).filter(Boolean))].sort(), careTypes: CARE_TYPES, form: {}, error: null });
@@ -369,7 +472,7 @@ module.exports = function mountHub(app, deps) {
         cqcRatedOn: text(f.cqcRatedOn, 40),
         managerName: text(f.managerName, 80),
         managerBio: text(f.managerBio, 800),
-        managerPhoto: text(f.managerPhoto, 300),
+        managerPhoto: f.removeManagerPhoto ? '' : home.details.managerPhoto || '',
         carehomeUrl: /^https:\/\/(www\.)?carehome\.co\.uk\//.test(text(f.carehomeUrl, 300)) ? text(f.carehomeUrl, 300) : '',
         reviewScore: text(f.reviewScore, 6),
         reviewCount: text(f.reviewCount, 8),
@@ -411,6 +514,12 @@ module.exports = function mountHub(app, deps) {
         }
         if (photo !== home.photo || gallery.length !== (home.gallery || []).length) changed.push('photos');
       }
+      // Manager photo: a new upload replaces it; "remove" (above) clears it.
+      const managerFile = ((req.files || {}).managerPhotoFile || [])[0];
+      if (managerFile) {
+        try { details.managerPhoto = await storage.savePhoto(managerFile); } catch (err) { return back(res, '/admin/homes/' + home.id + '/edit', err.message); }
+      }
+      if (details.managerPhoto !== (home.details.managerPhoto || '')) changed.push('manager photo');
       if (cqc !== home.cqc) changed.push('CQC rating (now ' + (cqc === 'Registered' ? 'not yet rated' : cqc) + ')');
       Object.assign(next, {
         name: text(f.name, 80) || home.name,

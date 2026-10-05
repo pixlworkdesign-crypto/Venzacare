@@ -35,6 +35,29 @@ function photoAbs(p, base) {
   return src && src.startsWith('/') && !src.startsWith('//') ? base + src : src;
 }
 
+/* ---------- Site images ----------
+   The fixed pictures around the website. Admins can swap any of them in the
+   staff hub (Site images); the choice is kept in site settings as
+   SITE.images[key], and a blank means the original picture bundled here. */
+const SITE_IMAGES = [
+  { key: 'hero', label: 'Homepage banner', where: 'The big picture at the top of the homepage. Also used when the site is shared on social media.', file: 'hero-home.jpg' },
+  { key: 'about', label: 'About us', where: 'Homepage, next to “Care that starts with getting to know you”.', file: 'about.jpg' },
+  { key: 'careResidential', label: 'Residential care', where: 'Our care page.', file: 'care-residential.jpg' },
+  { key: 'careNursing', label: 'Nursing care', where: 'Our care page.', file: 'care-nursing.jpg' },
+  { key: 'careDementia', label: 'Dementia care', where: 'Our care page.', file: 'care-dementia.jpg' },
+  { key: 'careRespite', label: 'Respite care', where: 'Our care page.', file: 'life.jpg' },
+  { key: 'carePalliative', label: 'End-of-life care', where: 'Our care page.', file: 'care-palliative.jpg' },
+  { key: 'careers', label: 'Careers sharing picture', where: 'Shown when a careers or job page is shared on social media or in a message.', file: 'careers.jpg' },
+];
+
+// The address of a site image: the uploaded replacement if there is one,
+// otherwise the original.
+function siteImage(SITE, key) {
+  const slot = SITE_IMAGES.find((s) => s.key === key);
+  const custom = SITE && SITE.images && SITE.images[key];
+  return photoSrc(custom || (slot ? slot.file : ''));
+}
+
 /* ---------- Fees ---------- */
 const FEE_ROWS = [
   { key: 'residential', label: 'Residential care' },
@@ -216,7 +239,7 @@ function ldScript(obj) {
 
 module.exports = {
   CQC_RATINGS, cqcLabel, cqcClass, cqcReportUrl,
-  photoSrc, photoAbs,
+  photoSrc, photoAbs, SITE_IMAGES, siteImage,
   FEE_ROWS, gbp, fromPrice, INCLUDED, EXTRAS,
   FEE_FAQS, GENERAL_FAQS, WHAT_TO_BRING,
   faqJsonLd, orgJsonLd, homeJsonLd, ldScript,

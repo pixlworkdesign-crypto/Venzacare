@@ -163,7 +163,14 @@
     <div class="panel__body">
       <div class="grid-2">
         <div class="field"><label for="managerName">Name</label><input type="text" id="managerName" name="managerName" value="<%= d.managerName %>" /></div>
-        <div class="field"><label for="managerPhoto">Photo address (optional)</label><input type="text" id="managerPhoto" name="managerPhoto" value="<%= d.managerPhoto %>" placeholder="/images/managers/jane.webp" /></div>
+      </div>
+      <div class="field manager-photo">
+        <span class="label">Photo (optional)</span>
+        <% if (d.managerPhoto) { %><img src="<%= photoSrc(d.managerPhoto) %>" alt="Current photo of <%= d.managerName || 'the manager' %>" width="96" height="96" /><% } %>
+        <label for="managerPhotoFile" class="label"><%= d.managerPhoto ? 'Replace it' : 'Add a photo' %></label>
+        <input type="file" id="managerPhotoFile" name="managerPhotoFile" accept="image/jpeg,image/png,image/webp,image/avif" />
+        <% if (d.managerPhoto) { %><label class="check-inline"><input type="checkbox" name="removeManagerPhoto" value="1" /> Remove the photo (shows their initials instead)</label><% } %>
+        <span class="hint">A head-and-shoulders photo works best. JPEG, PNG or WebP, up to 10 MB.</span>
       </div>
       <div class="field"><label for="managerBio">A few words from or about them</label><textarea id="managerBio" name="managerBio" rows="3"><%= d.managerBio %></textarea></div>
     </div>

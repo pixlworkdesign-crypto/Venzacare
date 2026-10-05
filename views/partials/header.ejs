@@ -13,7 +13,7 @@
   <meta property="og:title" content="<%= pageTitle %>" />
   <meta property="og:description" content="<%= pageDesc %>" />
   <meta property="og:url" content="<%= canonical %>" />
-  <meta property="og:image" content="<%= (typeof home !== 'undefined' && home && home.photo) ? photoAbs(home.photo, baseUrl) : baseUrl + '/images/hero-home.jpg' %>" />
+  <meta property="og:image" content="<%= (typeof home !== 'undefined' && home && home.photo) ? photoAbs(home.photo, baseUrl) : photoAbs(siteImage(SITE, 'hero'), baseUrl) %>" />
   <meta property="og:locale" content="en_GB" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="theme-color" content="#0d4f5c" />
@@ -34,6 +34,7 @@
       <nav class="nav__links" id="navlinks">
         <a href="/our-care" class="<%= currentPath === '/our-care' ? 'is-active' : '' %>">Our care</a>
         <a href="/care-homes" class="<%= currentPath.startsWith('/care-homes') ? 'is-active' : '' %>">Our homes</a>
+        <a href="/our-team" class="<%= currentPath === '/our-team' ? 'is-active' : '' %>">Our team</a>
         <a href="/fees-and-funding" class="<%= currentPath === '/fees-and-funding' ? 'is-active' : '' %>">Fees &amp; funding</a>
         <a href="/cqc-ratings" class="<%= currentPath === '/cqc-ratings' ? 'is-active' : '' %>">CQC ratings</a>
         <a href="/contact" class="<%= currentPath === '/contact' ? 'is-active' : '' %>">Contact</a>

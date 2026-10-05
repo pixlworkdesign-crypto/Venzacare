@@ -173,6 +173,14 @@ app.get('/', wrap(async (req, res) => {
 }));
 
 // Our care
+app.get('/our-team', wrap(async (req, res) => {
+  res.render('our-team', {
+    title: 'Our team',
+    description: 'Meet the people behind Venza Care UK — the managers, nurses and carers who look after our residents.',
+    team: await db.teamMembers(),
+  });
+}));
+
 app.get('/our-care', wrap(async (req, res) => {
   res.render('our-care', {
     title: 'Our care',
@@ -566,7 +574,7 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const base = siteUrl(req);
-  const paths = ['/', '/our-care', '/care-homes', '/fees-and-funding', '/cqc-ratings', '/faqs', '/careers', '/contact',
+  const paths = ['/', '/our-care', '/our-team', '/care-homes', '/fees-and-funding', '/cqc-ratings', '/faqs', '/careers', '/contact',
     '/privacy', '/cookies', '/accessibility'];
   (await db.homes()).forEach((h) => paths.push('/care-homes/' + h.id));
   (await db.openJobs()).forEach((j) => paths.push('/careers/' + j.id));
