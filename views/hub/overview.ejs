@@ -9,7 +9,7 @@
 
 <% if (noRealOwner) { %>
 <div class="hub-notice hub-notice--warn">
-  <strong>Start here:</strong> you’re signed in with the emergency owner login. Go to <a href="/admin/people">People &amp; access</a>, invite yourself as an <strong>Owner</strong>, and use that account from now on.
+  <strong>Start here:</strong> you’re signed in with the emergency login. Go to <a href="/admin/people">People &amp; access</a>, invite yourself as a <strong>Site administrator</strong>, and use that account from now on. Then remove <code>ADMIN_PASS</code> from your hosting settings to switch the emergency login off.
 </div>
 <% } %>
 <% if (health && (!health.ok || health.problems.length)) { %>

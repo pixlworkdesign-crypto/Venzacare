@@ -1,7 +1,7 @@
 <%- include('../partials/admin-header') %>
 <div class="hub-head"><div>
   <h1 class="hub-h1">My account</h1>
-  <p class="muted"><%= me.builtin ? 'This is the emergency owner login from your hosting settings.' : me.email %></p>
+  <p class="muted"><%= me.builtin ? 'This is the emergency login from your hosting settings.' : me.email %></p>
 </div></div>
 <% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
 <% if (!me.builtin) { %>

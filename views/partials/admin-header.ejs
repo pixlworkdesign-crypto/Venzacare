@@ -49,7 +49,7 @@
     <aside class="hub-nav" id="hubNav" aria-label="Staff hub">
       <a href="/admin" class="hub-nav__brand"><img src="/images/logo-white.png" alt="Venza Care" /><span>Staff hub</span></a>
       <a href="/admin/account" class="hub-nav__who<%= currentPath === '/admin/account' ? ' is-on' : '' %>">
-        <span class="hub-avatar"><%= initials %></span>
+        <% if (me.photoKey) { %><img class="hub-avatar hub-avatar--img" src="/admin/staff-photo/<%= me.id %>" alt="" width="36" height="36" /><% } else { %><span class="hub-avatar"><%= initials %></span><% } %>
         <span><b><%= me.name %></b><small><%= me.title %><%= me.builtin ? '' : ' · ' + homesLabel(me) %></small></span>
       </a>
       <nav>
@@ -70,5 +70,5 @@
       </div>
     </aside>
     <main class="hub-main" id="hub-main" tabindex="-1">
-      <% if (me.builtin) { %><div class="hub-banner">You’re using the <strong>emergency owner login</strong>. Invite yourself under People &amp; access and use your own account day to day.</div><% } %>
+      <% if (me.builtin) { %><div class="hub-banner">You’re using the <strong>emergency login</strong>. Invite yourself under People &amp; access as a Site administrator and use your own account day to day.</div><% } %>
       <% if (flash) { %><div class="hub-flash" role="status"><%= flash %></div><% } %>

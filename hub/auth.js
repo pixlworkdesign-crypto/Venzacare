@@ -12,7 +12,7 @@
 
 const crypto = require('crypto');
 const db = require('../db');
-const { BUILTIN_OWNER, normalisePerms } = require('./access');
+const { BUILTIN_OWNER, normalisePerms, presetName } = require('./access');
 
 const COOKIE = 'vc_admin';
 const SESSION_HOURS = 12;
@@ -109,6 +109,7 @@ function readCookie(req, name) {
 function shapeUser(u) {
   if (!u) return null;
   return Object.assign({ homes: [], status: 'invited', sessionVersion: 0, title: '', phone: '' }, u, {
+    preset: presetName(u.preset),
     perms: normalisePerms(u.perms, u.preset),
   });
 }

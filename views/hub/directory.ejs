@@ -14,7 +14,7 @@
 <div class="hub-dir">
   <% g.people.forEach(function (p) { var ini = p.name.split(/\s+/).map(function (x) { return x[0]; }).join('').slice(0, 2).toUpperCase(); var showContact = p.preset !== 'Carer / staff'; %>
   <div class="hub-card hub-person">
-    <div class="hub-who"><span class="hub-avatar"><%= ini %></span><div><strong><%= p.name %></strong><div class="hint"><%= p.title %></div></div></div>
+    <div class="hub-who"><% if (p.photoKey) { %><img class="hub-avatar hub-avatar--photo" src="/admin/staff-photo/<%= p.id %>" alt="" loading="lazy" width="56" height="56" /><% } else { %><span class="hub-avatar hub-avatar--lg"><%= ini %></span><% } %><div><strong><%= p.name %></strong><div class="hint"><%= p.title %></div></div></div>
     <div class="hint">
       <% if (showContact) { %>
         <% if (p.phone) { %><a href="tel:<%= p.phone.replace(/\s/g, '') %>" class="tabnum"><%= p.phone %></a><br /><% } %>
