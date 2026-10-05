@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <% var pageTitle = (title ? title + ' · ' : '') + SITE.name;
-     var pageDesc = description || 'Venza Care UK runs CQC-regulated care homes in London, Kent and Cambridgeshire — residential, nursing, dementia, respite and end-of-life care.'; %>
+     var pageDesc = description || 'Venza Care UK runs CQC-regulated care homes' + (areaText ? ' in ' + areaText : '') + ' — residential, nursing, dementia, respite and end-of-life care.'; %>
   <title><%= pageTitle %></title>
   <meta name="description" content="<%= pageDesc %>" />
   <link rel="canonical" href="<%= canonical %>" />

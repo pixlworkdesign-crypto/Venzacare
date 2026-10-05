@@ -76,7 +76,7 @@ const DEFAULT_CARE_TYPES = [
   { name: 'Nursing Care', image: 'careNursing', position: 'center 22%',
     description: 'When health needs go beyond day-to-day support, our registered nurses provide care around the clock — for long-term conditions, recovery after a hospital stay, and ongoing clinical needs — working closely with local GPs and community health teams.' },
   { name: 'Dementia Care', image: 'careDementia', position: 'center 22%',
-    description: 'Our teams are experienced in caring for people living with dementia, in calm, familiar surroundings designed to feel safe. We take time to learn each resident\'s history and routines, so they are known and understood — including on the harder days. At Fieldway in Mitcham, a dedicated floor specialises in dementia care.' },
+    description: 'Our teams are experienced in caring for people living with dementia, in calm, familiar surroundings designed to feel safe. We take time to learn each resident\'s history and routines, so they are known and understood — including on the harder days.' },
   { name: 'Respite Care', image: 'careRespite', position: 'center',
     description: 'A short stay — to recover after a hospital visit, to give a family carer a break, or simply to try a home before deciding. Respite guests get exactly the same care, meals and activities as everyone else, for as long or short a stay as you need, subject to a room being free.' },
   { name: 'End-of-life Care', image: 'carePalliative', position: 'center',
@@ -275,7 +275,7 @@ const GENERAL_FAQS = [
   },
   {
     q: 'How do you care for people living with dementia?',
-    a: 'Our teams are trained in dementia care, and we learn each person’s life story, routines and what calms them. Our homes offer care for people living with mild, moderate and advanced dementia; Fieldway in Mitcham has a dedicated dementia floor.',
+    a: 'Our teams are trained in dementia care, and we learn each person’s life story, routines and what calms them. Our homes offer care for people living with mild, moderate and advanced dementia.',
   },
   {
     q: 'Do you offer short stays?',

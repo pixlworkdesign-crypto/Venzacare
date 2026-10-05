@@ -5,7 +5,7 @@
   <div class="hero__inner">
     <span class="eyebrow hero__eyebrow">Residential · Nursing · Dementia · End-of-life care</span>
     <h1>The care home you'd choose for your own family</h1>
-    <p class="hero__lead">Warm, welcoming care homes across London, Kent and Cambridge, where every day is built around the person — not the routine.</p>
+    <p class="hero__lead">Warm, welcoming care homes<%= areaText ? ' across ' + areaText : '' %>, where every day is built around the person — not the routine.</p>
     <div class="hero__cta">
       <a href="/care-homes" class="btn btn--gold">Find a care home</a>
       <a href="/careers" class="btn btn--outline-light">Explore careers</a>
@@ -21,7 +21,7 @@
       <form action="/care-homes" method="get">
         <div class="field">
           <label for="f-q">Town or postcode</label>
-          <input type="text" id="f-q" name="q" placeholder="e.g. Croydon or CR0" />
+          <input type="text" id="f-q" name="q" placeholder="<%= searchExample %>" />
         </div>
         <div class="field">
           <label for="f-region">Region</label>
@@ -48,7 +48,7 @@
   <div class="trustbar__inner">
     <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Z"/></svg> <strong>CQC&nbsp;regulated</strong></span>
     <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z"/></svg> <strong>Nursing &amp; dementia care</strong></span>
-    <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg> London · Kent · Cambridge</span>
+    <% if (homeAreas.length) { %>    <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg> <%= homeAreas.join(' · ') %></span><% } %>
     <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Family always welcome</span>
   </div>
 </div>

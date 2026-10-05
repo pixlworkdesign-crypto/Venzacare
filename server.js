@@ -128,6 +128,15 @@ app.use(wrap(async (req, res, next) => {
   // Region filters list the regions the homes are actually in.
   const liveHomes = await db.homes();
   res.locals.homeRegions = [...new Set(liveHomes.map((h) => h.region).filter(Boolean))].sort();
+  // Where the live homes are, for wording around the site ("in Nottinghamshire and West Midlands").
+  const andList = (a) => (a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a.join(''));
+  const areas = [...new Set(liveHomes.map((h) => h.region || h.town).filter(Boolean))].sort();
+  const towns = [...new Set(liveHomes.map((h) => h.town).filter(Boolean))];
+  res.locals.homeAreas = areas;
+  res.locals.areaText = andList(areas);
+  res.locals.townText = andList(towns);
+  const ex = liveHomes.find((h) => h.town);
+  res.locals.searchExample = ex ? 'e.g. ' + ex.town + (ex.postcode ? ' or ' + ex.postcode.split(' ')[0] : '') : 'Town or postcode';
   // …and the "Type of care" filters list the care the homes actually offer.
   res.locals.homeCareTypes = content.careTypeNames(res.locals.SITE).filter((c) => liveHomes.some((h) => (h.careTypes || []).includes(c)));
   // The "Our team" page shows only if an admin hasn't hidden it and someone has been added.
@@ -165,7 +174,7 @@ app.get('/', wrap(async (req, res) => {
   const openJobs = await db.openJobs();
   res.render('index', {
     jsonLd: content.orgJsonLd(res.locals.SITE, res.locals.baseUrl),
-    description: 'Venza Care UK runs care homes in Croydon, Mitcham, Sevenoaks and Newmarket — residential, nursing, dementia, respite and end-of-life care. See fees and CQC ratings, and book a visit.',
+    description: 'Venza Care UK runs care homes' + (res.locals.townText ? ' in ' + res.locals.townText : '') + ' — residential, nursing, dementia, respite and end-of-life care. See fees and CQC ratings, and book a visit.',
     homes: await db.homes(),
     jobs: openJobs.filter((j) => j.featured).slice(0, 3),
     openCount: openJobs.length,
@@ -200,7 +209,7 @@ app.get('/our-team', wrap(async (req, res, next) => {
 app.get('/our-care', wrap(async (req, res) => {
   res.render('our-care', {
     title: 'Our care',
-    description: 'Residential, nursing, dementia, respite and end-of-life care at Venza Care UK homes in London, Kent and Cambridgeshire — what each type of care means and where it is offered.',
+    description: 'Residential, nursing, dementia, respite and end-of-life care at Venza Care UK homes' + (res.locals.areaText ? ' in ' + res.locals.areaText : '') + ' — what each type of care means and where it is offered.',
     homes: await db.homes(),
   });
 }));
@@ -434,7 +443,7 @@ app.get('/careers', wrap(async (req, res) => {
 
   res.render('careers', {
     title: 'Careers',
-    description: 'Care jobs at Venza Care UK homes in Croydon, Mitcham, Sevenoaks and Newmarket — carers, nurses, chefs and managers. Funded qualifications and real progression.',
+    description: 'Care jobs at Venza Care UK homes' + (res.locals.townText ? ' in ' + res.locals.townText : '') + ' — carers, nurses, chefs and managers. Funded qualifications and real progression.',
     jobs,
     services,
     locations: await db.jobLocations(),
