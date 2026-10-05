@@ -250,13 +250,20 @@ app.get('/care-homes', wrap(async (req, res) => {
   const q = (req.query.q || '').toString();
   const region = (req.query.region || '').toString();
   const careType = (req.query.careType || '').toString();
+  const need = [].concat(req.query.need || []).map(String).filter(Boolean);
+  const liveHomes = await db.homes();
+  // "More filters": specialist care and facilities that at least one live home offers.
+  const offered = (names) => names.filter((n) => liveHomes.some((h) => (h.specialisms || []).concat(content.homeFacilityNames(h)).includes(n)));
+  const filterSpecialist = offered([...new Set(content.specialistCareOf(res.locals.SITE).concat(...liveHomes.map((h) => h.specialisms || [])))]);
+  const filterFacilities = content.FACILITY_GROUPS.map((g) => ({ group: g.name, items: offered(content.facilitiesOf(res.locals.SITE).filter((f) => f.group === g.name).map((f) => f.name)) })).filter((g) => g.items.length);
   res.render('care-homes', {
+    need, filterSpecialist, filterFacilities,
     title: 'Find a care home',
     description: 'Find a Venza Care UK care home near you. Search by town or postcode, filter by type of care, and compare homes on a map.',
     // Every home is rendered and the non-matches hidden, so "Clear" in the
     // browser can bring them back without a reload.
     homes: await db.homes(),
-    shownIds: (await db.filterHomes({ q, region, careType })).map((h) => h.id),
+    shownIds: (await db.filterHomes({ q, region, careType })).filter((h) => need.every((n) => (h.specialisms || []).concat(content.homeFacilityNames(h)).includes(n))).map((h) => h.id),
     q,
     region,
     careType,

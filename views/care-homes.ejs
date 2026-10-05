@@ -36,6 +36,21 @@
           </select>
         </div>
         <button type="submit" class="btn btn--primary">Search</button>
+        <% if (filterSpecialist.length || filterFacilities.length) { %>
+        <details class="finder-more" id="moreFilters" <%= need.length ? 'open' : '' %>>
+          <summary>More filters<span id="needCount"><%= need.length ? ' (' + need.length + ')' : '' %></span></summary>
+          <% if (filterSpecialist.length) { %>
+          <fieldset><legend>Specialist care</legend>
+            <div class="finder-more__grid"><% filterSpecialist.forEach(function (n) { %><label><input type="checkbox" name="need" value="<%= n %>" <%= need.indexOf(n) > -1 ? 'checked' : '' %> /> <%= n %></label><% }) %></div>
+          </fieldset>
+          <% } %>
+          <% filterFacilities.forEach(function (g) { %>
+          <fieldset><legend><%= g.group %></legend>
+            <div class="finder-more__grid"><% g.items.forEach(function (n) { %><label><input type="checkbox" name="need" value="<%= n %>" <%= need.indexOf(n) > -1 ? 'checked' : '' %> /> <%= n %></label><% }) %></div>
+          </fieldset>
+          <% }) %>
+        </details>
+        <% } %>
       </form>
     </div>
 
@@ -112,7 +127,9 @@
       var region = regionEl ? regionEl.value : '', care = careEl ? careEl.value : '';
       var okR = !region || card.getAttribute('data-region') === region;
       var okC = !care || (card.getAttribute('data-care') || '').split('|').indexOf(care) > -1;
-      return okR && okC;
+      var have = (card.getAttribute('data-extra') || '').split('|');
+      var okN = needs().every(function (n) { return have.indexOf(n) > -1; });
+      return okR && okC && okN;
     }
     function textOk(card, q) {
       if (!q) return true;
@@ -120,7 +137,8 @@
         || norm(card.getAttribute('data-name')).indexOf(q) > -1
         || (card.getAttribute('data-postcode') || '').indexOf(q) > -1;
     }
-    function anyFilterActive() { return (qEl && qEl.value) || (regionEl && regionEl.value) || (careEl && careEl.value); }
+    function needs() { return Array.prototype.map.call(document.querySelectorAll('input[name="need"]:checked'), function (b) { return b.value; }); }
+    function anyFilterActive() { return (qEl && qEl.value) || (regionEl && regionEl.value) || (careEl && careEl.value) || needs().length; }
     function render(shown) {
       cards.forEach(function (c) { c.style.display = shown.indexOf(c) > -1 ? '' : 'none'; });
       if (countEl) countEl.textContent = shown.length;
@@ -197,7 +215,10 @@
 
     if (form) form.addEventListener('submit', function (e) { e.preventDefault(); doSearch(); });
     [regionEl, careEl].forEach(function (el) { if (el) el.addEventListener('change', doSearch); });
-    function clearAll() { if (qEl) qEl.value = ''; if (regionEl) regionEl.value = ''; if (careEl) careEl.value = ''; if (userMarker && map) { map.removeLayer(userMarker); userMarker = null; } apply(); }
+    document.querySelectorAll('input[name="need"]').forEach(function (b) {
+      b.addEventListener('change', function () { var n = needs().length, el = document.getElementById('needCount'); if (el) el.textContent = n ? ' (' + n + ')' : ''; doSearch(); });
+    });
+    function clearAll() { if (qEl) qEl.value = ''; if (regionEl) regionEl.value = ''; if (careEl) careEl.value = ''; document.querySelectorAll('input[name="need"]').forEach(function (b) { b.checked = false; }); var nc = document.getElementById('needCount'); if (nc) nc.textContent = ''; if (userMarker && map) { map.removeLayer(userMarker); userMarker = null; } apply(); }
     if (clearBtn) clearBtn.addEventListener('click', clearAll);
     var emptyClear = document.getElementById('emptyClear');
     if (emptyClear) emptyClear.addEventListener('click', clearAll);

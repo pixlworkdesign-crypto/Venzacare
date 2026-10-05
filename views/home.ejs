@@ -24,7 +24,7 @@
       <div class="prose">
         <p class="lead"><%= home.blurb %></p>
         <h2>About this home</h2>
-        <p><%= home.name %> is a <%= home.beds %>-bed care home in <%= home.town %>, offering <%= home.careTypes.join(', ').toLowerCase() %>.</p>
+        <p><%= home.name %> is a<%= home.beds ? ' ' + home.beds + '-bed' : '' %> care home in <%= home.town %>.</p>
         <div class="care-panel">
           <h3>Types of care</h3>
           <ul class="tick-list">
@@ -144,11 +144,29 @@
     </div>
     <% } %>
 
+    <% if (d.testimonials && d.testimonials.length) { %>
+    <div class="home-section">
+      <h2 class="h2" style="font-size:1.6rem;">What families say</h2>
+      <div class="quote-grid">
+        <% d.testimonials.forEach(function (t) { %>
+        <figure class="quote-card"><blockquote>“<%= t.quote %>”</blockquote><% if (t.by) { %><figcaption>— <%= t.by %></figcaption><% } %></figure>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (d.googleUrl && !d.carehomeUrl) { %>
+    <div class="home-section review-strip">
+      <div></div>
+      <div><strong>Reviews on Google</strong></div>
+      <a class="btn btn--ghost btn--sm" href="<%= d.googleUrl %>" target="_blank" rel="noopener">Read the reviews ↗</a>
+    </div>
+    <% } %>
     <% if (d.carehomeUrl) { %>
     <div class="home-section review-strip">
       <div><% if (d.reviewScore) { %><strong class="review-strip__score"><%= d.reviewScore %></strong><span class="muted"> / 10</span><% } %></div>
       <div><strong>Independent reviews on carehome.co.uk</strong><% if (d.reviewCount) { %><br /><span class="muted">from <%= d.reviewCount %> reviews by residents and families</span><% } %></div>
-      <a class="btn btn--ghost btn--sm" href="<%= d.carehomeUrl %>" target="_blank" rel="noopener">Read the reviews ↗</a>
+      <span class="review-strip__links"><a class="btn btn--ghost btn--sm" href="<%= d.carehomeUrl %>" target="_blank" rel="noopener">Read the reviews ↗</a><% if (d.googleUrl) { %> <a class="btn btn--ghost btn--sm" href="<%= d.googleUrl %>" target="_blank" rel="noopener">Google reviews ↗</a><% } %></span>
     </div>
     <% } %>
 

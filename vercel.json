@@ -4,10 +4,28 @@
     {
       "src": "server.js",
       "use": "@vercel/node",
-      "config": { "includeFiles": ["views/**", "public/**"] }
+      "config": {
+        "includeFiles": [
+          "views/**",
+          "public/**"
+        ]
+      }
     }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "server.js" }
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/certificates",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/enquiries",
+      "schedule": "0 8 * * *"
+    }
   ]
 }

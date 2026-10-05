@@ -642,6 +642,9 @@ module.exports = function mountHub(app, deps) {
         cqcRatedOn: text(f.cqcRatedOn, 40),
         managerBio: text(f.managerBio, 800),
         carehomeUrl: /^https:\/\/(www\.)?carehome\.co\.uk\//.test(text(f.carehomeUrl, 300)) ? text(f.carehomeUrl, 300) : '',
+        googleUrl: /^https:\/\/((www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|g\.page)\//.test(text(f.googleUrl, 400)) ? text(f.googleUrl, 400) : '',
+        testimonials: Object.keys(f).filter((k) => /^tq_\d+$/.test(k)).sort((a, b) => a.slice(3) - b.slice(3))
+          .map((k) => ({ quote: text(f[k], 600), by: text(f['tby_' + k.slice(3)], 80) })).filter((t) => t.quote).slice(0, 12),
         reviewScore: text(f.reviewScore, 6),
         reviewCount: text(f.reviewCount, 8),
         parking: text(f.parking, 400),
@@ -1623,6 +1626,39 @@ module.exports = function mountHub(app, deps) {
       await db.records.put('certificates', c.id, c);
     }
     res.json({ sent });
+  }));
+
+  /* Daily nudge: families still waiting for a first call 24 hours after
+     getting in touch. Each manager who can update enquiries for that home
+     gets one email listing them; each family is chased once. Same
+     CRON_SECRET as above (Vercel Cron sends it automatically). */
+  app.get('/api/cron/enquiries', wrap(async (req, res) => {
+    const secret = (process.env.CRON_SECRET || '').trim();
+    if (!secret || req.headers.authorization !== 'Bearer ' + secret) return res.status(401).json({ error: 'Not authorised' });
+    if (!mailer.configured()) return res.json({ sent: 0, note: 'Email is not set up (RESEND_API_KEY, EMAIL_FROM).' });
+    const dayAgo = Date.now() - 24 * 3600 * 1000;
+    const [list, progress, users] = await Promise.all([enquiryList({ homes: 'all' }), db.records.list('enquiry_progress'), auth.allUsers()]);
+    const remindedIds = new Set(progress.filter((p) => p.remindedAt).map((p) => p.id));
+    const late = list.filter((e) => e.stage === 'New' && new Date(e.createdAt).getTime() < dayAgo && !remindedIds.has(e.id));
+    const staff = users.filter((u) => u.status === 'active' && u.email && can(u, 'enquiries', 'edit'));
+    let sent = 0;
+    for (const u of staff) {
+      const mine = late.filter((e) => covers(u, e.homeId));
+      if (!mine.length) continue;
+      const ok = await mailer.send({
+        to: u.email,
+        subject: mine.length === 1 ? mine[0].name + ' is still waiting for a call' : mine.length + ' families are still waiting for a call',
+        heading: 'Still waiting for a first call',
+        lines: mine.map((e) => e.name + (e.home ? ' — ' + e.home : '') + ' (got in touch ' + new Date(e.createdAt).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) + (e.phone ? ', ' + e.phone : '') + ')'),
+        button: { label: 'Open enquiries', url: siteUrl(req) + '/admin/enquiries' },
+      });
+      if (ok) sent++;
+    }
+    for (const e of late) {
+      const prev = progress.find((p) => p.id === e.id) || {};
+      await db.records.put('enquiry_progress', e.id, Object.assign({ stage: 'New', note: '' }, prev, { remindedAt: new Date().toISOString() }));
+    }
+    res.json({ sent, families: late.length });
   }));
 
   return { certState };

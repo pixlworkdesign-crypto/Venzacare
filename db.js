@@ -761,6 +761,8 @@ const EMPTY_DETAILS = {
   managerBio: '',
   managerPhoto: '',
   carehomeUrl: '',       // carehome.co.uk profile
+  googleUrl: '',         // the home on Google Maps (its Google Business Profile)
+  testimonials: [],      // [{ quote, by }] from families, shown on the home's page
   reviewScore: '',       // e.g. 9.6
   reviewCount: '',
   parking: '',           // getting here / parking notes

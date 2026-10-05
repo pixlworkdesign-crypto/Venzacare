@@ -227,12 +227,24 @@
   </fieldset>
   <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
   <div class="panel">
-    <div class="panel__head"><h2>Reviews from carehome.co.uk</h2></div>
+    <div class="panel__head"><h2>Reviews</h2></div>
     <div class="panel__body">
       <div class="field"><label for="carehomeUrl">Link to this home on carehome.co.uk</label><input type="url" id="carehomeUrl" name="carehomeUrl" value="<%= d.carehomeUrl %>" placeholder="https://www.carehome.co.uk/carehome.cfm/searchazref/…" /></div>
       <div class="grid-2">
         <div class="field"><label for="reviewScore">Score shown there (out of 10)</label><input type="text" id="reviewScore" name="reviewScore" value="<%= d.reviewScore %>" placeholder="e.g. 9.6" /></div>
         <div class="field"><label for="reviewCount">Number of reviews shown there</label><input type="text" id="reviewCount" name="reviewCount" value="<%= d.reviewCount %>" placeholder="e.g. 42" /></div>
+      </div>
+      <div class="field"><label for="googleUrl">Link to this home on Google Maps</label><input type="url" id="googleUrl" name="googleUrl" value="<%= d.googleUrl %>" placeholder="https://maps.app.goo.gl/…" /></div>
+      <div class="field">
+        <span class="label">What families say</span>
+        <div class="quotes">
+          <% (d.testimonials || []).concat([{}, {}]).forEach(function (t, n) { %>
+          <div class="quote-row">
+            <textarea name="tq_<%= n %>" rows="2" maxlength="600" aria-label="Quote <%= n + 1 %>" <%- t.quote ? '' : 'placeholder="e.g. The staff are fantastic and always make us feel welcome."' %>><%= t.quote || '' %></textarea>
+            <input name="tby_<%= n %>" value="<%= t.by || '' %>" maxlength="80" aria-label="Who said it" placeholder="e.g. Daughter of a resident" />
+          </div>
+          <% }) %>
+        </div>
       </div>
     </div>
   </div>

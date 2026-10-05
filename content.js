@@ -349,6 +349,7 @@ function homeJsonLd(home, SITE, base) {
       addressCountry: 'GB',
     },
     parentOrganization: { '@type': 'Organization', name: SITE.name, url: base + '/' },
+    sameAs: [d.googleUrl, d.carehomeUrl].filter(Boolean).length ? [d.googleUrl, d.carehomeUrl].filter(Boolean) : undefined,
   };
   if (typeof home.lat === 'number' && typeof home.lng === 'number') {
     data.geo = { '@type': 'GeoCoordinates', latitude: home.lat, longitude: home.lng };

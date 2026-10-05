@@ -105,7 +105,7 @@ list. At minimum:
 | `ALERT_EMAIL` | Optional. Where new-enquiry and application alerts go (defaults to the site's enquiries email) |
 | `RETENTION_DAYS` | Optional. Days to keep job applications and CVs before automatic deletion (default 365; 0 turns it off) |
 | `SUPABASE_PHOTO_BUCKET` | Optional. Public bucket for home photos (default `home-photos`) |
-| `CRON_SECRET` | Optional. Protects `/api/cron/certificates` — point a daily scheduler at it with `Authorization: Bearer <CRON_SECRET>` to email certificate reminders |
+| `CRON_SECRET` | Optional. Protects `/api/cron/certificates` (certificate reminders) and `/api/cron/enquiries` (families still waiting for a call after 24 hours). On Vercel they run daily from `vercel.json`; elsewhere point a daily scheduler at them with `Authorization: Bearer <CRON_SECRET>` |
 | `SITE_URL` | The live address, e.g. `https://www.venzacare.co.uk` — used for canonical links, the sitemap and social previews |
 
 **4. Check it worked**

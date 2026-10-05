@@ -6,6 +6,7 @@
    data-postcode="<%= h.postcode.toLowerCase().replace(/\s/g,'') %>"
    data-region="<%= h.region %>"
    data-care="<%= h.careTypes.join('|') %>"
+   data-extra="<%= (h.specialisms || []).concat(homeFacilityNames(h)).join('|') %>"
    data-lat="<%= h.lat %>" data-lng="<%= h.lng %>"<%- (typeof hidden !== 'undefined' && hidden) ? ' style="display:none"' : '' %>>
   <div class="home-card__media<%= h.photo ? ' has-photo' : '' %>"<% if (h.photo) { %> style="background-image:url('<%= photoSrc(h.photo) %>'); background-repeat:no-repeat; background-position:center; background-size:cover;"<% } %>>
     <span class="home-card__rating <%= cqcClass(h) %>">
