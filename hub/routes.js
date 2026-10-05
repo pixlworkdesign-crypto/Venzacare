@@ -653,6 +653,13 @@ module.exports = function mountHub(app, deps) {
           closedDates: String(f.visitClosed || '').split(/[\s,]+/).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)),
         },
       });
+      // Anything typed under "Other specialist care" joins the master list, so it
+      // becomes a tick box on every home.
+      const specList = specialistCareOf(res.locals.SITE);
+      const otherSpecialist = String(f.specialismsOther || '').split(/[,\n]/).map((x) => text(x, 60)).filter(Boolean)
+        .map((x) => specList.find((s) => s.toLowerCase() === x.toLowerCase()) || x);
+      const newSpec = otherSpecialist.filter((x) => !specList.some((s) => s.toLowerCase() === x.toLowerCase()));
+      if (newSpec.length) await db.saveSettings({ specialistCare: specList.concat(newSpec) });
       const careTypes = [].concat(f.careTypes || []).filter((c) => careNames(res).includes(c));
       const cqc = CQC_OPTIONS.includes(f.cqc) ? f.cqc : home.cqc;
 
@@ -699,9 +706,8 @@ module.exports = function mountHub(app, deps) {
         postcode,
         region,
         lat, lng,
-        // Ticked specialist care, then anything typed under "Other" (comma-separated).
         specialisms: [...new Set([].concat(f.specialisms || []).filter((s) => specialistCareOf(res.locals.SITE).includes(s))
-          .concat(String(f.specialismsOther || '').split(/[,\n]/).map((x) => text(x, 60)).filter(Boolean)))].slice(0, 40),
+          .concat(otherSpecialist))].slice(0, 40),
         photo, gallery,
       });
       changed.push('details');

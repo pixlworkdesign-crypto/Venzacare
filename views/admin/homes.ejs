@@ -16,7 +16,8 @@
        if (!d.managerName) missing.push('manager');
        if (!d.cqcLocationId) missing.push('CQC ID');
        if (!d.address) missing.push('address'); %>
-  <a class="home-tile" href="/admin/homes/<%= h.id %>/edit">
+  <div class="home-tile">
+  <a class="home-tile__link" href="/admin/homes/<%= h.id %>/edit">
     <span class="home-tile__pic">
       <% if (h.photo) { %><img src="<%= photoSrc(h.photo) %>" alt="" loading="lazy" /><% } %>
       <% if (d.archived) { %><span class="home-tile__badge">Draft</span><% } %>
@@ -24,6 +25,12 @@
     <span class="home-tile__name"><%= h.name %></span>
     <% if (missing.length) { %><span class="home-tile__missing">Missing: <%= missing.join(', ') %></span><% } %>
   </a>
+  <% if (hubCan('homes', 'edit')) { %>
+  <form action="/admin/homes/<%= h.id %>/<%= d.archived ? 'restore' : 'archive' %>" method="post" class="home-tile__show" <%- d.archived ? '' : 'data-confirm="Take ' + h.name.replace(/"/g, '') + ' off the website?"' %>>
+    <button type="submit" class="switch" role="switch" aria-checked="<%= d.archived ? 'false' : 'true' %>"><span class="switch__track" aria-hidden="true"></span>Show on website</button>
+  </form>
+  <% } %>
+  </div>
   <% }) %>
 </div>
 

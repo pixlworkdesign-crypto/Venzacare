@@ -58,7 +58,7 @@
           <% specialistCare.forEach(function(s){ %><label><input type="checkbox" name="specialisms" value="<%= s %>" <%= spec.indexOf(s) > -1 ? 'checked' : '' %> /> <%= s %></label><% }) %>
         </div>
       </div>
-      <div class="field"><label for="specialismsOther">Other specialist care</label><input id="specialismsOther" name="specialismsOther" value="<%= otherSpec.join(', ') %>" placeholder="e.g. Korsakoff syndrome, Spinal injury" /></div>
+      <div class="field"><label for="specialismsOther">Add specialist care not listed</label><input id="specialismsOther" name="specialismsOther" value="<%= otherSpec.join(', ') %>" placeholder="e.g. Korsakoff syndrome, Spinal injury" /></div>
     </div>
   </div>
 

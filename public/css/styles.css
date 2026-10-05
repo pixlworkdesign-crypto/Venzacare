@@ -1499,9 +1499,18 @@ a.hub-who:hover strong { text-decoration: underline; }
 
 /* Staff hub: Homes as tiles */
 .home-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 3rem; }
-.home-tile { display: flex; flex-direction: column; gap: 0.35rem; color: inherit; text-decoration: none; background: var(--paper); border-radius: 16px; padding: 0.6rem 0.6rem 0.9rem; box-shadow: var(--shadow-sm); transition: box-shadow .15s, transform .15s; }
-.home-tile:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); color: inherit; }
-.home-tile:focus-visible { outline: 3px solid var(--green-500); outline-offset: 2px; }
+.home-tile { display: flex; flex-direction: column; background: var(--paper); border-radius: 16px; padding: 0.6rem 0.6rem 0.7rem; box-shadow: var(--shadow-sm); transition: box-shadow .15s, transform .15s; }
+.home-tile:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.home-tile__link { display: flex; flex-direction: column; gap: 0.35rem; color: inherit; text-decoration: none; flex: 1; border-radius: 12px; }
+.home-tile__link:hover { color: inherit; }
+.home-tile__link:focus-visible { outline: 3px solid var(--green-500); outline-offset: 2px; }
+.home-tile__show { margin: 0.6rem 0.2rem 0; padding-top: 0.6rem; border-top: 1px solid var(--line); }
+.switch { display: inline-flex; align-items: center; gap: 0.55rem; background: none; border: 0; padding: 0; font: 600 0.85rem var(--font-body); color: var(--ink); cursor: pointer; }
+.switch__track { position: relative; width: 36px; height: 20px; border-radius: 999px; background: #c9d3d0; transition: background .15s; flex: none; }
+.switch__track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.switch[aria-checked="true"] .switch__track { background: var(--green-600); }
+.switch[aria-checked="true"] .switch__track::after { transform: translateX(16px); }
+.switch:focus-visible { outline: 3px solid var(--green-500); outline-offset: 3px; border-radius: 6px; }
 .home-tile__pic { position: relative; display: block; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; background: var(--cream); }
 .home-tile__pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .home-tile__badge { position: absolute; top: 0.5rem; left: 0.5rem; background: #fff; color: var(--ink); font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 999px; }
