@@ -18,9 +18,9 @@
         <label for="photoFile" class="label"><%= m.photo ? 'Replace it' : 'Add a photo' %></label>
         <input type="file" id="photoFile" name="photoFile" accept="image/jpeg,image/png,image/webp,image/avif" />
         <% if (m.photo) { %><label class="check-inline"><input type="checkbox" name="removePhoto" value="1" /> Remove the photo (shows their initials instead)</label><% } %>
-        <span class="hint">A head-and-shoulders photo works best. JPEG, PNG or WebP, up to 10 MB.</span>
+        <span class="hint">JPEG, PNG or WebP, up to 10 MB.</span>
       </div>
-      <div class="field" style="max-width:160px;"><label for="order">Position on the page</label><input type="number" id="order" name="order" value="<%= m.order || '' %>" min="0" /><span class="hint">1 shows first.</span></div>
+      <div class="field" style="max-width:160px;"><label for="order">Position on the page</label><input type="number" id="order" name="order" value="<%= m.order || '' %>" min="0" /></div>
     </div>
   </div>
   <div style="display:flex;gap:.8rem;margin:1.5rem 0 3rem;">

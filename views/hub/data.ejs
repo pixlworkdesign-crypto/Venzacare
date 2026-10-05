@@ -1,7 +1,6 @@
 <%- include('../partials/admin-header') %>
 <div class="hub-head"><div>
   <h1 class="hub-h1">Data requests</h1>
-  <p class="muted">When a family member or job applicant asks what we hold about them, or asks us to delete it. Search by the email or phone number they gave us.</p>
 </div></div>
 
 <form method="get" action="/admin/data" class="hub-card hub-card__body admin-form" style="max-width:none;">
@@ -18,7 +17,7 @@
     <h2><%= total %> record<%= total === 1 ? '' : 's' %> found for <%= query.email || query.phone %></h2>
     <% if (total) { %><a class="btn btn--ghost btn--sm" href="/admin/data/export?email=<%= encodeURIComponent(query.email) %>&phone=<%= encodeURIComponent(query.phone) %>">Download everything (for a subject access request)</a><% } %>
   </div>
-  <% if (!total) { %><div class="hub-empty"><p class="muted">Nothing on the website’s records matches. Remember to check paper files and other systems too.</p></div><% } %>
+  <% if (!total) { %><div class="hub-empty"><p class="muted">No matches.</p></div><% } %>
   <% if (found.applications.length) { %>
   <div class="hub-card__body"><h3 style="margin:0 0 .5rem;">Job applications</h3>
     <ul class="plain-list"><% found.applications.forEach(function (a) { %><li><strong><%= a.jobTitle %></strong> — <%= a.name %>, applied <%= new Date(a.appliedAt).toLocaleDateString('en-GB') %><%= a.cvFilename ? ', with CV' : '' %></li><% }) %></ul>
@@ -45,10 +44,10 @@
 <div class="hub-card"><div class="hub-card__body">
   <h2 style="font-size:1.05rem;margin:0 0 .4rem;">Automatic clear-out</h2>
   <% if (retentionDays) { %>
-  <p class="muted" style="margin:0 0 .8rem;">Job applications and their CVs are deleted automatically <%= retentionDays %> days after they arrive. This runs once a day; you can also run it now.</p>
+  <p class="muted" style="margin:0 0 .8rem;">Applications and CVs are deleted <%= retentionDays %> days after they arrive.</p>
   <% if (canEdit) { %><form method="post" action="/admin/data/sweep"><button class="btn btn--ghost btn--sm">Run the clear-out now</button></form><% } %>
   <% } else { %>
-  <p class="muted" style="margin:0;">The automatic clear-out is switched off (RETENTION_DAYS is 0).</p>
+  <p class="muted" style="margin:0;">Off.</p>
   <% } %>
 </div></div>
 <%- include('../partials/admin-footer') %>

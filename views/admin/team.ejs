@@ -3,7 +3,6 @@
 <div class="hub-head">
   <div>
     <h1 class="hub-h1">Our team</h1>
-    <p class="muted">The people on the website’s <a href="/our-team" target="_blank" rel="noopener">Our team page</a>, in the order shown. Changes appear straight away.</p>
   </div>
   <% if (canEdit) { %><a href="/admin/team/new" class="btn btn--primary">+ Add a team member</a><% } %>
 </div>
@@ -12,9 +11,9 @@
 <div class="hub-card team-visibility">
   <div>
     <strong>On the website:</strong>
-    <% if (live) { %><span class="hub-pill hub-pill--ok">Showing</span> <span class="muted">Visitors see the page, and it’s in the menu and footer.</span>
-    <% } else if (hidden) { %><span class="hub-pill hub-pill--warn">Hidden</span> <span class="muted">The page and its menu link are hidden from visitors.</span>
-    <% } else { %><span class="hub-pill hub-pill--plain">Hidden until you add someone</span> <span class="muted">It will appear once there’s at least one person.</span><% } %>
+    <% if (live) { %><span class="hub-pill hub-pill--ok">Showing</span>
+    <% } else if (hidden) { %><span class="hub-pill hub-pill--warn">Hidden</span>
+    <% } else { %><span class="hub-pill hub-pill--plain">Hidden until you add someone</span><% } %>
   </div>
   <form action="/admin/team/visibility" method="post" class="inline-form">
     <input type="hidden" name="show" value="<%= hidden ? '1' : '0' %>" />

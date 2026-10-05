@@ -2,7 +2,6 @@
 <% var NEXT_LABEL = { New: 'I’ve called them', Called: 'Book a visit', 'Visit booked': 'They’ve visited', Visited: 'They’re moving in' }; %>
 <div class="hub-head"><div>
   <h1 class="hub-h1">Enquiries &amp; visit requests</h1>
-  <p class="muted">Every family who gets in touch, from their first message to moving in. Press the green button each time you’ve done the next step. <%= me.homes === 'all' ? 'Showing all homes.' : 'Showing ' + homesLabel(me) + ' only.' %></p>
 </div></div>
 
 <div class="hub-tabs" role="tablist">
@@ -63,5 +62,4 @@
   </article>
 <% }) %>
 </div>
-<% if (!canEdit) { %><p class="hint">You can see enquiries but not update them.</p><% } %>
 <%- include('../partials/admin-footer') %>

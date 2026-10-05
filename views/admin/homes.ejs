@@ -3,7 +3,6 @@
 <div class="hub-head">
   <div>
     <h1 class="hub-h1">Homes</h1>
-    <p class="muted">Keep fees, availability, CQC ratings and managers up to date — changes show on the website within 30 seconds. Archiving hides a home from the website without losing anything.</p>
   </div>
   <% if (hubCan('homes', 'edit') && me.homes === 'all') { %><a href="/admin/homes/new" class="btn btn--primary">+ Add a home</a><% } %>
 </div>
@@ -43,6 +42,5 @@
     </table>
   </div>
 </div>
-<% if (me.homes !== 'all') { %><p class="hint">You only see the homes you cover.</p><% } %>
 
 <%- include('../partials/admin-footer') %>

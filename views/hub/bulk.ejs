@@ -13,7 +13,7 @@
   </table></div></div>
   <p><a class="btn btn--ghost" href="/admin/people">Back to People</a></p>
 <% } else { %>
-<p class="muted">One person per row: <strong>Name, Email, Home, Access level</strong>. Leave Home blank (or write “Head office”) for company-wide staff. Access level defaults to <em>Carer / staff</em>.</p>
+<p class="muted">One per row: <strong>Name, Email, Home, Access level</strong></p>
 <div class="hub-card"><div class="table-wrap"><table class="table">
   <thead><tr><th>Name</th><th>Email</th><th>Home</th><th>Access level</th></tr></thead>
   <tbody><tr><td>Jordan Smith</td><td>jordan@example.com</td><td><%= (hubHomes[0] || {}).name %></td><td>Carer / staff</td></tr><tr><td>Amira Hussain</td><td>amira@example.com</td><td><%= (hubHomes[1] || hubHomes[0] || {}).name %></td><td>Reception</td></tr></tbody>

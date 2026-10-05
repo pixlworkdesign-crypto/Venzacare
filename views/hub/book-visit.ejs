@@ -14,7 +14,7 @@
     <% if (e.email) { %>
     <label class="checkbox" style="display:flex;"><input type="checkbox" name="confirm" <%= mailOn ? 'checked' : 'disabled' %> /> Email <%= e.name.split(' ')[0] %> a confirmation with directions<%= mailOn ? '' : ' (email isn’t set up yet)' %></label>
     <% } else { %>
-    <p class="hint">They didn’t leave an email, so remember to confirm by phone.</p>
+    <p class="hint">No email — confirm by phone.</p>
     <% } %>
   </div></div>
   <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;">

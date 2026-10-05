@@ -2,7 +2,6 @@
 <div class="hub-crumb"><a href="/admin/homes">Homes</a> › Add a home</div>
 <div class="hub-head"><div>
   <h1 class="hub-h1">Add a home</h1>
-  <p class="muted">The new home starts <strong>hidden</strong> from the website, so you can add fees, the CQC rating and the manager before it goes live.</p>
 </div></div>
 <% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
 <form action="/admin/homes/new" method="post" class="admin-form">
@@ -25,7 +24,6 @@
       </div>
     </div>
     <div class="field"><label for="blurb">Short description</label><textarea id="blurb" name="blurb" rows="3"><%= form.blurb || '' %></textarea></div>
-    <p class="hint">You can add photos on the next page. The map position is worked out from the postcode.</p>
   </div></div>
   <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;">
     <button class="btn btn--primary" type="submit">Add home</button>

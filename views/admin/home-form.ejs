@@ -4,7 +4,6 @@
 <div class="hub-crumb"><a href="/admin/homes">Homes</a> › <%= home.name %></div>
 <div class="hub-head"><div>
 <h1 class="hub-h1"><%= home.name %></h1>
-<p class="muted">Anything left blank is simply hidden on the website — nothing is made up.<% if (!canHomes || !canFees || !canAvail) { %> Greyed-out sections are ones your access doesn’t let you change.<% } %></p>
 </div></div>
 <% if (home.details.archived) { %><div class="hub-notice hub-notice--warn">This home is <strong>archived</strong>, so it’s hidden from the website. <% if (canHomes) { %>When it’s ready, press <strong>Make live</strong> on the Homes list.<% } %></div><% } %>
 
@@ -30,7 +29,6 @@
             <input id="lat" name="lat" inputmode="decimal" value="<%= home.lat == null ? '' : home.lat %>" placeholder="Latitude" aria-label="Latitude" />
             <input id="lng" name="lng" inputmode="decimal" value="<%= home.lng == null ? '' : home.lng %>" placeholder="Longitude" aria-label="Longitude" />
           </div>
-          <span class="hint">Leave blank to work it out from the postcode.</span>
         </div>
       </div>
       <div class="grid-2">
@@ -51,7 +49,6 @@
   <div class="panel" id="photos">
     <div class="panel__head"><h2>Photos</h2></div>
     <div class="panel__body">
-      <% if (!canPhotos) { %><p class="hint" style="margin-top:0;">Only admins can change photos.</p><% } %>
       <div class="home-photos">
         <div class="home-photos__main">
           <span class="label">Main photo (outside the home)</span>
@@ -60,7 +57,7 @@
           <input type="file" id="photoFile" name="photoFile" accept="image/jpeg,image/png,image/webp,image/avif" />
         </div>
         <div>
-          <span class="label">Gallery <span class="hint">— untick a photo to remove it</span></span>
+          <span class="label">Gallery</span>
           <div class="home-photos__grid">
             <% (home.gallery || []).forEach(function (g, i) { %>
             <label class="home-photos__item"><img src="<%= photoSrc(g) %>" alt="Gallery photo <%= i + 1 %>" loading="lazy" /><span><input type="checkbox" name="keepGallery" value="<%= g %>" checked /> Keep</span></label>
@@ -68,7 +65,7 @@
           </div>
           <label for="galleryFiles" class="label" style="margin-top:.5rem;">Add photos</label>
           <input type="file" id="galleryFiles" name="galleryFiles" multiple accept="image/jpeg,image/png,image/webp,image/avif" />
-          <span class="hint">JPEG, PNG or WebP, up to 10 MB each. Landscape photos look best.</span>
+          <span class="hint">JPEG, PNG or WebP, up to 10 MB each.</span>
         </div>
       </div>
     </div>
@@ -81,21 +78,20 @@
   <div class="panel" id="visiting">
     <div class="panel__head"><h2>Visit booking</h2></div>
     <div class="panel__body">
-      <p class="muted" style="margin-top:0;">Families pick one of these times on the website and it’s booked straight away. Booked visits appear in Enquiries.</p>
       <label class="checkbox" style="display:flex;margin-bottom:1rem;"><input type="checkbox" name="visitsEnabled" <%= visitSettings.enabled ? 'checked' : '' %> /> Let families book visits online</label>
       <div class="field"><span class="label">Visiting days</span>
         <div class="check-grid" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr));">
           <% [1,2,3,4,5,6,0].forEach(function (d) { %><label><input type="checkbox" name="visitDays" value="<%= d %>" <%= visitSettings.days.indexOf(d) > -1 ? 'checked' : '' %> /> <%= DAY_NAMES[d] %></label><% }) %>
         </div>
       </div>
-      <div class="field"><label for="visitTimes">Visit start times</label><input id="visitTimes" name="visitTimes" value="<%= visitSettings.times.map(timeLabel).join(', ') %>" /><span class="hint">Separate with commas, e.g. 10am, 11am, 2pm, 3:30pm. Leave out mealtimes and handovers.</span></div>
+      <div class="field"><label for="visitTimes">Visit start times</label><input id="visitTimes" name="visitTimes" value="<%= visitSettings.times.map(timeLabel).join(', ') %>" /><span class="hint">e.g. 10am, 11am, 2pm, 3:30pm</span></div>
       <div class="grid-2">
         <div class="field"><label for="visitPerSlot">Visits at the same time</label><input id="visitPerSlot" name="visitPerSlot" type="number" min="1" max="10" value="<%= visitSettings.perSlot %>" /></div>
         <div class="field"><label for="visitNotice">Notice needed (hours)</label><input id="visitNotice" name="visitNotice" type="number" min="0" max="336" value="<%= visitSettings.noticeHours %>" /></div>
       </div>
       <div class="grid-2">
         <div class="field"><label for="visitWeeks">How far ahead (weeks)</label><input id="visitWeeks" name="visitWeeks" type="number" min="1" max="12" value="<%= visitSettings.weeksAhead %>" /></div>
-        <div class="field"><label for="visitClosed">Dates with no visits</label><textarea id="visitClosed" name="visitClosed" rows="2" placeholder="2026-12-25"><%= visitSettings.closedDates.join('\n') %></textarea><span class="hint">One date per line (year-month-day), e.g. bank holidays.</span></div>
+        <div class="field"><label for="visitClosed">Dates with no visits</label><textarea id="visitClosed" name="visitClosed" rows="2" placeholder="2026-12-25"><%= visitSettings.closedDates.join('\n') %></textarea><span class="hint">One per line</span></div>
       </div>
     </div>
   </div>
@@ -126,7 +122,6 @@
   <div class="panel">
     <div class="panel__head"><h2>Weekly fees ("from" prices)</h2></div>
     <div class="panel__body">
-      <p class="muted" style="margin-top:0;">Consumer law (CMA guidance) expects care homes to show an indication of weekly fees on their website. Enter the lowest weekly fee for each type of care, in pounds.</p>
       <div class="grid-2">
         <div class="field"><label for="feeResidential">Residential care £/week</label><input type="text" inputmode="numeric" id="feeResidential" name="feeResidential" value="<%= d.fees.residential || '' %>" /></div>
         <div class="field"><label for="feeNursing">Nursing care £/week</label><input type="text" inputmode="numeric" id="feeNursing" name="feeNursing" value="<%= d.fees.nursing || '' %>" /></div>
@@ -146,7 +141,6 @@
   <div class="panel">
     <div class="panel__head"><h2>CQC rating</h2></div>
     <div class="panel__body">
-      <p class="muted" style="margin-top:0;">The law requires the current rating to be shown, whatever it is, within 21 days of a new report. Adding the CQC location ID also shows the CQC's own widget, which updates itself.</p>
       <div class="grid-2">
         <div class="field"><label for="cqc">Overall rating</label>
           <select id="cqc" name="cqc">
@@ -155,7 +149,7 @@
         </div>
         <div class="field"><label for="cqcRatedOn">Date of latest report</label><input type="text" id="cqcRatedOn" name="cqcRatedOn" value="<%= d.cqcRatedOn %>" placeholder="e.g. 12 March 2026" /></div>
       </div>
-      <div class="field"><label for="cqcLocationId">CQC location ID</label><input type="text" id="cqcLocationId" name="cqcLocationId" value="<%= d.cqcLocationId %>" placeholder="e.g. 1-123456789" /><span class="hint">Find it in the address of the home's page on cqc.org.uk: cqc.org.uk/location/<strong>1-123456789</strong></span></div>
+      <div class="field"><label for="cqcLocationId">CQC location ID</label><input type="text" id="cqcLocationId" name="cqcLocationId" value="<%= d.cqcLocationId %>" placeholder="e.g. 1-123456789" /></div>
     </div>
   </div>
 
@@ -174,8 +168,8 @@
         <label for="managerPhotoFile" class="label"><%= d.managerPhoto ? 'Replace it' : 'Add a photo' %></label>
         <input type="file" id="managerPhotoFile" name="managerPhotoFile" accept="image/jpeg,image/png,image/webp,image/avif" />
         <% if (d.managerPhoto) { %><label class="check-inline"><input type="checkbox" name="removeManagerPhoto" value="1" /> Remove the photo (shows their initials instead)</label><% } %>
-        <span class="hint">A head-and-shoulders photo works best. JPEG, PNG or WebP, up to 10 MB.</span>
-        <% } else { %><span class="hint"><%= d.managerPhoto ? '' : 'No photo yet. ' %>Only admins can change photos.</span><% } %>
+        <span class="hint">JPEG, PNG or WebP, up to 10 MB.</span>
+        <% } else { %><% if (!d.managerPhoto) { %><span class="hint">No photo yet.</span><% } %><% } %>
       </div>
       <div class="field"><label for="managerBio">A few words from or about them</label><textarea id="managerBio" name="managerBio" rows="3"><%= d.managerBio %></textarea></div>
     </div>
@@ -206,7 +200,7 @@
 <div class="panel" style="margin-bottom:3rem;">
   <div class="panel__head"><h2>Delete this home</h2></div>
   <div class="panel__body">
-    <% if (!home.details.archived) { %><p class="muted" style="margin:0;">Archive the home first (on the Homes list). Archiving hides it and can be undone — deleting can’t.</p>
+    <% if (!home.details.archived) { %><p class="muted" style="margin:0;">Archive the home first.</p>
     <% } else if (jobCount) { %><p class="muted" style="margin:0;"><%= home.name %> still has <%= jobCount %> job<%= jobCount === 1 ? '' : 's' %> attached. Delete or move <%= jobCount === 1 ? 'it' : 'them' %> first.</p>
     <% } else { %>
     <form action="/admin/homes/<%= home.id %>/delete" method="post" class="hub-inline" data-confirm="Delete <%= home.name.replace(/"/g, '') %> for good? This can’t be undone.">

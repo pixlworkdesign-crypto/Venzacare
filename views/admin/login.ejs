@@ -14,7 +14,6 @@
     <div class="login-card">
       <img src="/images/logo.png" alt="Venza Care" class="login-logo" />
       <h1 style="text-align:center;font-size:1.5rem;margin:1rem 0 0.3rem;">Staff hub</h1>
-      <p class="muted" style="text-align:center;margin-top:0;">Sign in with your work account</p>
 
       <% if (typeof notice !== 'undefined' && notice) { %><div class="alert alert--success" role="status"><%= notice %></div><% } %>
       <% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
@@ -31,7 +30,6 @@
         <button type="submit" class="btn btn--primary btn--block">Sign in</button>
       </form>
       <p style="text-align:center;margin:1rem 0 0;"><a href="/admin/forgot">Forgotten your password?</a></p>
-      <p class="hint" style="text-align:center;margin-top:1rem;">New here? Use the link in your invite email, or ask your manager to send you one.</p>
       <% if (typeof showDemo !== 'undefined' && showDemo) { %><p class="hint mt-2" style="text-align:center;">Local development emergency login → <strong>admin</strong> / <strong>venza2026</strong></p><% } %>
       <script>
         // Keep the page someone was trying to reach, so they land there after signing in.

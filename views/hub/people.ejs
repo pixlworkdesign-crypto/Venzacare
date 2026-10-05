@@ -2,12 +2,10 @@
 <div class="hub-head">
   <div>
     <h1 class="hub-h1">People &amp; access</h1>
-    <p class="muted">Everyone who can sign in. Click a person to change what they can do, pause them or delete their account.</p>
   </div>
   <% if (canEdit) { %><div class="hub-actions"><a class="btn btn--ghost" href="/admin/people/bulk">Invite from a spreadsheet</a><a class="btn btn--primary" href="#invite" data-open="invite">+ Invite a person</a></div><% } %>
 </div>
 
-<% if (!canEdit) { %><div class="hub-notice">You can see this list but can’t change anyone’s access.</div><% } %>
 
 <% if (canEdit) { %>
 <details class="hub-card hub-compose" id="invite" <%= error ? 'open' : '' %>>
@@ -16,14 +14,13 @@
   <form action="/admin/people/invite" method="post" class="admin-form">
     <div class="grid-2">
       <div class="field"><label for="i-name">Full name</label><input id="i-name" name="name" required value="<%= form.name || '' %>" /></div>
-      <div class="field"><label for="i-email">Email</label><input id="i-email" name="email" type="email" required value="<%= form.email || '' %>" /><span class="hint">A personal email is fine.</span></div>
+      <div class="field"><label for="i-email">Email</label><input id="i-email" name="email" type="email" required value="<%= form.email || '' %>" /></div>
     </div>
     <div class="grid-2">
       <div class="field"><label for="i-preset">Access level</label>
         <select id="i-preset" name="preset">
           <% PRESET_NAMES.forEach(function (p) { if (p === 'Site administrator' && !grantOwner) return; %><option <%= (form.preset || 'Carer / staff') === p ? 'selected' : '' %>><%= p %></option><% }) %>
         </select>
-        <span class="hint">You can fine-tune exactly what they can do afterwards.</span>
       </div>
       <div class="field"><label for="i-title">Job title (optional)</label><input id="i-title" name="title" value="<%= form.title || '' %>" placeholder="e.g. Senior care assistant" /></div>
     </div>
@@ -36,7 +33,6 @@
         <% hubHomes.forEach(function (h) { %><label><input type="checkbox" name="homes" value="<%= h.id %>" <%= [].concat(form.homes || []).indexOf(h.id) > -1 ? 'checked' : '' %> /> <%= h.name %></label><% }) %>
       </div>
     </div>
-    <p class="hint"><%= mailOn ? 'They’ll get an email with a link to set their password.' : 'Email isn’t set up yet, so you’ll get a link to pass on to them yourself.' %></p>
     <div><button class="btn btn--primary" type="submit">Send invite</button></div>
   </form>
 </details>
@@ -46,7 +42,7 @@
   <div class="table-wrap"><table class="table hub-table-links">
     <thead><tr><th>Person</th><th>Access level</th><th>Homes</th><th>Status</th><th>Last signed in</th></tr></thead>
     <tbody>
-    <% if (!users.length) { %><tr><td colspan="5" class="muted">Nobody yet. Invite your first person above.</td></tr><% } %>
+    <% if (!users.length) { %><tr><td colspan="5" class="muted">Nobody yet.</td></tr><% } %>
     <% users.forEach(function (u) { var ini = u.name.split(/\s+/).map(function (x) { return x[0]; }).join('').slice(0, 2).toUpperCase(); %>
       <tr>
         <td><a class="hub-who" href="/admin/people/<%= u.id %>"><span class="hub-avatar"><%= ini %></span><span><strong><%= u.name %></strong><%= u.id === me.id ? ' (you)' : '' %><br /><span class="hint"><%= u.email %></span></span></a></td>

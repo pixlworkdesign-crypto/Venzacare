@@ -3,7 +3,6 @@
 <div class="hub-head">
   <div>
     <h1 class="hub-h1"><%= greet %>, <%= me.name.split(' ')[0] %></h1>
-    <p class="muted">Here’s what needs your attention.</p>
   </div>
 </div>
 
@@ -23,14 +22,12 @@
   <div class="hub-card hub-tile">
     <span class="muted">Must-read notices</span>
     <span class="hub-tile__n"><%= unread.length %></span>
-    <span class="hint"><%= unread.length ? 'waiting for you to read' : 'You’re all caught up' %></span>
     <a class="btn btn--ghost btn--sm" href="/admin/noticeboard">Open noticeboard</a>
   </div>
   <% if (waiting) { %>
   <div class="hub-card hub-tile">
     <span class="muted">Families waiting for a call</span>
     <span class="hub-tile__n"><%= waiting.length %></span>
-    <span class="hint"><%= me.homes === 'all' ? 'across all homes' : 'for ' + homesLabel(me) %></span>
     <a class="btn btn--ghost btn--sm" href="/admin/enquiries">See enquiries</a>
   </div>
   <% } %>
@@ -44,7 +41,6 @@
   <div class="hub-card hub-tile">
     <span class="muted">Invites not yet accepted</span>
     <span class="hub-tile__n"><%= pendingInvites %></span>
-    <span class="hint">people who haven’t set a password</span>
     <a class="btn btn--ghost btn--sm" href="/admin/people">People &amp; access</a>
   </div>
   <% } %>

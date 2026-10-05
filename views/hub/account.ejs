@@ -1,7 +1,7 @@
 <%- include('../partials/admin-header') %>
 <div class="hub-head"><div>
   <h1 class="hub-h1">My account</h1>
-  <p class="muted"><%= me.builtin ? 'This is the emergency login from your hosting settings.' : me.email %></p>
+  <% if (!me.builtin) { %><p class="muted"><%= me.email %></p><% } %>
 </div></div>
 <% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
 <% if (!me.builtin) { %>
@@ -11,9 +11,8 @@
     <div class="panel__body">
       <% if (me.preset !== 'Carer / staff') { %>
       <div class="field"><label for="a-title">Job title</label><input id="a-title" name="title" value="<%= me.title %>" /></div>
-      <div class="field"><label for="a-phone">Work phone</label><input id="a-phone" name="phone" type="tel" value="<%= me.phone %>" /><span class="hint">Shown to colleagues in the staff directory.</span></div>
+      <div class="field"><label for="a-phone">Work phone</label><input id="a-phone" name="phone" type="tel" value="<%= me.phone %>" /></div>
       <% } else { %>
-      <p class="hint">Your name, role and home are shown to colleagues. Phone numbers aren’t shown for care staff.</p>
       <input type="hidden" name="phone" value="" />
       <% } %>
       <button class="btn btn--primary" type="submit">Save</button>
@@ -34,6 +33,6 @@
   <p style="margin:0;"><strong>Your access:</strong> <%= me.preset %> · <%= homesLabel(me) %>. Ask an admin if you need something changed.</p>
 </div></div>
 <% } else { %>
-<div class="hub-notice">To change this password, update <code>ADMIN_PASS</code> in your hosting settings and redeploy. For day-to-day use, invite yourself under People &amp; access.</div>
+<div class="hub-notice">To change this password, update <code>ADMIN_PASS</code> in your hosting settings and redeploy.</div>
 <% } %>
 <%- include('../partials/admin-footer') %>
