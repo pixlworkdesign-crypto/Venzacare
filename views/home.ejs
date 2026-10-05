@@ -32,18 +32,6 @@
             <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><%= c %></span></li>
             <% }) %>
           </ul>
-          <% if (home.dementiaNote) { %>
-          <p class="muted" style="font-size:0.9rem;margin:0.25rem 0 0;"><%= home.dementiaNote %></p>
-          <% } %>
-
-          <% if (home.specialisms && home.specialisms.length) { %>
-          <h3>Specialist care we support</h3>
-          <ul class="tick-list">
-            <% home.specialisms.forEach(function(s){ %>
-            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><%= s %></span></li>
-            <% }) %>
-          </ul>
-          <% } %>
 
           <h3>Facilities &amp; daily life</h3>
           <div class="facility-grid">

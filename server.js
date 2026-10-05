@@ -668,9 +668,7 @@ async function buildKnowledge() {
         (avail ? `Availability: ${avail}${d.availabilityNote ? ' — ' + d.availabilityNote : ''}. ` : '') +
         (d.managerName ? `Home manager: ${d.managerName}. ` : '') +
         `Page: /care-homes/${h.id} — families can book a visit there instantly by picking a free time. ` +
-        `Care types: ${h.careTypes.join(', ')}. ${h.blurb}` +
-        (h.specialisms && h.specialisms.length ? ` Specialisms: ${h.specialisms.join(', ')}.` : '') +
-        (h.dementiaNote ? ` ${h.dementiaNote}` : '')
+        `Care types: ${h.careTypes.join(', ')}. ${h.blurb}`
     );
   });
 
