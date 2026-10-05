@@ -505,6 +505,7 @@ module.exports = function mountHub(app, deps) {
     const details = Object.assign({}, home.details);
     const next = Object.assign({}, home);
     const changed = [];
+    let pinWarning = '';
 
     if (can(me, 'availability', 'edit')) {
       details.availability = ['available', 'limited', 'waitlist'].includes(f.availability) ? f.availability : '';
@@ -542,13 +543,12 @@ module.exports = function mountHub(app, deps) {
       const careTypes = [].concat(f.careTypes || []).filter((c) => CARE_TYPES.includes(c));
       const cqc = CQC_OPTIONS.includes(f.cqc) ? f.cqc : home.cqc;
 
-      // Location: an empty map position is looked up from the postcode.
+      // Map pin: worked out from the postcode whenever it changes (or is missing).
       const postcode = text(f.postcode, 12).toUpperCase() || home.postcode;
-      const num = (v) => (String(v || '').trim() === '' ? null : Number(v));
-      let lat = num(f.lat), lng = num(f.lng);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng) || postcode !== home.postcode && f.lat == home.lat) {
+      let lat = home.lat, lng = home.lng;
+      if (postcode !== home.postcode || lat == null || lng == null) {
         const pt = await geocode(postcode);
-        if (pt) { lat = pt.lat; lng = pt.lng; } else if (!Number.isFinite(lat) || !Number.isFinite(lng)) { lat = home.lat; lng = home.lng; }
+        if (pt) { lat = pt.lat; lng = pt.lng; } else if (postcode !== home.postcode) pinWarning = ' We couldn’t find that postcode, so the map pin hasn’t moved — check it’s right.';
       }
 
       // Photos: a new main photo replaces the old one; ticked gallery photos
@@ -595,7 +595,7 @@ module.exports = function mountHub(app, deps) {
     next.details = details;
     await db.saveHome(next);
     await log(me, me.name + ' updated ' + home.name + ' — ' + [...new Set(changed)].join(', '));
-    back(res, '/admin/homes', 'Saved ' + home.name + '. The website shows the change within 30 seconds.');
+    back(res, '/admin/homes', 'Saved ' + home.name + '. The website shows the change within 30 seconds.' + pinWarning);
   }));
 
   /* "10, 11:30, 2pm, 14.00" → ['10:00', '11:30', '14:00'] */

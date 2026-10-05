@@ -31,12 +31,6 @@
       </div>
       <div class="grid-2">
         <div class="field"><label for="region">Region</label><input id="region" name="region" value="<%= home.region %>" list="regionList" /><datalist id="regionList"><% (SITE.regions || []).forEach(function (r) { %><option value="<%= r %>"><% }) %></datalist></div>
-        <div class="field"><span class="label">Map position</span>
-          <div class="grid-2" style="gap:.5rem;">
-            <input id="lat" name="lat" inputmode="decimal" value="<%= home.lat == null ? '' : home.lat %>" placeholder="Latitude" aria-label="Latitude" />
-            <input id="lng" name="lng" inputmode="decimal" value="<%= home.lng == null ? '' : home.lng %>" placeholder="Longitude" aria-label="Longitude" />
-          </div>
-        </div>
       </div>
     </div>
   </div>
