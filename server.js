@@ -131,6 +131,8 @@ app.use(wrap(async (req, res, next) => {
   res.locals.homeRegions = [...new Set(liveHomes.map((h) => h.region).filter(Boolean))].sort();
   // …and the "Type of care" filters list the care the homes actually offer.
   res.locals.homeCareTypes = CARE_TYPES.filter((c) => liveHomes.some((h) => (h.careTypes || []).includes(c)));
+  // The "Our team" page shows only if an admin hasn't hidden it and someone has been added.
+  res.locals.hasTeam = !res.locals.SITE.teamHidden && (await db.teamMembers()).length > 0;
   res.locals.year = new Date().getFullYear();
   res.locals.currentPath = req.path;
   res.locals.title = '';
@@ -173,7 +175,8 @@ app.get('/', wrap(async (req, res) => {
 }));
 
 // Our care
-app.get('/our-team', wrap(async (req, res) => {
+app.get('/our-team', wrap(async (req, res, next) => {
+  if (!res.locals.hasTeam) return next(); // hidden → page not found
   res.render('our-team', {
     title: 'Our team',
     description: 'Meet the people behind Venza Care UK — the managers, nurses and carers who look after our residents.',
@@ -396,6 +399,7 @@ app.get('/careers', wrap(async (req, res) => {
     jobs,
     services,
     locations: await db.jobLocations(),
+    anyOpen: allOpen.length > 0,
     q: req.query.q || '',
     service,
     location,
@@ -574,7 +578,7 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const base = siteUrl(req);
-  const paths = ['/', '/our-care', '/our-team', '/care-homes', '/fees-and-funding', '/cqc-ratings', '/faqs', '/careers', '/contact',
+  const paths = ['/', '/our-care', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/fees-and-funding', '/cqc-ratings', '/faqs', '/careers', '/contact',
     '/privacy', '/cookies', '/accessibility'];
   (await db.homes()).forEach((h) => paths.push('/care-homes/' + h.id));
   (await db.openJobs()).forEach((j) => paths.push('/careers/' + j.id));

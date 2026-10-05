@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= title ? title + ' · ' : '' %>Careers · <%= SITE.name %></title>
+  <title><%= title && title !== 'Careers' ? title + ' · ' : '' %>Careers · <%= SITE.name %></title>
   <meta name="description" content="<%= description || 'Careers at Venza Care UK — caring jobs across our care homes. Search roles and apply online in minutes.' %>" />
   <link rel="canonical" href="<%= canonical %>" />
   <meta property="og:type" content="website" />

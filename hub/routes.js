@@ -307,7 +307,15 @@ module.exports = function mountHub(app, deps) {
   const teamUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).single('photoFile');
 
   app.get('/admin/team', need('photos', 'edit'), wrap(async (req, res) => {
-    res.render('admin/team', { title: 'Our team', team: await db.teamMembers(), canEdit: true });
+    res.render('admin/team', { title: 'Our team', team: await db.teamMembers(), canEdit: true, hidden: !!(await db.settings()).teamHidden });
+  }));
+
+  // Show or hide the whole Our team page (and its menu and footer links).
+  app.post('/admin/team/visibility', need('photos', 'edit'), wrap(async (req, res) => {
+    const show = req.body.show === '1';
+    await db.saveSettings({ teamHidden: !show });
+    await log(req.me, req.me.name + (show ? ' made the Our team page visible on the website' : ' hid the Our team page from the website'));
+    back(res, '/admin/team', show ? 'The Our team page is now on the website.' : 'The Our team page is now hidden from the website.');
   }));
 
   app.get('/admin/team/new', need('photos', 'edit'), wrap(async (req, res) => {

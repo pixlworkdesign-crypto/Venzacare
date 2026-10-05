@@ -743,6 +743,7 @@ textarea { resize: vertical; min-height: 120px; }
 @media (max-width: 760px) {
   /* On phones, the header buttons are hidden — show the sticky bottom bar. */
   .nav__cta { display: none; }
+  .nav .nav-toggle { margin-left: auto; }
   .mobile-cta {
     display: flex;
     position: fixed;
@@ -1420,3 +1421,33 @@ a.hub-who:hover strong { text-decoration: underline; }
 .team-card__role { color: var(--green-700); font-weight: 600; margin: 0.25rem 0 0; }
 .team-card__bio { color: var(--muted); font-size: 0.92rem; margin: 0.75rem 0 0; }
 .team-thumb { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: block; }
+
+/* ---------- Small screens: long button labels wrap instead of running off the page ---------- */
+@media (max-width: 560px) {
+  .btn { white-space: normal; text-align: center; line-height: 1.25; }
+}
+
+/* ---------- Careers header on phones: links go behind the menu button ---------- */
+@media (max-width: 960px) {
+  .careers-nav__inner { position: relative; }
+  .careers-nav .nav-toggle { display: block; margin-left: auto; }
+  .careers-nav__links {
+    display: none; position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column; align-items: stretch; gap: 0;
+    background: var(--green-800); padding: 0.4rem 1.5rem 1.2rem;
+    box-shadow: var(--shadow-md);
+  }
+  .careers-nav__links.open { display: flex; }
+  .careers-nav__links a { padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .careers-nav__links a.careers-nav__back { margin-top: 0.8rem; border: 1px solid rgba(255,255,255,0.4); text-align: center; padding: 0.6rem 1rem; }
+}
+
+/* Staff hub: Our team show/hide bar */
+.team-visibility { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 1rem 1.2rem; }
+.team-visibility .muted { font-size: 0.9rem; }
+
+/* Careers: friendly note when no roles are open */
+.careers-hero__cta { margin-top: 1.6rem; }
+
+/* Keep the floating chat button from covering the footer's last links (e.g. Staff login) */
+.footer__bottom, .careers-footer__bottom { padding-right: 4.5rem; }
