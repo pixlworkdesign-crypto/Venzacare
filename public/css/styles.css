@@ -230,6 +230,17 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(32,167,188,0.18); }
 textarea { resize: vertical; min-height: 120px; }
+/* Show / hide password button */
+.pw-wrap { position: relative; display: block; }
+.pw-wrap input { padding-right: 4.6rem; }
+.pw-toggle {
+  position: absolute; top: 50%; right: 0.45rem; transform: translateY(-50%);
+  font: 600 0.85rem var(--font-body); color: var(--green-700);
+  background: transparent; border: 0; border-radius: 8px;
+  padding: 0.4rem 0.6rem; cursor: pointer;
+}
+.pw-toggle:hover { background: var(--cream); }
+.pw-toggle:focus-visible { outline: 2px solid var(--green-500); outline-offset: 1px; }
 
 /* ---------- Care types grid ---------- */
 .care-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; }
