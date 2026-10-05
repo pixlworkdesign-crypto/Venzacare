@@ -55,10 +55,13 @@
 
   <div class="panel" id="facilities">
     <div class="panel__head"><h2>Facilities</h2></div>
-    <div class="panel__body list-rows">
-      <% facilities.concat(['', '', '']).forEach(function (x, n) { %>
-      <input type="hidden" name="fac_orig_<%= n %>" value="<%= x %>" />
-      <input name="fac_<%= n %>" value="<%= x %>" maxlength="80" aria-label="Facility <%= n + 1 %>" <%- x ? '' : 'placeholder="Add a facility, e.g. Hair salon"' %> />
+    <div class="panel__body list-rows list-rows--pair">
+      <% facilities.concat([{ name: '', group: 'Other' }, { name: '', group: 'Other' }, { name: '', group: 'Other' }]).forEach(function (x, n) { %>
+      <input type="hidden" name="fac_orig_<%= n %>" value="<%= x.name %>" />
+      <input name="fac_<%= n %>" value="<%= x.name %>" maxlength="80" aria-label="Facility <%= n + 1 %>" <%- x.name ? '' : 'placeholder="Add a facility"' %> />
+      <select name="facgroup_<%= n %>" aria-label="Group">
+        <% FACILITY_GROUPS.forEach(function (g) { %><option <%= g.name === x.group ? 'selected' : '' %>><%= g.name %></option><% }) %>
+      </select>
       <% }) %>
     </div>
   </div>

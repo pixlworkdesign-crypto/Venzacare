@@ -16,7 +16,7 @@ const db = require('../db');
 const storage = require('../storage');
 const mailer = require('../mailer');
 const visits = require('../visits');
-const { SITE_IMAGES, careTypesOf, careTypeNames, specialistCareOf, facilitiesOf, feeItemsOf } = require('../content');
+const { SITE_IMAGES, FACILITY_GROUPS, careTypesOf, careTypeNames, specialistCareOf, facilitiesOf, facilityNames, homeFacilityNames, feeItemsOf } = require('../content');
 const auth = require('./auth');
 const access = require('./access');
 
@@ -484,7 +484,10 @@ module.exports = function mountHub(app, deps) {
       return { out, ren };
     };
     const fac = rows('fac_', 80), fee = rows('fee_', 120);
-    const facilities = [...new Set(fac.out.map((r) => r.name))];
+    const groupNames = FACILITY_GROUPS.map((g) => g.name);
+    const facilities = [];
+    for (const r of fac.out) if (!facilities.some((x) => x.name === r.name)) facilities.push({ name: r.name, group: groupNames.includes(f['facgroup_' + r.n]) ? f['facgroup_' + r.n] : 'Other' });
+    const facNames = facilities.map((x) => x.name);
     const feeItems = [];
     for (const r of fee.out) if (!feeItems.some((x) => x.name === r.name)) feeItems.push({ name: r.name, usually: f['feeusually_' + r.n] === 'extra' ? 'extra' : 'included' });
 
@@ -492,7 +495,7 @@ module.exports = function mountHub(app, deps) {
     for (const h of await db.allHomes()) {
       const d = h.details || {};
       const careTypes = (h.careTypes || []).filter((c) => !removed.includes(c)).map((c) => renames[c] || c);
-      const homeFac = Array.isArray(d.facilities) ? d.facilities.map((x) => fac.ren[x] || x).filter((x) => facilities.includes(x)) : d.facilities;
+      const homeFac = Array.isArray(d.facilities) ? homeFacilityNames(h).map((x) => fac.ren[x] || x).filter((x) => facNames.includes(x)) : d.facilities;
       let homeFee = d.feeItems;
       if (homeFee) {
         homeFee = {};
@@ -642,7 +645,7 @@ module.exports = function mountHub(app, deps) {
         reviewScore: text(f.reviewScore, 6),
         reviewCount: text(f.reviewCount, 8),
         parking: text(f.parking, 400),
-        facilities: f.facilitiesSection ? [].concat(f.facilities || []).filter((x) => facilitiesOf(res.locals.SITE).includes(x)) : home.details.facilities,
+        facilities: f.facilitiesSection ? [].concat(f.facilities || []).filter((x) => facilityNames(res.locals.SITE).includes(x)) : home.details.facilities,
         visits: {
           enabled: !!f.visitsEnabled,
           days: [].concat(f.visitDays || []).map(Number).filter((d) => d >= 0 && d <= 6),

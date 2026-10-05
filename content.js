@@ -143,23 +143,62 @@ const EXTRAS = [
    home ticking its own: details.facilities (names) and details.feeItems
    ({ name: 'included' | 'extra' | 'no' }). A home that hasn't been set up
    yet shows the defaults. */
-const FACILITY_ICONS = {
-  'Comfortable lounges & gardens': 'M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z',
-  'Freshly prepared meals, special diets catered for': 'M3 12h18a9 9 0 0 1-18 0zM8 4v3M12 3v4M16 4v3',
-  'Daily activities & outings': 'M9 18V6l12-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
-  'En-suite rooms you can make your own': 'M3 12h18v6M3 18v-8a1 1 0 0 1 1-1h7v5',
-  'Open visiting — family welcome any time': 'M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+const FACILITY_GROUPS = [
+  { name: 'Rooms', icon: 'M3 12h18v6M3 18v-8a1 1 0 0 1 1-1h7v5' },
+  { name: 'Indoor spaces', icon: 'M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z' },
+  { name: 'Outdoors', icon: 'M12 22V12M12 12c-4 0-6-3-6-6 3 0 6 2 6 6zm0 0c4 0 6-3 6-6-3 0-6 2-6 6zM5 22h14' },
+  { name: 'Food & dining', icon: 'M3 12h18a9 9 0 0 1-18 0zM8 4v3M12 3v4M16 4v3' },
+  { name: 'Daily life', icon: 'M9 18V6l12-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z' },
+  { name: 'Health & wellbeing', icon: 'M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z' },
+  { name: 'Building & accessibility', icon: 'M12 5a2 2 0 1 0 0-.01M9 9h6l-1 5h-4zM10 14l-2 7M14 14l2 7' },
+  { name: 'Visiting', icon: 'M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' },
+  { name: 'Other', icon: 'M20 6 9 17l-5-5' },
+];
+const DEFAULT_FACILITIES = [
+  ['Rooms', ['En-suite rooms', 'Rooms with an en-suite wet room or shower', 'Rooms you can personalise with your own furniture', 'Ground-floor rooms', 'Double or companion rooms', 'TV point in every room', 'Phone line available in rooms', 'Nurse call system in every room']],
+  ['Indoor spaces', ['Comfortable lounges', 'Quiet lounge or library', 'Dining room', 'Café or bistro', 'Hair salon', 'Cinema room', 'Sensory room', 'Activity and craft room', 'Private room for family visits']],
+  ['Outdoors', ['Gardens', 'Secure garden', 'Wheelchair-accessible garden paths', 'Patio or terrace with seating', 'Raised flower beds for gardening', 'Sensory garden']],
+  ['Food & dining', ['Freshly cooked meals made on site', 'Special diets catered for (e.g. diabetic, soft, puréed)', 'Cultural and religious diets catered for', 'Snacks and drinks available any time', 'Private dining for family occasions']],
+  ['Daily life', ['Daily activities programme', 'Trips and outings', 'Exercise and movement classes', 'Visiting entertainers', 'Religious services and faith support', 'Pets welcome by arrangement', 'Minibus', 'Wi-Fi throughout']],
+  ['Health & wellbeing', ['Regular GP visits', 'Physiotherapy', 'Chiropody', 'Dentist and optician visits', 'Assisted bathrooms with specialist baths', 'Hoists and specialist beds']],
+  ['Building & accessibility', ['Lift to all floors', 'Wheelchair accessible throughout', 'Secure entry system', 'Dementia-friendly design and signage', 'Visitor parking']],
+  ['Visiting', ['Open visiting — family welcome any time', 'Family welcome to join for meals']],
+].flatMap(([group, names]) => names.map((name) => ({ name, group })));
+// The five lines the site used before: kept working for anything saved with them.
+const OLD_FACILITIES = {
+  'Comfortable lounges & gardens': ['Comfortable lounges', 'Gardens'],
+  'Freshly prepared meals, special diets catered for': ['Freshly cooked meals made on site', 'Special diets catered for (e.g. diabetic, soft, puréed)'],
+  'Daily activities & outings': ['Daily activities programme', 'Trips and outings'],
+  'En-suite rooms you can make your own': ['En-suite rooms', 'Rooms you can personalise with your own furniture'],
+  'Open visiting — family welcome any time': ['Open visiting — family welcome any time'],
 };
-const DEFAULT_FACILITIES = Object.keys(FACILITY_ICONS);
-const TICK_ICON = 'M20 6 9 17l-5-5';
+// What a home shows before anyone has ticked its facilities (the old five lines).
+const DEFAULT_TICKED = [...new Set(Object.values(OLD_FACILITIES).flat())];
+const upgradeNames = (names) => [...new Set(names.flatMap((n) => OLD_FACILITIES[n] || [n]))];
+
+// The master list: [{ name, group }].
 function facilitiesOf(SITE) {
-  return (SITE && Array.isArray(SITE.facilities)) ? SITE.facilities : DEFAULT_FACILITIES;
+  const saved = SITE && Array.isArray(SITE.facilities) ? SITE.facilities : null;
+  if (!saved) return DEFAULT_FACILITIES;
+  if (saved.every((x) => typeof x === 'string')) {
+    // Saved before groups existed: the detailed list plus anything custom.
+    const custom = saved.filter((x) => !OLD_FACILITIES[x]).map((name) => ({ name, group: 'Other' }));
+    return DEFAULT_FACILITIES.concat(custom.filter((c) => !DEFAULT_FACILITIES.some((d) => d.name === c.name)));
+  }
+  return saved.filter((x) => x && x.name).map((x) => ({ name: x.name, group: FACILITY_GROUPS.some((g) => g.name === x.group) ? x.group : 'Other' }));
 }
-function homeFacilities(SITE, home) {
-  const all = facilitiesOf(SITE);
+function facilityNames(SITE) { return facilitiesOf(SITE).map((f) => f.name); }
+// The names a home has ticked (or the old defaults if it's never been set).
+function homeFacilityNames(home) {
   const picked = home.details && home.details.facilities;
-  return (Array.isArray(picked) ? all.filter((f) => picked.includes(f)) : all)
-    .map((name) => ({ name, icon: FACILITY_ICONS[name] || TICK_ICON }));
+  return Array.isArray(picked) ? upgradeNames(picked) : DEFAULT_TICKED;
+}
+// A home's facilities grouped for its page: [{ group, icon, items: [names] }].
+function homeFacilities(SITE, home) {
+  const mine = homeFacilityNames(home);
+  const all = facilitiesOf(SITE);
+  return FACILITY_GROUPS.map((g) => ({ group: g.name, icon: g.icon, items: all.filter((f) => f.group === g.name && mine.includes(f.name)).map((f) => f.name) }))
+    .filter((g) => g.items.length);
 }
 function feeItemsOf(SITE) {
   if (SITE && Array.isArray(SITE.feeItems)) return SITE.feeItems;
@@ -325,7 +364,7 @@ module.exports = {
   CQC_RATINGS, cqcLabel, cqcClass, cqcReportUrl, homeAddress,
   photoSrc, photoAbs, SITE_IMAGES, siteImage,
   DEFAULT_CARE_TYPES, DEFAULT_SPECIALIST_CARE, careTypesOf, careTypeNames, specialistCareOf, careImage,
-  facilitiesOf, homeFacilities, feeItemsOf, feeLists,
+  FACILITY_GROUPS, facilitiesOf, facilityNames, homeFacilityNames, homeFacilities, feeItemsOf, feeLists,
   FEE_ROWS, gbp, fromPrice, INCLUDED, EXTRAS,
   FEE_FAQS, GENERAL_FAQS, WHAT_TO_BRING,
   faqJsonLd, orgJsonLd, homeJsonLd, ldScript,

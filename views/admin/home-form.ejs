@@ -66,10 +66,15 @@
     <div class="panel__head"><h2>Facilities</h2></div>
     <div class="panel__body">
       <input type="hidden" name="facilitiesSection" value="1" />
-      <% var myFac = Array.isArray(d.facilities) ? d.facilities : facilityList; %>
-      <div class="check-grid check-grid--3">
-        <% facilityList.forEach(function (x) { %><label><input type="checkbox" name="facilities" value="<%= x %>" <%= myFac.indexOf(x) > -1 ? 'checked' : '' %> /> <%= x %></label><% }) %>
+      <% var myFac = homeFacilityNames(home); %>
+      <% FACILITY_GROUPS.forEach(function (g) { var items = facilityList.filter(function (x) { return x.group === g.name; }); if (!items.length) return; %>
+      <div class="field">
+        <span class="label"><%= g.name %></span>
+        <div class="check-grid check-grid--3">
+          <% items.forEach(function (x) { %><label><input type="checkbox" name="facilities" value="<%= x.name %>" <%= myFac.indexOf(x.name) > -1 ? 'checked' : '' %> /> <%= x.name %></label><% }) %>
+        </div>
       </div>
+      <% }) %>
     </div>
   </div>
 

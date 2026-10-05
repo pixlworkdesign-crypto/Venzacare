@@ -44,9 +44,12 @@
 
           <% var facs = homeFacilities(SITE, home); if (facs.length) { %>
           <h3>Facilities &amp; daily life</h3>
-          <div class="facility-grid">
-            <% facs.forEach(function(f){ %>
-            <div class="fac"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="<%= f.icon %>"/></svg><span><%= f.name %></span></div>
+          <div class="fac-groups">
+            <% facs.forEach(function(g){ %>
+            <div class="fac-group">
+              <h4><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="<%= g.icon %>"/></svg><%= g.group %></h4>
+              <ul><% g.items.forEach(function (x) { %><li><%= x %></li><% }) %></ul>
+            </div>
             <% }) %>
           </div>
           <% } %>
