@@ -7,42 +7,24 @@
   <% if (hubCan('homes', 'edit') && me.homes === 'all') { %><a href="/admin/homes/new" class="btn btn--primary">+ Add a home</a><% } %>
 </div>
 
-<div class="hub-card">
-  <div class="table-wrap">
-    <table class="table">
-      <thead><tr><th>Home</th><th>On the website</th><th>CQC</th><th>Availability</th><th>Fees from</th><th>Still to fill in</th><th></th></tr></thead>
-      <tbody>
-        <% homes.forEach(function(h){ var d = h.details; var from = fromPrice(h);
-             var missing = [];
-             if (!d.address) missing.push(['address', 'address']);
-             if (!from) missing.push(['fees', 'fees']);
-             if (!d.cqcLocationId) missing.push(['CQC location ID', 'cqc']);
-             if (!d.managerName) missing.push(['manager', 'manager']);
-             if (!d.availability) missing.push(['room availability', 'availability']);
-             if (!h.photo) missing.push(['photos', 'photos']); %>
-        <tr>
-          <td><strong><%= h.name %></strong><div class="muted" style="font-size:.85rem;"><%= h.town %> · <%= h.postcode %></div></td>
-          <td><% if (d.archived) { %><span class="hub-pill hub-pill--plain">Draft</span><% } else { %><span class="hub-pill hub-pill--ok">Live</span><% } %></td>
-          <td><%= cqcLabel(h) %></td>
-          <td><%= hubCan('availability') ? ({ available: 'Rooms available', limited: 'Limited', waitlist: 'Waiting list' }[d.availability] || '—') : '—' %></td>
-          <td class="tabnum"><%= hubCan('fees') ? (from ? gbp(from) + '/wk' : '—') : '—' %></td>
-          <td style="font-size:.85rem;"><% if (missing.length) { missing.forEach(function (m, n) { %><%= n ? ', ' : '' %><a href="/admin/homes/<%= h.id %>/edit#<%= m[1] %>"><%= m[0] %></a><% }) } else { %><span class="muted">Nothing — all set</span><% } %></td>
-          <td>
-            <div class="row-actions">
-              <a class="btn btn--sm btn--ghost" href="/admin/homes/<%= h.id %>/edit"><%= hubCan('homes', 'edit') || hubCan('fees', 'edit') || hubCan('availability', 'edit') ? 'Edit' : 'View' %></a>
-              <% if (hubCan('homes', 'edit')) { %>
-              <form action="/admin/homes/<%= h.id %>/<%= d.archived ? 'restore' : 'archive' %>" method="post" class="inline-form" <%- d.archived ? '' : 'data-confirm="Make ' + h.name.replace(/"/g, '') + ' a draft? Families won’t see it until you make it live again."' %>>
-                <button class="btn btn--sm btn--muted"><%= d.archived ? 'Make live' : 'Make draft' %></button>
-              </form>
-              <% } %>
-              <% if (!d.archived) { %><a class="btn btn--sm btn--muted" href="/care-homes/<%= h.id %>" target="_blank" rel="noopener">View ↗</a><% } %>
-            </div>
-          </td>
-        </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
+<div class="home-tiles">
+  <% homes.forEach(function(h){ var d = h.details; var from = fromPrice(h);
+       var missing = [];
+       if (!h.photo) missing.push('photos');
+       if (!from) missing.push('fees');
+       if (!d.availability) missing.push('availability');
+       if (!d.managerName) missing.push('manager');
+       if (!d.cqcLocationId) missing.push('CQC ID');
+       if (!d.address) missing.push('address'); %>
+  <a class="home-tile" href="/admin/homes/<%= h.id %>/edit">
+    <span class="home-tile__pic">
+      <% if (h.photo) { %><img src="<%= photoSrc(h.photo) %>" alt="" loading="lazy" /><% } %>
+      <% if (d.archived) { %><span class="home-tile__badge">Draft</span><% } %>
+    </span>
+    <span class="home-tile__name"><%= h.name %></span>
+    <% if (missing.length) { %><span class="home-tile__missing">Missing: <%= missing.join(', ') %></span><% } %>
+  </a>
+  <% }) %>
 </div>
 
 <%- include('../partials/admin-footer') %>

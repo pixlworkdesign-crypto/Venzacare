@@ -4,7 +4,12 @@
 <div class="hub-crumb"><a href="/admin/homes">Homes</a> › <%= home.name %></div>
 <div class="hub-head"><div>
 <h1 class="hub-h1"><%= home.name %></h1>
-</div></div>
+</div>
+<% if (!home.details.archived) { %><div class="row-actions">
+  <a class="btn btn--sm btn--muted" href="/care-homes/<%= home.id %>" target="_blank" rel="noopener">View on website ↗</a>
+  <% if (canHomes) { %><form action="/admin/homes/<%= home.id %>/archive" method="post" class="inline-form" data-confirm="Make <%= home.name.replace(/"/g, '') %> a draft? Families won’t see it until you make it live again."><input type="hidden" name="back" value="edit" /><button class="btn btn--sm btn--muted">Make draft</button></form><% } %>
+</div><% } %>
+</div>
 <% if (home.details.archived) { %><div class="hub-notice hub-notice--warn hub-notice--action"><span><strong>Draft</strong> — families can’t see this home until you make it live.</span><% if (canHomes) { %><form action="/admin/homes/<%= home.id %>/restore" method="post" class="inline-form"><input type="hidden" name="back" value="edit" /><button class="btn btn--primary btn--sm">Make live</button></form><% } %></div><% } %>
 
 <form action="/admin/homes/<%= home.id %>" method="post" class="admin-form" enctype="multipart/form-data">
