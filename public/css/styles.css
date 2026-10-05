@@ -1490,3 +1490,9 @@ a.hub-who:hover strong { text-decoration: underline; }
 .care-type__body { display: grid; grid-template-columns: 1fr 260px; gap: 1.5rem; align-items: start; }
 .care-type__pic img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; margin-bottom: 0.5rem; }
 @media (max-width: 720px) { .care-type__body { grid-template-columns: 1fr; } }
+.hub-notice--action { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.list-rows { display: grid; gap: 0.5rem; }
+.list-rows--pair { grid-template-columns: 1fr 12rem; }
+.fee-items { display: grid; gap: 0.4rem; margin-top: 0.4rem; }
+.fee-item { display: grid; grid-template-columns: 1fr 11rem; gap: 0.8rem; align-items: center; }
+@media (max-width: 640px) { .list-rows--pair, .fee-item { grid-template-columns: 1fr; } }

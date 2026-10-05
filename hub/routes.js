@@ -16,7 +16,7 @@ const db = require('../db');
 const storage = require('../storage');
 const mailer = require('../mailer');
 const visits = require('../visits');
-const { SITE_IMAGES, careTypesOf, careTypeNames, specialistCareOf } = require('../content');
+const { SITE_IMAGES, careTypesOf, careTypeNames, specialistCareOf, facilitiesOf, feeItemsOf } = require('../content');
 const auth = require('./auth');
 const access = require('./access');
 
@@ -429,7 +429,7 @@ module.exports = function mountHub(app, deps) {
   const needCare = [need('homes', 'edit'), (req, res, next) => (req.me.homes === 'all' ? next() : deny(res, 'Only people who cover the whole company can change the types of care.'))];
 
   app.get('/admin/care-types', ...needCare, (req, res) => {
-    res.render('admin/care-types', { title: 'Types of care', types: careTypesOf(res.locals.SITE), specialist: specialistCareOf(res.locals.SITE) });
+    res.render('admin/care-types', { title: 'Care & facilities', types: careTypesOf(res.locals.SITE), specialist: specialistCareOf(res.locals.SITE), facilities: facilitiesOf(res.locals.SITE), feeItems: feeItemsOf(res.locals.SITE) });
   });
 
   app.post('/admin/care-types', ...needCare, careUpload, wrap(async (req, res) => {
@@ -468,20 +468,42 @@ module.exports = function mountHub(app, deps) {
 
     const specialistCare = [...new Set(String(f.specialist || '').split(/\r?\n/).map((s) => text(s, 60)).filter(Boolean))];
 
-    // Carry renames and removals through to every home.
-    if (Object.keys(renames).length || removed.length) {
-      for (const h of await db.allHomes()) {
-        const next = (h.careTypes || []).filter((c) => !removed.includes(c)).map((c) => renames[c] || c);
-        if (JSON.stringify(next) !== JSON.stringify(h.careTypes || [])) await db.saveHome(Object.assign({}, h, { careTypes: next }));
+    // Facilities and fee items: rows of name (+ orig for renames); a cleared name removes the row.
+    const rows = (prefix, max) => {
+      const out = [], ren = {};
+      for (let n = 0; n < 200 && (f[prefix + n] !== undefined || f[prefix + 'orig_' + n] !== undefined); n++) {
+        const name = text(f[prefix + n], max), orig = text(f[prefix + 'orig_' + n], max);
+        if (!name) continue;
+        if (orig && orig !== name) ren[orig] = name;
+        out.push({ n, name });
       }
+      return { out, ren };
+    };
+    const fac = rows('fac_', 80), fee = rows('fee_', 120);
+    const facilities = [...new Set(fac.out.map((r) => r.name))];
+    const feeItems = [];
+    for (const r of fee.out) if (!feeItems.some((x) => x.name === r.name)) feeItems.push({ name: r.name, usually: f['feeusually_' + r.n] === 'extra' ? 'extra' : 'included' });
+
+    // Carry renames and removals through to every home.
+    for (const h of await db.allHomes()) {
+      const d = h.details || {};
+      const careTypes = (h.careTypes || []).filter((c) => !removed.includes(c)).map((c) => renames[c] || c);
+      const homeFac = Array.isArray(d.facilities) ? d.facilities.map((x) => fac.ren[x] || x).filter((x) => facilities.includes(x)) : d.facilities;
+      let homeFee = d.feeItems;
+      if (homeFee) {
+        homeFee = {};
+        for (const [k, v] of Object.entries(d.feeItems)) { const nk = fee.ren[k] || k; if (feeItems.some((x) => x.name === nk)) homeFee[nk] = v; }
+      }
+      const next = Object.assign({}, h, { careTypes, details: Object.assign({}, d, { facilities: homeFac, feeItems: homeFee }) });
+      if (JSON.stringify(next) !== JSON.stringify(h)) await db.saveHome(next);
     }
-    await db.saveSettings({ careTypes: types, specialistCare });
+    await db.saveSettings({ careTypes: types, specialistCare, facilities, feeItems });
     const what = [].concat(
       Object.entries(renames).map(([a, b]) => 'renamed ' + a + ' to ' + b),
       removed.map((r) => 'removed ' + r),
       newName ? ['added ' + newName] : []
     );
-    await log(req.me, req.me.name + ' updated the types of care' + (what.length ? ' — ' + what.join(', ') : ''));
+    await log(req.me, req.me.name + ' updated care & facilities' + (what.length ? ' — ' + what.join(', ') : ''));
     back(res, '/admin/care-types', f.move ? 'Order saved.' : 'Saved. The website shows the change within 30 seconds.');
   }));
 
@@ -550,7 +572,8 @@ module.exports = function mountHub(app, deps) {
     const home = await db.anyHome(req.params.id);
     if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
     res.render('admin/home-form', {
-      title: 'Edit ' + home.name, home, careTypes: careNames(res), specialistCare: specialistCareOf(res.locals.SITE), error: null,
+      title: 'Edit ' + home.name, home, careTypes: careNames(res), specialistCare: specialistCareOf(res.locals.SITE),
+      facilityList: facilitiesOf(res.locals.SITE), feeItems: feeItemsOf(res.locals.SITE), error: null,
       visitSettings: visits.settingsFor(home), DAY_NAMES: visits.DAY_NAMES, timeLabel: visits.timeLabel,
       jobCount: (await db.jobs()).filter((j) => j.homeId === home.id).length,
       canHomes: can(req.me, 'homes', 'edit'), canPhotos: can(req.me, 'homes', 'edit') && can(req.me, 'photos', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
@@ -583,10 +606,21 @@ module.exports = function mountHub(app, deps) {
       details.fees = fees;
       details.feesUpdated = text(f.feesUpdated, 40);
       details.feesNote = text(f.feesNote, 400);
+      if (f.feeItemsSection) {
+        const items = {};
+        feeItemsOf(res.locals.SITE).forEach((it, n) => {
+          const how = f['fee_' + n];
+          items[it.name] = ['included', 'extra', 'no'].includes(how) ? how : it.usually;
+        });
+        if (JSON.stringify(items) !== JSON.stringify(home.details.feeItems || {})) changed.push('what the fee covers');
+        details.feeItems = items;
+      }
     }
     if (can(me, 'homes', 'edit')) {
       Object.assign(details, {
         phone: text(f.phone, 40),
+        email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text(f.email, 120)) ? text(f.email, 120) : '',
+        visitingHours: text(f.visitingHours, 120),
         address: addressLine(f.address),
         cqcLocationId: text(f.cqcLocationId, 30).replace(/[^0-9A-Za-z-]/g, ''),
         cqcRatedOn: text(f.cqcRatedOn, 40),
@@ -595,6 +629,7 @@ module.exports = function mountHub(app, deps) {
         reviewScore: text(f.reviewScore, 6),
         reviewCount: text(f.reviewCount, 8),
         parking: text(f.parking, 400),
+        facilities: f.facilitiesSection ? [].concat(f.facilities || []).filter((x) => facilitiesOf(res.locals.SITE).includes(x)) : home.details.facilities,
         visits: {
           enabled: !!f.visitsEnabled,
           days: [].concat(f.visitDays || []).map(Number).filter((d) => d >= 0 && d <= 6),
@@ -683,7 +718,7 @@ module.exports = function mountHub(app, deps) {
   app.post('/admin/homes/:id/delete', need('homes', 'edit'), wrap(async (req, res) => {
     const home = await db.anyHome(req.params.id);
     if (!home || req.me.homes !== 'all') return res.redirect('/admin/homes');
-    if (!home.details.archived) return back(res, '/admin/homes/' + home.id + '/edit', 'Archive the home before deleting it');
+    if (!home.details.archived) return back(res, '/admin/homes/' + home.id + '/edit', 'Hide the home from the website before deleting it');
     const attached = (await db.jobs()).filter((j) => j.homeId === home.id).length;
     if (attached) return back(res, '/admin/homes/' + home.id + '/edit', home.name + ' still has ' + attached + ' job(s) attached');
     if (text(req.body.confirm, 120).toLowerCase() !== home.name.toLowerCase()) return back(res, '/admin/homes/' + home.id + '/edit', 'Type the home’s name exactly to delete it');
@@ -698,7 +733,8 @@ module.exports = function mountHub(app, deps) {
       if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
       await db.saveHome(Object.assign({}, home, { details: Object.assign({}, home.details, { archived }) }));
       await log(req.me, req.me.name + (archived ? ' archived ' + home.name + ' (hidden from the website)' : ' made ' + home.name + ' live on the website'));
-      back(res, '/admin/homes', archived ? home.name + ' is hidden from the website.' : home.name + ' is live on the website.');
+      const to = req.body.back === 'edit' ? '/admin/homes/' + home.id + '/edit' : '/admin/homes';
+      back(res, to, archived ? home.name + ' is hidden from the website.' : home.name + ' is live on the website.');
     }));
   }
 

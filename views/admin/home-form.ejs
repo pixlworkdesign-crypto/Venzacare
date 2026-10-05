@@ -5,7 +5,7 @@
 <div class="hub-head"><div>
 <h1 class="hub-h1"><%= home.name %></h1>
 </div></div>
-<% if (home.details.archived) { %><div class="hub-notice hub-notice--warn">This home is <strong>archived</strong>, so it’s hidden from the website. <% if (canHomes) { %>When it’s ready, press <strong>Make live</strong> on the Homes list.<% } %></div><% } %>
+<% if (home.details.archived) { %><div class="hub-notice hub-notice--warn hub-notice--action"><span><strong>Not on the website yet.</strong> Families can’t see this home until you make it live.</span><% if (canHomes) { %><form action="/admin/homes/<%= home.id %>/restore" method="post" class="inline-form"><input type="hidden" name="back" value="edit" /><button class="btn btn--primary btn--sm">Make live</button></form><% } %></div><% } %>
 
 <form action="/admin/homes/<%= home.id %>" method="post" class="admin-form" enctype="multipart/form-data">
 
@@ -17,11 +17,12 @@
         <div class="field"><label for="name">Home name</label><input type="text" id="name" name="name" value="<%= home.name %>" /></div>
         <div class="field"><label for="phone">Direct phone number for this home</label><input type="tel" id="phone" name="phone" value="<%= d.phone %>" placeholder="Leave blank to use <%= SITE.phone %>" /></div>
       </div>
+      <div class="field"><label for="email">Email address for this home</label><input type="email" id="email" name="email" value="<%= d.email %>" placeholder="Leave blank to use <%= SITE.email %>" style="max-width:28rem;" /></div>
       <div class="field"><label for="blurb">Short description</label><textarea id="blurb" name="blurb" rows="3"><%= home.blurb %></textarea></div>
     </div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="address">
     <div class="panel__head"><h2>Address</h2></div>
     <div class="panel__body">
       <div class="field"><label for="address">Address</label><textarea id="address" name="address" rows="2" style="min-height:4.5rem;" autocomplete="street-address" placeholder="e.g. 12 Victoria Road"><%= d.address %></textarea></div>
@@ -55,6 +56,17 @@
         </div>
       </div>
       <div class="field"><label for="specialismsOther">Other specialist care</label><input id="specialismsOther" name="specialismsOther" value="<%= otherSpec.join(', ') %>" placeholder="e.g. Korsakoff syndrome, Spinal injury" /></div>
+    </div>
+  </div>
+
+  <div class="panel" id="facilities">
+    <div class="panel__head"><h2>Facilities</h2></div>
+    <div class="panel__body">
+      <input type="hidden" name="facilitiesSection" value="1" />
+      <% var myFac = Array.isArray(d.facilities) ? d.facilities : facilityList; %>
+      <div class="check-grid check-grid--3">
+        <% facilityList.forEach(function (x) { %><label><input type="checkbox" name="facilities" value="<%= x %>" <%= myFac.indexOf(x) > -1 ? 'checked' : '' %> /> <%= x %></label><% }) %>
+      </div>
     </div>
   </div>
 
@@ -113,7 +125,7 @@
   </fieldset>
   <% if (seeAvail) { %>
   <fieldset class="hub-fieldset" <%= canAvail ? "" : "disabled" %>>
-  <div class="panel">
+  <div class="panel" id="availability">
     <div class="panel__head"><h2>Room availability</h2></div>
     <div class="panel__body">
       <div class="grid-2">
@@ -134,7 +146,7 @@
   <% } %>
   <% if (seeFees) { %>
   <fieldset class="hub-fieldset" <%= canFees ? "" : "disabled" %>>
-  <div class="panel">
+  <div class="panel" id="fees">
     <div class="panel__head"><h2>Weekly fees ("from" prices)</h2></div>
     <div class="panel__body">
       <div class="grid-2">
@@ -147,13 +159,29 @@
         <div class="field"><label for="feesUpdated">Prices correct as of</label><input type="text" id="feesUpdated" name="feesUpdated" value="<%= d.feesUpdated %>" placeholder="e.g. September 2026" /></div>
         <div class="field"><label for="feesNote">Note shown under the prices</label><input type="text" id="feesNote" name="feesNote" value="<%= d.feesNote %>" placeholder="e.g. Nursing fee shown before NHS-funded nursing care (FNC)" /></div>
       </div>
+      <div class="field" style="margin-top:.5rem;">
+        <span class="label">What the fee covers</span>
+        <input type="hidden" name="feeItemsSection" value="1" />
+        <div class="fee-items">
+          <% feeItems.forEach(function (it, n) { var how = (d.feeItems && d.feeItems[it.name]) || it.usually; %>
+          <div class="fee-item">
+            <span><%= it.name %></span>
+            <select name="fee_<%= n %>" aria-label="<%= it.name %>">
+              <option value="included" <%= how === 'included' ? 'selected' : '' %>>Included</option>
+              <option value="extra" <%= how === 'extra' ? 'selected' : '' %>>Extra charge</option>
+              <option value="no" <%= how === 'no' ? 'selected' : '' %>>Not offered</option>
+            </select>
+          </div>
+          <% }) %>
+        </div>
+      </div>
     </div>
   </div>
 
   </fieldset>
   <% } %>
   <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
-  <div class="panel">
+  <div class="panel" id="cqc">
     <div class="panel__head"><h2>CQC rating</h2></div>
     <div class="panel__body">
       <div class="grid-2">
@@ -170,7 +198,7 @@
 
   </fieldset>
   <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
-  <div class="panel">
+  <div class="panel" id="manager">
     <div class="panel__head"><h2>Home manager</h2></div>
     <div class="panel__body">
       <div class="field manager-photo">
@@ -204,6 +232,7 @@
   <div class="panel">
     <div class="panel__head"><h2>Getting here</h2></div>
     <div class="panel__body">
+      <div class="field"><label for="visitingHours">Visiting hours</label><input id="visitingHours" name="visitingHours" value="<%= d.visitingHours %>" placeholder="e.g. Any time, or 10am – 8pm daily" style="max-width:28rem;" /></div>
       <div class="field"><label for="parking">Parking and travel</label><textarea id="parking" name="parking" rows="2" style="min-height:4.5rem;" placeholder="e.g. Free visitor parking on site. 5 minutes' walk from East Croydon station."><%= d.parking %></textarea></div>
     </div>
   </div>
@@ -219,7 +248,7 @@
 <div class="panel" style="margin-bottom:3rem;">
   <div class="panel__head"><h2>Delete this home</h2></div>
   <div class="panel__body">
-    <% if (!home.details.archived) { %><p class="muted" style="margin:0;">Archive the home first.</p>
+    <% if (!home.details.archived) { %><p class="muted" style="margin:0;">Hide the home from the website first.</p>
     <% } else if (jobCount) { %><p class="muted" style="margin:0;"><%= home.name %> still has <%= jobCount %> job<%= jobCount === 1 ? '' : 's' %> attached. Delete or move <%= jobCount === 1 ? 'it' : 'them' %> first.</p>
     <% } else { %>
     <form action="/admin/homes/<%= home.id %>/delete" method="post" class="hub-inline" data-confirm="Delete <%= home.name.replace(/"/g, '') %> for good? This can’t be undone.">

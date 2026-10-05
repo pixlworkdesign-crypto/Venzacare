@@ -42,18 +42,14 @@
           </ul>
           <% } %>
 
+          <% var facs = homeFacilities(SITE, home); if (facs.length) { %>
           <h3>Facilities &amp; daily life</h3>
           <div class="facility-grid">
-            <% var facilities=[
-              {l:'Comfortable lounges &amp; gardens', i:'M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z'},
-              {l:'Freshly prepared meals, special diets catered for', i:'M3 12h18a9 9 0 0 1-18 0zM8 4v3M12 3v4M16 4v3'},
-              {l:'Daily activities &amp; outings', i:'M9 18V6l12-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'},
-              {l:'En-suite rooms you can make your own', i:'M3 12h18v6M3 18v-8a1 1 0 0 1 1-1h7v5'},
-              {l:'Open visiting &mdash; family welcome any time', i:'M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'}
-            ]; facilities.forEach(function(f){ %>
-            <div class="fac"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="<%= f.i %>"/></svg><span><%- f.l %></span></div>
+            <% facs.forEach(function(f){ %>
+            <div class="fac"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="<%= f.icon %>"/></svg><span><%= f.name %></span></div>
             <% }) %>
           </div>
+          <% } %>
         </div>
       </div>
 
@@ -69,6 +65,8 @@
           <li><span>Beds</span><span><%= home.beds %></span></li>
           <% if (d.managerName) { %><li><span>Manager</span><span><%= d.managerName %></span></li><% } %>
           <li><span>Call</span><span><a href="tel:<%= homeTel %>"><%= homePhone %></a></span></li>
+          <% if (d.email) { %><li><span>Email</span><span><a href="mailto:<%= d.email %>"><%= d.email %></a></span></li><% } %>
+          <% if (d.visitingHours) { %><li><span>Visiting</span><span><%= d.visitingHours %></span></li><% } %>
         </ul>
         <a href="#visit" class="btn btn--primary btn--block">Book a visit</a>
         <a href="tel:<%= homeTel %>" class="btn btn--ghost btn--block mt-1">Call the home</a>
@@ -94,17 +92,18 @@
       <% } else { %>
       <p class="lead" style="font-size:1.05rem;">We're updating the published prices for <%= home.name %>. Call <a href="tel:<%= homeTel %>"><%= homePhone %></a> and we'll tell you the current weekly fee straight away — no forms, no obligation.</p>
       <% } %>
+      <% var fl = feeLists(SITE, home); %>
       <div class="included-grid">
         <div class="care-panel">
           <h3>Included in the fee</h3>
           <ul class="tick-list">
-            <% INCLUDED.forEach(function(i){ %><li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><%= i %></span></li><% }) %>
+            <% fl.included.forEach(function(i){ %><li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><%= i %></span></li><% }) %>
           </ul>
         </div>
         <div class="care-panel">
           <h3>Optional extras (charged separately)</h3>
           <ul class="plain-list">
-            <% EXTRAS.forEach(function(i){ %><li><%= i %></li><% }) %>
+            <% fl.extras.forEach(function(i){ %><li><%= i %></li><% }) %>
           </ul>
           <p style="margin:1rem 0 0;"><a class="care-card__link" href="/fees-and-funding">Deposits, fee reviews &amp; funding help →</a></p>
         </div>

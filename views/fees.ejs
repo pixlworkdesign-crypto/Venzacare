@@ -39,18 +39,19 @@
     </div>
     <p class="muted fee-note">Prices are per week. Nursing fees state whether NHS-funded nursing care (FNC) is included — see the home's page. Where a price isn't shown, call <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a> and we'll tell you the current fee straight away.</p>
 
+    <% var fl = feeLists(SITE); %>
     <div class="included-grid" style="margin-top:2.5rem;">
       <div class="care-panel">
         <h3>What the weekly fee includes</h3>
         <ul class="tick-list">
-          <% INCLUDED.forEach(function(i){ %><li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><%= i %></span></li><% }) %>
+          <% fl.included.forEach(function(i){ %><li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><%= i %></span></li><% }) %>
         </ul>
       </div>
       <div class="care-panel">
         <h3>Optional extras</h3>
         <p class="muted" style="margin-top:0;">Only if you choose them, charged at cost and itemised on your invoice:</p>
         <ul class="plain-list">
-          <% EXTRAS.forEach(function(i){ %><li><%= i %></li><% }) %>
+          <% fl.extras.forEach(function(i){ %><li><%= i %></li><% }) %>
         </ul>
       </div>
     </div>

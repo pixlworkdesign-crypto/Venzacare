@@ -138,6 +138,45 @@ const EXTRAS = [
   'Dry cleaning',
 ];
 
+/* ---------- Facilities and what the fee covers ----------
+   Site-wide lists managed in the staff hub (Care & facilities), with each
+   home ticking its own: details.facilities (names) and details.feeItems
+   ({ name: 'included' | 'extra' | 'no' }). A home that hasn't been set up
+   yet shows the defaults. */
+const FACILITY_ICONS = {
+  'Comfortable lounges & gardens': 'M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z',
+  'Freshly prepared meals, special diets catered for': 'M3 12h18a9 9 0 0 1-18 0zM8 4v3M12 3v4M16 4v3',
+  'Daily activities & outings': 'M9 18V6l12-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+  'En-suite rooms you can make your own': 'M3 12h18v6M3 18v-8a1 1 0 0 1 1-1h7v5',
+  'Open visiting — family welcome any time': 'M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+};
+const DEFAULT_FACILITIES = Object.keys(FACILITY_ICONS);
+const TICK_ICON = 'M20 6 9 17l-5-5';
+function facilitiesOf(SITE) {
+  return (SITE && Array.isArray(SITE.facilities)) ? SITE.facilities : DEFAULT_FACILITIES;
+}
+function homeFacilities(SITE, home) {
+  const all = facilitiesOf(SITE);
+  const picked = home.details && home.details.facilities;
+  return (Array.isArray(picked) ? all.filter((f) => picked.includes(f)) : all)
+    .map((name) => ({ name, icon: FACILITY_ICONS[name] || TICK_ICON }));
+}
+function feeItemsOf(SITE) {
+  if (SITE && Array.isArray(SITE.feeItems)) return SITE.feeItems;
+  return INCLUDED.map((name) => ({ name, usually: 'included' })).concat(EXTRAS.map((name) => ({ name, usually: 'extra' })));
+}
+// The site-wide "usually" lists (Fees & funding page) or one home's own.
+function feeLists(SITE, home) {
+  const own = home && home.details && home.details.feeItems;
+  const out = { included: [], extras: [] };
+  for (const item of feeItemsOf(SITE)) {
+    const how = own && own[item.name] ? own[item.name] : item.usually;
+    if (how === 'included') out.included.push(item.name);
+    else if (how === 'extra') out.extras.push(item.name);
+  }
+  return out;
+}
+
 /* ---------- FAQs ---------- */
 const FEE_FAQS = [
   {
@@ -256,6 +295,7 @@ function homeJsonLd(home, SITE, base) {
     description: home.blurb,
     url: base + '/care-homes/' + home.id,
     telephone: d.phone || SITE.phone,
+    email: d.email || undefined,
     image: home.photo ? photoAbs(home.photo, base) : undefined,
     address: {
       '@type': 'PostalAddress',
@@ -285,6 +325,7 @@ module.exports = {
   CQC_RATINGS, cqcLabel, cqcClass, cqcReportUrl, homeAddress,
   photoSrc, photoAbs, SITE_IMAGES, siteImage,
   DEFAULT_CARE_TYPES, DEFAULT_SPECIALIST_CARE, careTypesOf, careTypeNames, specialistCareOf, careImage,
+  facilitiesOf, homeFacilities, feeItemsOf, feeLists,
   FEE_ROWS, gbp, fromPrice, INCLUDED, EXTRAS,
   FEE_FAQS, GENERAL_FAQS, WHAT_TO_BRING,
   faqJsonLd, orgJsonLd, homeJsonLd, ldScript,

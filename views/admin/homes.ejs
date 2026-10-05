@@ -14,23 +14,25 @@
       <tbody>
         <% homes.forEach(function(h){ var d = h.details; var from = fromPrice(h);
              var missing = [];
-             if (!from) missing.push('fees');
-             if (!d.cqcLocationId) missing.push('CQC location ID');
-             if (!d.managerName) missing.push('manager');
-             if (!d.availability) missing.push('availability'); %>
+             if (!d.address) missing.push(['address', 'address']);
+             if (!from) missing.push(['fees', 'fees']);
+             if (!d.cqcLocationId) missing.push(['CQC location ID', 'cqc']);
+             if (!d.managerName) missing.push(['manager', 'manager']);
+             if (!d.availability) missing.push(['room availability', 'availability']);
+             if (!h.photo) missing.push(['photos', 'photos']); %>
         <tr>
           <td><strong><%= h.name %></strong><div class="muted" style="font-size:.85rem;"><%= h.town %> · <%= h.postcode %></div></td>
-          <td><% if (d.archived) { %><span class="hub-pill hub-pill--plain">Archived</span><% } else { %><span class="hub-pill hub-pill--ok">Live</span><% } %></td>
+          <td><% if (d.archived) { %><span class="hub-pill hub-pill--plain">Hidden</span><% } else { %><span class="hub-pill hub-pill--ok">Live</span><% } %></td>
           <td><%= cqcLabel(h) %></td>
           <td><%= hubCan('availability') ? ({ available: 'Rooms available', limited: 'Limited', waitlist: 'Waiting list' }[d.availability] || '—') : '—' %></td>
           <td class="tabnum"><%= hubCan('fees') ? (from ? gbp(from) + '/wk' : '—') : '—' %></td>
-          <td class="muted" style="font-size:.85rem;"><%= missing.length ? missing.join(', ') : 'Nothing — all set' %></td>
+          <td style="font-size:.85rem;"><% if (missing.length) { missing.forEach(function (m, n) { %><%= n ? ', ' : '' %><a href="/admin/homes/<%= h.id %>/edit#<%= m[1] %>"><%= m[0] %></a><% }) } else { %><span class="muted">Nothing — all set</span><% } %></td>
           <td>
             <div class="row-actions">
               <a class="btn btn--sm btn--ghost" href="/admin/homes/<%= h.id %>/edit"><%= hubCan('homes', 'edit') || hubCan('fees', 'edit') || hubCan('availability', 'edit') ? 'Edit' : 'View' %></a>
               <% if (hubCan('homes', 'edit')) { %>
               <form action="/admin/homes/<%= h.id %>/<%= d.archived ? 'restore' : 'archive' %>" method="post" class="inline-form" <%- d.archived ? '' : 'data-confirm="Hide ' + h.name.replace(/"/g, '') + ' from the website? You can bring it back any time."' %>>
-                <button class="btn btn--sm btn--muted"><%= d.archived ? 'Make live' : 'Archive' %></button>
+                <button class="btn btn--sm btn--muted"><%= d.archived ? 'Make live' : 'Hide' %></button>
               </form>
               <% } %>
               <% if (!d.archived) { %><a class="btn btn--sm btn--muted" href="/care-homes/<%= h.id %>" target="_blank" rel="noopener">View ↗</a><% } %>
