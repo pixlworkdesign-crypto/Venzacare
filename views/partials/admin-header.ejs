@@ -17,6 +17,7 @@
   var sections = [
     { label: 'Work', items: [
       { href: '/admin', key: 'overview', label: 'Overview', show: true, icon: 'M3 12 12 4l9 8M5 10v10h14V10' },
+      { href: '/admin/visitor-stats', key: 'visitor-stats', label: 'Visitor stats', show: hubCan('activity'), icon: 'M4 20V10M10 20V4M16 20v-7M22 20H2' },
       { href: '/admin/homes', key: 'homes', label: 'Homes', show: hubCan('homes') || hubCan('fees') || hubCan('availability'), icon: 'M3 21h18M5 21V8l7-5 7 5v13M10 21v-6h4v6' },
       { href: '/admin/images', key: 'images', label: 'Site images', show: hubCan('photos', 'edit'), icon: 'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15.5 9.5a1.5 1.5 0 1 0 0-.01' },
       { href: '/admin/care-types', key: 'care-types', label: 'Care & facilities', show: hubCan('homes', 'edit') && me.homes === 'all', icon: 'M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z' },

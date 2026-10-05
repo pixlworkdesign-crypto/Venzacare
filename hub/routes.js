@@ -18,6 +18,7 @@ const mailer = require('../mailer');
 const visits = require('../visits');
 const { DEFAULT_TEXT, textOf, faqsOf, feeFaqsOf, whatToBringOf, SITE_IMAGES, FACILITY_GROUPS, careTypesOf, careTypeNames, specialistCareOf, facilitiesOf, facilityNames, homeFacilityNames, feeItemsOf } = require('../content');
 const auth = require('./auth');
+const analytics = require('../analytics');
 const access = require('./access');
 
 const { AREAS, PRESETS, PRESET_NAMES, MANAGER_PRESETS, LEVEL_WORDS, BUILTIN_OWNER, can, covers, isCustom, homesLabel } = access;
@@ -1663,6 +1664,23 @@ module.exports = function mountHub(app, deps) {
     res.set('Content-Disposition', 'attachment; filename="' + name + '"');
     res.send(csv(rows));
   };
+
+  /* ---------- Visitor stats ----------
+     Counted by analytics.js without cookies. Enquiries and booked visits
+     come from the enquiries themselves. */
+  app.get('/admin/visitor-stats', need('activity', 'view'), wrap(async (req, res) => {
+    const days = [7, 30, 90].includes(+req.query.days) ? +req.query.days : 30;
+    const s = await analytics.summary(days);
+    const enq = (await enquiryList({ homes: 'all' })).filter((e) => String(e.createdAt).slice(0, 10) >= s.start);
+    const homes = (await db.allHomes()).map((h) => ({
+      id: h.id, name: h.name, town: h.town, views: s.homes[h.id] || 0,
+      enquiries: enq.filter((e) => e.homeId === h.id).length,
+      visits: enq.filter((e) => e.homeId === h.id && (e.kind === 'visit' || e.online)).length,
+    })).filter((h) => h.views || h.enquiries).sort((a, b) => b.views - a.views);
+    const top = (obj, n) => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n);
+    analytics.tidy().catch(() => {});
+    res.render('hub/visitor-stats', { title: 'Visitor stats', s, enquiries: enq.length, homes, top });
+  }));
 
   app.get('/admin/activity', need('activity', 'view'), wrap(async (req, res) => {
     const all = (await db.records.list('activity')).sort((a, b) => new Date(b.at) - new Date(a.at));

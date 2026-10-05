@@ -14,6 +14,7 @@ const storage = require('./storage');
 const mountHub = require('./hub/routes');
 const visits = require('./visits');
 const mailer = require('./mailer');
+const analytics = require('./analytics');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -74,6 +75,9 @@ app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'public', 'images'), { maxAge: '7d' }));
 app.use('/guides', express.static(path.join(__dirname, 'public', 'guides'), { maxAge: '7d' }));
 app.use(express.static(path.join(__dirname, 'public')));
+// Visitor stats (no cookies) — see analytics.js.
+app.use(analytics.track());
+app.post('/api/stats/search', (req, res) => { analytics.search(req.body && req.body.q).catch(() => {}); res.status(204).end(); });
 
 // Constant-time string comparison, so response timing leaks nothing.
 function sameText(a, b) {

@@ -1,0 +1,82 @@
+<%- include('../partials/admin-header') %>
+<% var fmt = function (n) { return Number(n).toLocaleString('en-GB'); };
+   var change = s.prevVisitors ? Math.round((s.visitors - s.prevVisitors) / s.prevVisitors * 100) : null;
+   var conv = s.visitors ? (enquiries / s.visitors * 100).toFixed(1) : '0.0';
+   var sources = top(s.sources, 8), srcTotal = sources.reduce(function (n, x) { return n + x[1]; }, 0);
+   var devs = top(s.devices, 3), devTotal = devs.reduce(function (n, x) { return n + x[1]; }, 0);
+   var pageNames = { '/': 'Homepage', '/care-homes': 'Find a home', '/fees-and-funding': 'Fees & funding', '/our-care': 'Our care', '/faqs': 'FAQs', '/careers': 'Careers', '/contact': 'Contact', '/compare': 'Compare homes', '/cqc-ratings': 'CQC ratings', '/our-team': 'Our team' };
+   hubHomes.forEach(function (h) { pageNames['/care-homes/' + h.id] = h.name; });
+   /* chart */
+   var W = 720, H = 220, P = { l: 34, r: 24, t: 12, b: 26 };
+   var max = Math.max(4, Math.max.apply(null, s.daily.map(function (d) { return d.visitors; })));
+   var step = Math.pow(10, Math.floor(Math.log10(max))); var niceMax = Math.ceil(max / step) * step;
+   var x = function (i) { return P.l + (W - P.l - P.r) * (s.daily.length > 1 ? i / (s.daily.length - 1) : 0); };
+   var y = function (v) { return P.t + (H - P.t - P.b) * (1 - v / niceMax); };
+   var line = s.daily.map(function (d, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(d.visitors).toFixed(1); }).join(' ');
+   var area = line + ' L' + x(s.daily.length - 1).toFixed(1) + ' ' + y(0) + ' L' + x(0).toFixed(1) + ' ' + y(0) + ' Z';
+   var labelEvery = Math.ceil(s.daily.length / 5); %>
+
+<div class="hub-head">
+  <div><h1 class="hub-h1">Visitor stats</h1></div>
+  <div class="vs-range" role="group" aria-label="Period">
+    <% [7, 30, 90].forEach(function (d) { %><a href="?days=<%= d %>" class="<%= s.days === d ? 'is-on' : '' %>"><%= d === 7 ? 'Last 7 days' : d + ' days' %></a><% }) %>
+  </div>
+</div>
+
+<div class="vs-tiles">
+  <div class="hub-card vs-tile"><span>Visitors</span><b><%= fmt(s.visitors) %></b><% if (change !== null) { %><em class="<%= change >= 0 ? 'up' : 'down' %>"><%= change >= 0 ? '▲' : '▼' %> <%= Math.abs(change) %>%</em><% } %></div>
+  <div class="hub-card vs-tile"><span>Page views</span><b><%= fmt(s.views) %></b></div>
+  <div class="hub-card vs-tile"><span>Enquiries &amp; visit bookings</span><b><%= fmt(enquiries) %></b></div>
+  <div class="hub-card vs-tile"><span>Visitors who got in touch</span><b><%= conv %>%</b></div>
+</div>
+
+<div class="hub-card vs-card">
+  <div class="hub-card__head"><h2>Daily visitors</h2></div>
+  <div class="vs-chart">
+    <svg viewBox="0 0 <%= W %> <%= H %>" role="img" aria-label="Daily visitors over the last <%= s.days %> days">
+      <% [0, 0.5, 1].forEach(function (f) { var v = Math.round(niceMax * f); %><line x1="<%= P.l %>" x2="<%= W - P.r %>" y1="<%= y(v) %>" y2="<%= y(v) %>" class="vs-grid" /><text x="<%= P.l - 6 %>" y="<%= y(v) + 4 %>" text-anchor="end"><%= v %></text><% }) %>
+      <path d="<%= area %>" class="vs-area" /><path d="<%= line %>" class="vs-line" />
+      <% s.daily.forEach(function (d, i) { if (i % labelEvery && i !== s.daily.length - 1) return; %><text x="<%= x(i) %>" y="<%= H - 6 %>" text-anchor="middle"><%= new Date(d.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) %></text><% }) %>
+      <% s.daily.forEach(function (d, i) { %><circle cx="<%= x(i) %>" cy="<%= y(d.visitors) %>" r="3" class="vs-dot"><title><%= new Date(d.date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) %>: <%= d.visitors %> visitors, <%= d.views %> page views</title></circle><% }) %>
+    </svg>
+  </div>
+</div>
+
+<div class="hub-grid2">
+  <div class="hub-card vs-card">
+    <div class="hub-card__head"><h2>Where visitors come from</h2></div>
+    <div class="vs-bars">
+      <% if (!sources.length) { %><p class="muted">No visits yet.</p><% } %>
+      <% sources.forEach(function (x) { var pc = Math.round(x[1] / srcTotal * 100); %>
+      <div class="vs-bar"><span><%= x[0] %></span><i><b style="width:<%= pc %>%"></b></i><strong><%= pc %>%</strong></div>
+      <% }) %>
+    </div>
+  </div>
+  <div class="hub-card vs-card">
+    <div class="hub-card__head"><h2>Homes</h2></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Home</th><th class="num">Views</th><th class="num">Enquiries</th><th class="num">Visits</th></tr></thead>
+      <tbody>
+        <% if (!homes.length) { %><tr><td colspan="4" class="muted">No visits yet.</td></tr><% } %>
+        <% homes.forEach(function (h) { %><tr><td><strong><%= h.name %></strong><div class="hint"><%= h.town %></div></td><td class="num"><%= fmt(h.views) %></td><td class="num"><%= h.enquiries %></td><td class="num"><%= h.visits %></td></tr><% }) %>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+
+<div class="vs-three">
+  <div class="hub-card vs-card">
+    <div class="hub-card__head"><h2>Top pages</h2></div>
+    <ul class="vs-list"><% top(s.pages, 8).forEach(function (x) { %><li><span><%= pageNames[x[0]] || x[0] %></span><b><%= fmt(x[1]) %></b></li><% }) %></ul>
+  </div>
+  <div class="hub-card vs-card">
+    <div class="hub-card__head"><h2>Searches on Find a home</h2></div>
+    <ul class="vs-list"><% var se = top(s.searches, 8); if (!se.length) { %><li class="muted">None yet.</li><% } se.forEach(function (x) { %><li><span>“<%= x[0] %>”</span><b><%= x[1] %></b></li><% }) %></ul>
+  </div>
+  <div class="hub-card vs-card">
+    <div class="hub-card__head"><h2>Devices</h2></div>
+    <ul class="vs-list"><% devs.forEach(function (x) { %><li><span><%= x[0] %></span><b><%= Math.round(x[1] / devTotal * 100) %>%</b></li><% }) %></ul>
+  </div>
+</div>
+
+<%- include('../partials/admin-footer') %>

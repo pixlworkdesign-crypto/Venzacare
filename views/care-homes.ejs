@@ -214,7 +214,11 @@
     if (careEl && params.get('careType')) careEl.value = params.get('careType');
     doSearch();
 
-    if (form) form.addEventListener('submit', function (e) { e.preventDefault(); doSearch(); });
+    if (form) form.addEventListener('submit', function (e) {
+      e.preventDefault(); doSearch();
+      // Count what people search for (Visitor stats); no personal details.
+      try { if (qEl && qEl.value.trim().length > 1 && navigator.sendBeacon) navigator.sendBeacon('/api/stats/search', new Blob([JSON.stringify({ q: qEl.value })], { type: 'application/json' })); } catch (err) {}
+    });
     [regionEl, careEl].forEach(function (el) { if (el) el.addEventListener('change', doSearch); });
     document.querySelectorAll('input[name="need"]').forEach(function (b) {
       b.addEventListener('change', function () { var n = needs().length, el = document.getElementById('needCount'); if (el) el.textContent = n ? ' (' + n + ')' : ''; doSearch(); });
