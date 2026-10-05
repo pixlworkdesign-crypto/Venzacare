@@ -4,8 +4,8 @@
 <section class="hero has-photo" style="background-image: linear-gradient(100deg, rgba(13,79,92,0.88) 0%, rgba(13,79,92,0.6) 46%, rgba(17,93,108,0.32) 100%), url('<%= siteImage(SITE, 'hero') %>'); background-size: cover; background-position: center;">
   <div class="hero__inner">
     <span class="eyebrow hero__eyebrow">Residential · Nursing · Dementia · End-of-life care</span>
-    <h1>The care home you'd choose for your own family</h1>
-    <p class="hero__lead">Warm, welcoming care homes<%= areaText ? ' across ' + areaText : '' %>, where every day is built around the person — not the routine.</p>
+    <% var T = textOf(SITE); %><h1><%= T.heroTitle %></h1>
+    <p class="hero__lead"><% if (T.heroLead) { %><%= T.heroLead %><% } else { %>Warm, welcoming care homes<%= areaText ? ' across ' + areaText : '' %>, where every day is built around the person — not the routine.<% } %></p>
     <div class="hero__cta">
       <a href="/care-homes" class="btn btn--gold">Find a care home</a>
       <a href="/careers" class="btn btn--outline-light">Explore careers</a>
@@ -59,8 +59,9 @@
   <div class="container">
     <div class="section-head center">
       <span class="eyebrow">Our homes</span>
-      <h2 class="h2">Four homes, each with its own character</h2>
-      <p class="lead" style="margin-inline:auto;">Every home offers residential, nursing and dementia care, so as needs change your loved one rarely has to move. Prices and CQC ratings are shown up front.</p>
+      <% var nWords = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve']; %>
+      <h2 class="h2"><%= T.homesTitle || ((nWords[homes.length] || homes.length) + (homes.length === 1 ? ' home, with its own character' : ' homes, each with its own character')) %></h2>
+      <% if (T.homesLead) { %><p class="lead" style="margin-inline:auto;"><%= T.homesLead %></p><% } %>
     </div>
     <div class="homes-grid">
       <% homes.forEach(function(h){ %><%- include('partials/home-card', { h: h }) %><% }) %>
@@ -76,10 +77,10 @@
       <div class="split__media split__media--bordered has-photo" style="background-image:url('<%= siteImage(SITE, 'about') %>');"></div>
       <div>
         <span class="eyebrow">About Venza Care</span>
-        <h2 class="h2">Care that starts with getting to know you</h2>
-        <p class="lead">Across our homes, around 300 people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. Our carers and nurses take time to learn the little things: a grandchild's name, a favourite song, the routine that makes a day feel right.</p>
+        <h2 class="h2"><%= T.aboutTitle %></h2>
+        <% if (T.aboutText) { %><p class="lead"><%= T.aboutText %></p><% } %>
         <ul style="list-style:none;padding:0;margin:1.5rem 0;display:grid;gap:0.8rem;">
-          <% ['A regular programme of activities and outings','Freshly prepared meals, with special diets catered for','Comfortable lounges and gardens to enjoy','Residential, nursing, dementia and respite care'].forEach(function(p){ %>
+          <% T.aboutPoints.forEach(function(p){ %>
           <li style="display:flex;gap:0.7rem;align-items:flex-start;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#20a7bc" stroke-width="2.2" style="flex:none;margin-top:2px"><path d="M20 6 9 17l-5-5"/></svg>
             <span><%= p %></span>
@@ -103,9 +104,7 @@
       <h2 class="h2" style="color:#fff;">Trusted care, by the numbers</h2>
     </div>
     <div class="stats stats--3">
-      <div class="stat"><div class="stat__num">100%</div><div class="stat__label">CQC-registered homes</div></div>
-      <div class="stat"><div class="stat__num"><%= stats.careTypes %></div><div class="stat__label">Types of care, from residential to nursing</div></div>
-      <div class="stat"><div class="stat__num">24/7</div><div class="stat__label">Registered nursing on site</div></div>
+      <% T.stats.filter(function (x) { return x.label; }).forEach(function (x) { %><div class="stat"><div class="stat__num"><%= x.num || stats.careTypes %></div><div class="stat__label"><%= x.label %></div></div><% }) %>
     </div>
   </div>
 </section>

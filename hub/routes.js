@@ -16,7 +16,7 @@ const db = require('../db');
 const storage = require('../storage');
 const mailer = require('../mailer');
 const visits = require('../visits');
-const { SITE_IMAGES, FACILITY_GROUPS, careTypesOf, careTypeNames, specialistCareOf, facilitiesOf, facilityNames, homeFacilityNames, feeItemsOf } = require('../content');
+const { DEFAULT_TEXT, textOf, faqsOf, feeFaqsOf, whatToBringOf, SITE_IMAGES, FACILITY_GROUPS, careTypesOf, careTypeNames, specialistCareOf, facilitiesOf, facilityNames, homeFacilityNames, feeItemsOf } = require('../content');
 const auth = require('./auth');
 const access = require('./access');
 
@@ -512,6 +512,40 @@ module.exports = function mountHub(app, deps) {
     );
     await log(req.me, req.me.name + ' updated care & facilities' + (what.length ? ' — ' + what.join(', ') : ''));
     back(res, '/admin/care-types', f.move ? 'Order saved.' : 'Saved. The website shows the change within 30 seconds.');
+  }));
+
+  /* ---------- Website text ----------
+     Homepage wording, the FAQs, the fees FAQs and the moving-in checklist.
+     Whole-company home editors (same as Care & facilities). */
+  app.get('/admin/website-text', ...needCare, (req, res) => {
+    const SITE = res.locals.SITE;
+    res.render('admin/website-text', { title: 'Website text', T: textOf(SITE), faqs: faqsOf(SITE), feeFaqs: feeFaqsOf(SITE), bring: whatToBringOf(SITE) });
+  });
+  app.post('/admin/website-text', ...needCare, wrap(async (req, res) => {
+    const f = req.body;
+    const lines = (v, max) => String(v || '').split(/\r?\n/).map((x) => text(x, max)).filter(Boolean);
+    const qa = (prefix) => {
+      const out = [];
+      for (let n = 0; n < 100 && f[prefix + 'q_' + n] !== undefined; n++) {
+        const q = text(f[prefix + 'q_' + n], 200), a = text(f[prefix + 'a_' + n], 2000);
+        if (q && a) out.push({ q, a });
+      }
+      return out;
+    };
+    const stats = [0, 1, 2].map((n) => ({ num: text(f['statnum_' + n], 12), label: text(f['statlabel_' + n], 80) }));
+    const T = {
+      heroTitle: text(f.heroTitle, 120) || DEFAULT_TEXT.heroTitle,
+      heroLead: text(f.heroLead, 300),
+      homesTitle: text(f.homesTitle, 120),
+      homesLead: text(f.homesLead, 400),
+      aboutTitle: text(f.aboutTitle, 120) || DEFAULT_TEXT.aboutTitle,
+      aboutText: text(f.aboutText, 1200),
+      aboutPoints: lines(f.aboutPoints, 120).slice(0, 8),
+      stats,
+    };
+    await db.saveSettings({ text: T, faqs: qa('faq'), feeFaqs: qa('fee'), whatToBring: lines(f.bring, 160).slice(0, 40) });
+    await log(req.me, req.me.name + ' updated the website text');
+    back(res, '/admin/website-text', 'Saved. The website shows the change within 30 seconds.');
   }));
 
   /* ---------- Company details ----------

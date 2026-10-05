@@ -220,6 +220,27 @@ function feeLists(SITE, home) {
   return out;
 }
 
+/* ---------- Website text ----------
+   Homepage wording, FAQs and the moving-in checklist, editable in the staff
+   hub (Website text) and kept in site settings. Blank settings mean these
+   defaults. */
+const DEFAULT_TEXT = {
+  heroTitle: 'The care home you’d choose for your own family',
+  heroLead: '',  // blank: "Warm, welcoming care homes across <live areas>, …"
+  homesTitle: '', // blank: "<N> homes, each with its own character"
+  homesLead: 'Every home offers residential, nursing and dementia care, so as needs change your loved one rarely has to move. Prices and CQC ratings are shown up front.',
+  aboutTitle: 'Care that starts with getting to know you',
+  aboutText: 'Across our homes, people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. Our carers and nurses take time to learn the little things: a grandchild’s name, a favourite song, the routine that makes a day feel right.',
+  aboutPoints: ['A regular programme of activities and outings', 'Freshly prepared meals, with special diets catered for', 'Comfortable lounges and gardens to enjoy', 'Residential, nursing, dementia and respite care'],
+  stats: [{ num: '100%', label: 'CQC-registered homes' }, { num: '', label: 'Types of care, from residential to nursing' }, { num: '24/7', label: 'Registered nursing on site' }],
+};
+function textOf(SITE) {
+  return Object.assign({}, DEFAULT_TEXT, (SITE && SITE.text) || {});
+}
+function faqsOf(SITE) { return SITE && Array.isArray(SITE.faqs) ? SITE.faqs : GENERAL_FAQS; }
+function feeFaqsOf(SITE) { return SITE && Array.isArray(SITE.feeFaqs) ? SITE.feeFaqs : FEE_FAQS; }
+function whatToBringOf(SITE) { return SITE && Array.isArray(SITE.whatToBring) ? SITE.whatToBring : WHAT_TO_BRING; }
+
 /* ---------- FAQs ---------- */
 const FEE_FAQS = [
   {
@@ -372,6 +393,6 @@ module.exports = {
   DEFAULT_CARE_TYPES, DEFAULT_SPECIALIST_CARE, careTypesOf, careTypeNames, specialistCareOf, careImage,
   FACILITY_GROUPS, facilitiesOf, facilityNames, homeFacilityNames, homeFacilities, feeItemsOf, feeLists,
   FEE_ROWS, gbp, fromPrice, INCLUDED, EXTRAS,
-  FEE_FAQS, GENERAL_FAQS, WHAT_TO_BRING,
+  FEE_FAQS, GENERAL_FAQS, WHAT_TO_BRING, DEFAULT_TEXT, textOf, faqsOf, feeFaqsOf, whatToBringOf,
   faqJsonLd, orgJsonLd, homeJsonLd, ldScript,
 };

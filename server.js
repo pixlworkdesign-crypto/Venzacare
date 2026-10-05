@@ -216,7 +216,7 @@ app.get('/our-care', wrap(async (req, res) => {
 
 // Fees & funding (CMA: indicative prices, what's included, extras, deposits)
 app.get('/fees-and-funding', wrap(async (req, res) => {
-  const faqs = FEE_FAQS;
+  const faqs = content.feeFaqsOf(res.locals.SITE);
   res.render('fees', {
     title: 'Fees & funding',
     description: 'Weekly care-home fees at every Venza Care UK home, what is included, optional extras, deposits, fee reviews and the funding help available — in plain English.',
@@ -240,8 +240,8 @@ app.get('/faqs', (req, res) => {
   res.render('faqs', {
     title: 'Questions families ask',
     description: 'Answers to the questions families ask most about Venza Care UK homes — visiting, fees, moving in, what to bring, dementia care and more.',
-    faqs: GENERAL_FAQS,
-    jsonLd: faqJsonLd(GENERAL_FAQS),
+    faqs: content.faqsOf(res.locals.SITE),
+    jsonLd: faqJsonLd(content.faqsOf(res.locals.SITE)),
   });
 });
 

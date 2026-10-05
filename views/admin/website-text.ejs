@@ -1,0 +1,71 @@
+<%- include('../partials/admin-header') %>
+
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1">Website text</h1>
+  </div>
+  <a class="btn btn--sm btn--muted" href="/" target="_blank" rel="noopener">View homepage ↗</a>
+</div>
+
+<form action="/admin/website-text" method="post" class="admin-form">
+  <div class="panel">
+    <div class="panel__head"><h2>Homepage — top</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="heroTitle">Main headline</label><input id="heroTitle" name="heroTitle" value="<%= T.heroTitle %>" maxlength="120" /></div>
+      <div class="field"><label for="heroLead">Line under the headline</label><textarea id="heroLead" name="heroLead" rows="2" style="min-height:4.5rem;" maxlength="300" placeholder="Warm, welcoming care homes across <%= areaText || '…' %>, where every day is built around the person — not the routine."><%= T.heroLead %></textarea></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Homepage — our homes</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="homesTitle">Heading</label><input id="homesTitle" name="homesTitle" value="<%= T.homesTitle %>" maxlength="120" placeholder="Counts your live homes, e.g. “Four homes, each with its own character”" /></div>
+      <div class="field"><label for="homesLead">Text</label><textarea id="homesLead" name="homesLead" rows="2" style="min-height:4.5rem;" maxlength="400"><%= T.homesLead %></textarea></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Homepage — about us</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="aboutTitle">Heading</label><input id="aboutTitle" name="aboutTitle" value="<%= T.aboutTitle %>" maxlength="120" /></div>
+      <div class="field"><label for="aboutText">Text</label><textarea id="aboutText" name="aboutText" rows="4" maxlength="1200"><%= T.aboutText %></textarea></div>
+      <div class="field"><label for="aboutPoints">Ticked points (one per line)</label><textarea id="aboutPoints" name="aboutPoints" rows="4"><%= T.aboutPoints.join('\n') %></textarea></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Homepage — at a glance</h2></div>
+    <div class="panel__body list-rows list-rows--stat">
+      <% T.stats.forEach(function (x, n) { %>
+      <input name="statnum_<%= n %>" value="<%= x.num %>" maxlength="12" aria-label="Figure <%= n + 1 %>" <%- n === 1 ? 'placeholder="Automatic"' : '' %> />
+      <input name="statlabel_<%= n %>" value="<%= x.label %>" maxlength="80" aria-label="Label <%= n + 1 %>" />
+      <% }) %>
+    </div>
+  </div>
+
+  <% [['faq', 'Questions families ask', faqs], ['fee', 'Fees questions', feeFaqs]].forEach(function (sec) { %>
+  <div class="panel">
+    <div class="panel__head"><h2><%= sec[1] %></h2></div>
+    <div class="panel__body qa-rows">
+      <% sec[2].concat([{ q: '', a: '' }, { q: '', a: '' }]).forEach(function (x, n) { %>
+      <div class="qa-row">
+        <input name="<%= sec[0] %>q_<%= n %>" value="<%= x.q %>" maxlength="200" aria-label="Question <%= n + 1 %>" <%- x.q ? '' : 'placeholder="Add a question"' %> />
+        <textarea name="<%= sec[0] %>a_<%= n %>" rows="3" maxlength="2000" aria-label="Answer <%= n + 1 %>" <%- x.q ? '' : 'placeholder="Answer"' %>><%= x.a %></textarea>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% }) %>
+
+  <div class="panel">
+    <div class="panel__head"><h2>What to bring — checklist</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="bring">One per line</label><textarea id="bring" name="bring" rows="10"><%= bring.join('\n') %></textarea></div>
+    </div>
+  </div>
+
+  <p class="hint">To remove a question, clear it.</p>
+  <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;"><button type="submit" class="btn btn--primary">Save changes</button></div>
+</form>
+
+<%- include('../partials/admin-footer') %>

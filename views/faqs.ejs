@@ -34,7 +34,7 @@
       <p class="lead">Familiar things make a room feel like home from day one. Tick things off as you go — this list remembers your ticks on this device.</p>
     </div>
     <ul class="checklist" id="bringList">
-      <% WHAT_TO_BRING.forEach(function(item, i){ %>
+      <% whatToBringOf(SITE).forEach(function(item, i){ %>
       <li><label><input type="checkbox" data-key="bring-<%= i %>" /> <span><%= item %></span></label></li>
       <% }) %>
     </ul>
