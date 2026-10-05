@@ -514,6 +514,33 @@ module.exports = function mountHub(app, deps) {
     back(res, '/admin/care-types', f.move ? 'Order saved.' : 'Saved. The website shows the change within 30 seconds.');
   }));
 
+  /* ---------- Company details ----------
+     The name, phone, email and address shown on every public page, in the
+     legal pages and in search-engine data. Site administrators only. */
+  const needCompany = [need(), (req, res, next) => (req.me.builtin || req.me.preset === 'Site administrator' ? next() : deny(res, 'Only site administrators can change the company details.'))];
+  app.get('/admin/company', ...needCompany, (req, res) => {
+    res.render('admin/company', { title: 'Company details', error: null, form: res.locals.SITE });
+  });
+  app.post('/admin/company', ...needCompany, wrap(async (req, res) => {
+    const f = req.body;
+    const email = (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text(v, 120)) ? text(v, 120) : '');
+    const next = {
+      name: text(f.name, 80),
+      legalName: text(f.legalName, 120),
+      phone: text(f.phone, 30),
+      email: email(f.email),
+      hrEmail: email(f.hrEmail),
+      address: addressLine(f.address),
+      companyNumber: text(f.companyNumber, 20).replace(/\s/g, ''),
+      icoNumber: text(f.icoNumber, 20).replace(/\s/g, ''),
+    };
+    const problem = !next.name ? 'Enter the company name.' : !next.phone ? 'Enter a phone number.' : !next.email ? 'Enter a valid email address.' : !next.address ? 'Enter the address.' : '';
+    if (problem) return res.render('admin/company', { title: 'Company details', error: problem, form: Object.assign({}, res.locals.SITE, f) });
+    await db.saveSettings(next);
+    await log(req.me, req.me.name + ' updated the company details');
+    back(res, '/admin/company', 'Saved. The website shows the change within 30 seconds.');
+  }));
+
   /* ---------- Site images ----------
      The fixed pictures on the public pages (homepage banner, Our care…).
      Only people with "Website photos" access (Site administrators and Admins) can

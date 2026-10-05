@@ -18,7 +18,7 @@
           <span class="site-credit__by">Website by</span>
           <span class="site-credit__logo"><img src="/images/pixelworks-design.png" alt="PixelWorks Design" /></span>
         </a>
-        <span>© <%= year %> <%= SITE.name %> Ltd · Careers portal · <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a></span>
+        <span>© <%= year %> <%= SITE.legalName || SITE.name %> · Careers portal · <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a></span>
       </div>
     </div>
   </footer>

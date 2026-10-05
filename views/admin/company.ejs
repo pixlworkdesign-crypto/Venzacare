@@ -1,0 +1,40 @@
+<%- include('../partials/admin-header') %>
+
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1">Company details</h1>
+  </div>
+</div>
+<% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
+
+<form action="/admin/company" method="post" class="admin-form">
+  <div class="panel">
+    <div class="panel__head"><h2>Company</h2></div>
+    <div class="panel__body">
+      <div class="grid-2">
+        <div class="field"><label for="name">Company name *</label><input id="name" name="name" value="<%= form.name %>" maxlength="80" required placeholder="e.g. Venza Care UK" /></div>
+        <div class="field"><label for="legalName">Registered company name</label><input id="legalName" name="legalName" value="<%= form.legalName || '' %>" maxlength="120" placeholder="e.g. Venza Care UK Ltd" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="companyNumber">Company number</label><input id="companyNumber" name="companyNumber" value="<%= form.companyNumber || '' %>" maxlength="20" placeholder="e.g. 12345678" /></div>
+        <div class="field"><label for="icoNumber">ICO registration number</label><input id="icoNumber" name="icoNumber" value="<%= form.icoNumber || '' %>" maxlength="20" placeholder="e.g. ZA123456" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Contact</h2></div>
+    <div class="panel__body">
+      <div class="grid-2">
+        <div class="field"><label for="phone">Phone *</label><input id="phone" name="phone" type="tel" value="<%= form.phone %>" maxlength="30" required /></div>
+        <div class="field"><label for="email">Email for enquiries *</label><input id="email" name="email" type="email" value="<%= form.email %>" maxlength="120" required /></div>
+      </div>
+      <div class="field" style="max-width:calc(50% - .5rem);min-width:16rem;"><label for="hrEmail">Email for job applicants</label><input id="hrEmail" name="hrEmail" type="email" value="<%= form.hrEmail || '' %>" maxlength="120" placeholder="Leave blank to use the enquiries email" /></div>
+      <div class="field"><label for="address">Head office address *</label><textarea id="address" name="address" rows="2" style="min-height:4.5rem;" required><%= form.address %></textarea></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;"><button type="submit" class="btn btn--primary">Save changes</button></div>
+</form>
+
+<%- include('../partials/admin-footer') %>

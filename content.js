@@ -320,6 +320,7 @@ function orgJsonLd(SITE, base) {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: SITE.name,
+    legalName: SITE.legalName || undefined,
     url: base + '/',
     logo: base + '/images/logo.png',
     telephone: SITE.phone,

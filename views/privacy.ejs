@@ -15,7 +15,7 @@
       <p class="muted">Last updated: <%= updated %>.</p>
 
       <h2>1. Who we are</h2>
-      <p><%= SITE.name %> ("we", "us") is the data controller for the personal information described here. Contact us at <a href="mailto:<%= SITE.email %>"><%= SITE.email %></a>, on <%= SITE.phone %>, or by post at <%= SITE.address %>.</p>
+      <p><%= SITE.legalName || SITE.name %> ("we", "us")<%= SITE.companyNumber ? ', a company registered in England and Wales (no. ' + SITE.companyNumber + ')' : '' %>, is the data controller for the personal information described here.<%= SITE.icoNumber ? ' We are registered with the Information Commissioner’s Office under number ' + SITE.icoNumber + '.' : '' %> Contact us at <a href="mailto:<%= SITE.email %>"><%= SITE.email %></a>, on <%= SITE.phone %>, or by post at <%= SITE.address %>.</p>
 
       <h2>2. What we collect</h2>
       <ul>

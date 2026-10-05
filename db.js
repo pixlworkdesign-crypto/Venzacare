@@ -25,6 +25,7 @@ const DEFAULT_SITE = {
   phone: '0800 470 1925',
   email: 'enquiries@venzacare.co.uk',
   address: 'Venza Care UK Ltd, 1 Croydon Gateway, Croydon CR0 2AB',
+  legalName: 'Venza Care UK Ltd',
   regions: ['London', 'Kent', 'Cambridgeshire'],
 };
 
