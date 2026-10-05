@@ -376,7 +376,7 @@ module.exports = function mountHub(app, deps) {
     if (!member) return res.redirect('/admin/team');
     const linked = member.userId ? await auth.getUser(member.userId) : null;
     if (member.userId && !linked) return res.redirect('/admin/team');
-    if (linked) Object.assign(member, { name: linked.name, staffPhoto: linked.photoKey ? '/admin/staff-photo/' + linked.id : '' });
+    if (linked) Object.assign(member, { name: linked.name, staffPhoto: linked.photoKey && linked.photoConsent ? '/admin/staff-photo/' + linked.id : '' });
     res.render('admin/team-form', { title: 'Edit ' + member.name, member, mode: 'edit' });
   }));
 
@@ -1113,10 +1113,12 @@ module.exports = function mountHub(app, deps) {
 
   /* ---------- Staff photos ----------
      A person's photo for the directory. Kept in PRIVATE storage (like CVs),
-     so it's only ever served to someone signed in to the hub. Only people
-     with "Website photos" access (Site administrators and Admins) can add or change one. */
+     so it's only ever served to someone signed in to the hub. Staff upload
+     their own from My account and must tick the consent box first; the
+     consent is stored with the photo. Admins can only remove one. */
   const staffPhotoUpload = uploader(['.jpg', '.jpeg', '.png', '.webp']).single('photoFile');
   const STAFF_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const PHOTO_CONSENT = 'I agree that this photo will be visible to everyone signed in to the staff hub and, depending on my role, may also be shown on the public Venza Care website.';
 
   app.get('/admin/staff-photo/:id', need(), wrap(async (req, res) => {
     const person = await auth.getUser(req.params.id);
@@ -1129,28 +1131,43 @@ module.exports = function mountHub(app, deps) {
     res.sendFile(local);
   }));
 
-  app.post('/admin/people/:id/photo', need('photos', 'edit'), staffPhotoUpload, wrap(async (req, res) => {
+  app.post('/admin/people/:id/photo/remove', need('photos', 'edit'), wrap(async (req, res) => {
     const p = await personOr404(req, res);
     if (!p) return;
     const person = await auth.getUser(p.id);
-    const oldKey = person.photoKey || '';
-    if (req.body.removePhoto) {
+    if (person.photoKey) {
+      await storage.removeFile(person.photoKey);
       person.photoKey = '';
-    } else if (req.file) {
-      if (!STAFF_PHOTO_TYPES.includes(req.file.mimetype)) return back(res, '/admin/people/' + p.id, 'Photos must be JPEG, PNG or WebP images.');
-      person.photoKey = (await storage.saveFile('staff-photos', req.file)).key;
-    } else {
-      return back(res, '/admin/people/' + p.id, 'Choose a photo first.');
+      delete person.photoConsent;
+      await auth.saveUser(person);
+      await log(req.me, req.me.name + ' removed ' + p.name + '’s photo');
     }
-    await auth.saveUser(person);
-    if (oldKey && oldKey !== person.photoKey) await storage.removeFile(oldKey);
-    await log(req.me, req.me.name + (person.photoKey ? ' changed ' : ' removed ') + p.name + '’s directory photo');
-    back(res, '/admin/people/' + p.id, person.photoKey ? 'Photo saved. It now shows in the staff directory.' : 'Photo removed.');
+    back(res, '/admin/people/' + p.id, 'Photo removed.');
+  }));
+
+  app.post('/admin/account/photo', need(), staffPhotoUpload, wrap(async (req, res) => {
+    if (req.me.builtin) return back(res, '/admin/account', 'The emergency login can’t have a photo');
+    const me = await auth.getUser(req.me.id);
+    const oldKey = me.photoKey || '';
+    if (req.body.removePhoto) {
+      me.photoKey = '';
+      delete me.photoConsent;
+    } else {
+      if (!req.file) return back(res, '/admin/account', 'Choose a photo first.');
+      if (req.body.consent !== '1') return back(res, '/admin/account', 'Tick the box to agree before uploading your photo.');
+      if (!STAFF_PHOTO_TYPES.includes(req.file.mimetype)) return back(res, '/admin/account', 'Photos must be JPEG, PNG or WebP images.');
+      me.photoKey = (await storage.saveFile('staff-photos', req.file)).key;
+      me.photoConsent = { at: new Date().toISOString(), text: PHOTO_CONSENT };
+    }
+    await auth.saveUser(me);
+    if (oldKey && oldKey !== me.photoKey) await storage.removeFile(oldKey);
+    await log(me, me.name + (me.photoKey ? ' uploaded their photo and agreed to it being shown' : ' removed their photo'));
+    back(res, '/admin/account', me.photoKey ? 'Photo saved.' : 'Photo removed.');
   }));
 
   /* ---------- My account ---------- */
   app.get('/admin/account', need(), (req, res) => {
-    res.render('hub/account', { title: 'My account', error: null });
+    res.render('hub/account', { title: 'My account', error: null, PHOTO_CONSENT });
   });
   app.post('/admin/account', need(), wrap(async (req, res) => {
     if (req.me.builtin) return back(res, '/admin/account', 'The emergency login can’t be edited');
@@ -1166,7 +1183,7 @@ module.exports = function mountHub(app, deps) {
     const ok = await auth.verifyPassword(String(req.body.current || ''), me.passwordHash);
     const pw = String(req.body.password || '');
     const problem = !ok ? 'Your current password isn’t right.' : auth.passwordProblem(pw) || (pw !== String(req.body.confirm || '') ? 'The two new passwords don’t match.' : null);
-    if (problem) return res.render('hub/account', { title: 'My account', error: problem });
+    if (problem) return res.render('hub/account', { title: 'My account', error: problem, PHOTO_CONSENT });
     me.passwordHash = await auth.hashPassword(pw);
     me.sessionVersion = (me.sessionVersion || 0) + 1;
     await auth.saveUser(me);

@@ -1211,7 +1211,7 @@ a.contact-list__value:hover { color: var(--green-500); }
 .staff-photo input[type=checkbox] { width: auto; }
 .staff-photo .hint { display: block; margin-top: 0.4rem; }
 .staff-photo .btn { display: inline-flex; }
-.staff-photo .check-inline { display: flex; gap: 0.4rem; align-items: center; font-weight: 500; margin-top: 0.4rem; }
+.staff-photo .check-inline { display: flex; gap: 0.5rem; align-items: flex-start; max-width: 46ch; font-weight: 500; margin-top: 0.4rem; }
 .hub-avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.8rem; background: var(--sage-100); color: var(--green-700); flex: none; }
 .hub-top { display: none; }
 

@@ -6,18 +6,16 @@
 <% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
 <% if (!me.builtin) { %>
 <div class="hub-grid2">
+  <% if (me.preset !== 'Carer / staff') { %>
   <form action="/admin/account" method="post" class="panel admin-form">
     <div class="panel__head"><h2>How you appear in the directory</h2></div>
     <div class="panel__body">
-      <% if (me.preset !== 'Carer / staff') { %>
       <div class="field"><label for="a-title">Job title</label><input id="a-title" name="title" value="<%= me.title %>" /></div>
       <div class="field"><label for="a-phone">Work phone</label><input id="a-phone" name="phone" type="tel" value="<%= me.phone %>" /></div>
-      <% } else { %>
-      <input type="hidden" name="phone" value="" />
-      <% } %>
       <button class="btn btn--primary" type="submit">Save</button>
     </div>
   </form>
+  <% } %>
   <form action="/admin/account/password" method="post" class="panel admin-form">
     <div class="panel__head"><h2>Change password</h2></div>
     <div class="panel__body">
@@ -26,6 +24,22 @@
       <div class="field"><label for="a-new">New password</label><input id="a-new" name="password" type="password" autocomplete="new-password" minlength="10" required /><span class="hint">At least 10 characters.</span></div>
       <div class="field"><label for="a-con">Type it again</label><input id="a-con" name="confirm" type="password" autocomplete="new-password" minlength="10" required /></div>
       <button class="btn btn--primary" type="submit">Change password</button>
+    </div>
+  </form>
+  <form action="/admin/account/photo" method="post" enctype="multipart/form-data" class="panel admin-form">
+    <div class="panel__head"><h2>Your photo</h2></div>
+    <div class="panel__body staff-photo">
+      <% if (me.photoKey) { %><img src="/admin/staff-photo/<%= me.id %>" alt="Your photo" width="96" height="96" /><% } else { %><span class="hub-avatar hub-avatar--xl"><%= me.name.split(/\s+/).map(function (x) { return x[0]; }).join('').slice(0, 2).toUpperCase() %></span><% } %>
+      <div>
+        <label for="photoFile" class="label"><%= me.photoKey ? 'Replace it' : 'Add a photo' %></label>
+        <input type="file" id="photoFile" name="photoFile" accept="image/jpeg,image/png,image/webp" required />
+        <span class="hint">JPEG, PNG or WebP, up to 10 MB.</span>
+        <label class="check-inline"><input type="checkbox" name="consent" value="1" required /> <%= PHOTO_CONSENT %></label>
+        <div style="margin-top:.8rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+          <button type="submit" class="btn btn--primary btn--sm">Upload photo</button>
+          <% if (me.photoKey) { %><button type="submit" name="removePhoto" value="1" formnovalidate class="btn btn--ghost btn--sm">Remove photo</button><% } %>
+        </div>
+      </div>
     </div>
   </form>
 </div>

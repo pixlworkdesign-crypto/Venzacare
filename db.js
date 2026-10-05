@@ -1031,7 +1031,8 @@ const records = {
    People shown on the public Our team page, kept as hub records and listed
    in the order the admin chose (then by name). A member picked from the
    staff directory (userId) takes their name from it, and their directory
-   photo when no separate website photo has been uploaded. Members whose
+   photo (only if they agreed to it being shown) when no separate website
+   photo has been uploaded. Members whose
    account has been deleted drop off. */
 async function teamMembers() {
   const list = await records.list('team');
@@ -1043,7 +1044,7 @@ async function teamMembers() {
       if (!u) return null;
       return Object.assign({}, m, {
         name: u.name || m.name,
-        photo: m.photo || (u.photoKey ? '/team-photo/' + m.id : ''),
+        photo: m.photo || (u.photoKey && u.photoConsent ? '/team-photo/' + m.id : ''),
       });
     })
     .filter(Boolean)

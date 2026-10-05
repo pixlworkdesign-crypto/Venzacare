@@ -179,7 +179,7 @@ app.get('/', wrap(async (req, res) => {
 app.get('/team-photo/:id', wrap(async (req, res) => {
   const member = res.locals.hasTeam && (await db.records.get('team', req.params.id));
   const user = member && member.userId && (await db.records.get('users', member.userId));
-  if (!user || !user.photoKey) return res.status(404).end();
+  if (!user || !user.photoKey || !user.photoConsent) return res.status(404).end();
   res.set('Cache-Control', 'public, max-age=300');
   const url = await storage.downloadUrl(user.photoKey, 3600);
   if (url) return res.redirect(url);
