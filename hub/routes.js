@@ -243,13 +243,21 @@ module.exports = function mountHub(app, deps) {
     return { url, emailed };
   }
 
+  async function alreadySignedIn(req) {
+    return !SEALED && !!(await auth.currentUser(req, SESSION_SECRET));
+  }
+
   for (const kind of ['invite', 'reset']) {
     app.get('/admin/' + kind + '/:token', wrap(async (req, res) => {
       const user = await userByToken(kind, req.params.token);
+      if (!user && await alreadySignedIn(req)) return res.redirect('/admin?done=' + encodeURIComponent('Your password is already set and you’re signed in.'));
       res.render('hub/set-password', { title: 'Set your password', kind, user, error: user ? null : 'This link has expired or has already been used. Ask your manager to send a new one.' });
     }));
     app.post('/admin/' + kind + '/:token', wrap(async (req, res) => {
       const user = await userByToken(kind, req.params.token);
+      // A second press of Save lands here after the first one already used
+      // the link and signed them in, so just carry on into the hub.
+      if (!user && await alreadySignedIn(req)) return res.redirect('/admin?done=' + encodeURIComponent('Your password is set and you’re signed in.'));
       if (!user) return res.render('hub/set-password', { title: 'Set your password', kind, user: null, error: 'This link has expired or has already been used. Ask your manager to send a new one.' });
       const pw = String(req.body.password || '');
       const problem = auth.passwordProblem(pw) || (pw !== String(req.body.confirm || '') ? 'The two passwords don’t match.' : null);
