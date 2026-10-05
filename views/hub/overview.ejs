@@ -28,7 +28,6 @@
   <div class="hub-card hub-tile">
     <span class="muted">Families waiting for a call</span>
     <span class="hub-tile__n"><%= waiting.length %></span>
-    <% var overdue = waiting.filter(function (e) { return Date.now() - new Date(e.createdAt) > 864e5; }).length; if (overdue) { %><span class="hub-tile__late"><%= overdue %> waiting over a day</span><% } %>
     <a class="btn btn--ghost btn--sm" href="/admin/enquiries">See enquiries</a>
   </div>
   <% } %>

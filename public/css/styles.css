@@ -1541,4 +1541,3 @@ a.hub-who:hover strong { text-decoration: underline; }
 .quote-row { display: grid; grid-template-columns: 1fr 14rem; gap: 0.6rem; align-items: start; }
 .quote-row textarea { min-height: 3.2rem; }
 @media (max-width: 640px) { .quote-row { grid-template-columns: 1fr; } }
-.hub-tile__late { font-size: 0.82rem; font-weight: 700; color: #a8473f; }

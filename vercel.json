@@ -22,10 +22,6 @@
     {
       "path": "/api/cron/certificates",
       "schedule": "0 7 * * *"
-    },
-    {
-      "path": "/api/cron/enquiries",
-      "schedule": "0 8 * * *"
     }
   ]
 }
