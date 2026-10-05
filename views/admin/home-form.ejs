@@ -47,6 +47,14 @@
           </div>
         </div>
       </div>
+      <% var spec = home.specialisms || []; var otherSpec = spec.filter(function (s) { return specialistCare.indexOf(s) === -1; }); %>
+      <div class="field">
+        <span class="label">Specialist care</span>
+        <div class="check-grid check-grid--3">
+          <% specialistCare.forEach(function(s){ %><label><input type="checkbox" name="specialisms" value="<%= s %>" <%= spec.indexOf(s) > -1 ? 'checked' : '' %> /> <%= s %></label><% }) %>
+        </div>
+      </div>
+      <div class="field"><label for="specialismsOther">Other specialist care</label><input id="specialismsOther" name="specialismsOther" value="<%= otherSpec.join(', ') %>" placeholder="e.g. Korsakoff syndrome, Spinal injury" /></div>
     </div>
   </div>
 

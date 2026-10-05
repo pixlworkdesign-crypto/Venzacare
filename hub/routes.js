@@ -67,7 +67,7 @@ async function geocode(postcode) {
 }
 
 module.exports = function mountHub(app, deps) {
-  const { wrap, siteUrl, CARE_TYPES, config } = deps;
+  const { wrap, siteUrl, CARE_TYPES, SPECIALIST_CARE, config } = deps;
   const { ADMIN_USER, ADMIN_PASS, SESSION_SECRET, SEALED, sealedHint } = config;
 
   /* ---------- Shared helpers ---------- */
@@ -485,7 +485,7 @@ module.exports = function mountHub(app, deps) {
     const home = await db.anyHome(req.params.id);
     if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
     res.render('admin/home-form', {
-      title: 'Edit ' + home.name, home, careTypes: CARE_TYPES, error: null,
+      title: 'Edit ' + home.name, home, careTypes: CARE_TYPES, specialistCare: SPECIALIST_CARE, error: null,
       visitSettings: visits.settingsFor(home), DAY_NAMES: visits.DAY_NAMES, timeLabel: visits.timeLabel,
       jobCount: (await db.jobs()).filter((j) => j.homeId === home.id).length,
       canHomes: can(req.me, 'homes', 'edit'), canPhotos: can(req.me, 'homes', 'edit') && can(req.me, 'photos', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
@@ -586,8 +586,9 @@ module.exports = function mountHub(app, deps) {
         postcode,
         region: text(f.region, 40) || home.region,
         lat, lng,
-        specialisms: String(f.specialisms == null ? (home.specialisms || []).join('\n') : f.specialisms).split(/\r?\n/).map((x) => x.trim()).filter(Boolean).slice(0, 30),
-        dementiaNote: f.dementiaNote == null ? home.dementiaNote : text(f.dementiaNote, 300),
+        // Ticked specialist care, then anything typed under "Other" (comma-separated).
+        specialisms: [...new Set([].concat(f.specialisms || []).filter((s) => SPECIALIST_CARE.includes(s))
+          .concat(String(f.specialismsOther || '').split(/[,\n]/).map((x) => text(x, 60)).filter(Boolean)))].slice(0, 40),
         photo, gallery,
       });
       changed.push('details');

@@ -121,6 +121,13 @@ function alert(req, res, subject, rows, replyTo, path) {
 }
 
 const CARE_TYPES = ['Residential Care', 'Nursing Care', 'Dementia Care', 'Respite Care', 'End-of-life Care'];
+// Conditions and needs a home can tick as well as the main types of care.
+const SPECIALIST_CARE = [
+  'Acquired brain injury (ABI)', 'Alcohol-related brain damage (ARBD)', 'Alcohol & substance misuse', 'Bariatric care',
+  'Cancer care', 'Complex care', 'Convalescent care', 'COPD & pulmonary disease', 'Diabetes', 'Epilepsy',
+  'Huntington’s disease', 'Learning disabilities', 'Mental health support', 'Motor neurone disease', 'Multiple sclerosis',
+  'Parkinson’s disease', 'Physical disability', 'Stroke recovery', 'Visual & hearing impairment', 'Younger adults (18–65)',
+];
 const lower = (s) => (s || '').toLowerCase();
 
 // Shared locals available to every view
@@ -694,7 +701,9 @@ async function buildKnowledge() {
         (avail ? `Availability: ${avail}${d.availabilityNote ? ' — ' + d.availabilityNote : ''}. ` : '') +
         (d.managerName ? `Home manager: ${d.managerName}. ` : '') +
         `Page: /care-homes/${h.id} — families can book a visit there instantly by picking a free time. ` +
-        `Care types: ${h.careTypes.join(', ')}. ${h.blurb}`
+        `Care types: ${h.careTypes.join(', ')}. ` +
+        (h.specialisms && h.specialisms.length ? `Specialist care: ${h.specialisms.join(', ')}. ` : '') +
+        h.blurb
     );
   });
 
@@ -800,6 +809,7 @@ mountHub(app, {
   isOneOffVercelHost,
   sameText,
   CARE_TYPES,
+  SPECIALIST_CARE,
   config: { ADMIN_USER, ADMIN_PASS, SESSION_SECRET, IS_PROD, SEALED: HUB_SEALED, sealedHint: adminSetupHint },
 });
 

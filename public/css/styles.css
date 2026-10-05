@@ -1150,6 +1150,7 @@ a.contact-list__value:hover { color: var(--green-500); }
 /* Admin: care-type checkboxes */
 .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1rem; margin-top: 0.4rem; }
 .check-grid label { display: flex; gap: 0.45rem; align-items: center; font-weight: 500; }
+.check-grid--3 { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 .admin-form .label { display: block; font-weight: 600; font-size: 0.9rem; }
 
 /* Six nav links: tighten on mid-size screens so the bar doesn't wrap */
