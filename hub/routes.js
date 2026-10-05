@@ -544,49 +544,58 @@ module.exports = function mountHub(app, deps) {
     back(res, '/admin/images', 'Saved. The website shows the new pictures within 30 seconds.');
   }));
 
-  app.get('/admin/homes/new', need('homes', 'edit'), (req, res) => {
-    if (req.me.homes !== 'all') return deny(res, 'Only people who cover the whole company can add a home.');
-    res.render('hub/home-new', { title: 'Add a home', regions: [...new Set((res.locals.SITE.regions || []).concat(res.locals.hubHomes.map((h) => h.region)).filter(Boolean))].sort(), careTypes: careNames(res), form: {}, error: null });
+  // Add a home and Edit a home share one page (admin/home-form).
+  async function homeFormLocals(req, res, home, isNew) {
+    return {
+      title: isNew ? 'Add a home' : 'Edit ' + home.name, home, isNew, careTypes: careNames(res), specialistCare: specialistCareOf(res.locals.SITE),
+      facilityList: facilitiesOf(res.locals.SITE), feeItems: feeItemsOf(res.locals.SITE), error: null,
+      visitSettings: visits.settingsFor(home), DAY_NAMES: visits.DAY_NAMES, timeLabel: visits.timeLabel,
+      jobCount: isNew ? 0 : (await db.jobs()).filter((j) => j.homeId === home.id).length,
+      canHomes: can(req.me, 'homes', 'edit'), canPhotos: can(req.me, 'homes', 'edit') && can(req.me, 'photos', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
+      seeFees: can(req.me, 'fees', 'view'), seeAvail: can(req.me, 'availability', 'view'),
+      staff: (await auth.allUsers()).filter((u) => u.status !== 'invited').sort((a, b) => a.name.localeCompare(b.name)),
+    };
+  }
+  const blankHome = (res) => ({
+    id: '', name: '', town: '', postcode: '', region: '', lat: null, lng: null, beds: null, cqc: 'Registered',
+    careTypes: careNames(res), specialisms: [], blurb: '', dementiaNote: '', photo: '', gallery: [],
+    details: Object.assign({}, db.EMPTY_DETAILS, { fees: Object.assign({}, db.EMPTY_DETAILS.fees), archived: true }),
   });
 
-  app.post('/admin/homes/new', need('homes', 'edit'), wrap(async (req, res) => {
+  app.get('/admin/homes/new', need('homes', 'edit'), wrap(async (req, res) => {
+    if (req.me.homes !== 'all') return deny(res, 'Only people who cover the whole company can add a home.');
+    res.render('admin/home-form', await homeFormLocals(req, res, blankHome(res), true));
+  }));
+
+  // A new home is created as a draft, then the rest of the form is saved
+  // exactly as an edit would be.
+  app.post('/admin/homes/new', need('homes', 'edit'), photoUpload, wrap(async (req, res) => {
     if (req.me.homes !== 'all') return deny(res, 'Only people who cover the whole company can add a home.');
     const f = req.body;
     const name = text(f.name, 80);
     if (!name || !text(f.town)) {
-      return res.render('hub/home-new', { title: 'Add a home', regions: [...new Set((res.locals.SITE.regions || []).concat(res.locals.hubHomes.map((h) => h.region)).filter(Boolean))].sort(), careTypes: careNames(res), form: f, error: 'Give the home a name and a town.' });
+      const home = Object.assign(blankHome(res), { name, town: text(f.town, 60), postcode: text(f.postcode, 12), blurb: text(f.blurb, 600) });
+      home.details.address = addressLine(f.address);
+      return res.render('admin/home-form', Object.assign(await homeFormLocals(req, res, home, true), { error: 'Give the home a name and a town.' }));
     }
     let id = slug(name);
     const existing = await db.allHomes();
     while (existing.some((h) => h.id === id)) id = slug(name) + '-' + Math.random().toString(36).slice(2, 5);
-    const careTypes = [].concat(f.careTypes || []).filter((c) => careNames(res).includes(c));
-    const pt = await geocode(f.postcode);
-    await db.saveHome({
-      id, name, town: text(f.town, 60), postcode: text(f.postcode, 12).toUpperCase(), region: pt ? pt.region : '',
-      lat: pt ? pt.lat : null, lng: pt ? pt.lng : null,
-      beds: parseInt(f.beds, 10) || null, cqc: 'Registered', careTypes, specialisms: [], blurb: text(f.blurb, 600),
-      dementiaNote: '', photo: '', gallery: [], sortOrder: existing.length,
-      details: { archived: true, address: addressLine(f.address) },
-    });
+    await db.saveHome(Object.assign(blankHome(res), { id, name, town: text(f.town, 60), careTypes: [], sortOrder: existing.length }));
     await log(req.me, req.me.name + ' added ' + name + ' as a draft');
-    back(res, '/admin/homes/' + id + '/edit', name + ' added as a draft.');
+    req.params.id = id;
+    req.newHome = true;
+    return saveHomeForm(req, res);
   }));
 
   app.get('/admin/homes/:id/edit', need(['homes', 'fees', 'availability'], 'view'), wrap(async (req, res) => {
     const home = await db.anyHome(req.params.id);
     if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
-    res.render('admin/home-form', {
-      title: 'Edit ' + home.name, home, careTypes: careNames(res), specialistCare: specialistCareOf(res.locals.SITE),
-      facilityList: facilitiesOf(res.locals.SITE), feeItems: feeItemsOf(res.locals.SITE), error: null,
-      visitSettings: visits.settingsFor(home), DAY_NAMES: visits.DAY_NAMES, timeLabel: visits.timeLabel,
-      jobCount: (await db.jobs()).filter((j) => j.homeId === home.id).length,
-      canHomes: can(req.me, 'homes', 'edit'), canPhotos: can(req.me, 'homes', 'edit') && can(req.me, 'photos', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
-      seeFees: can(req.me, 'fees', 'view'), seeAvail: can(req.me, 'availability', 'view'),
-      staff: (await auth.allUsers()).filter((u) => u.status !== 'invited').sort((a, b) => a.name.localeCompare(b.name)),
-    });
+    res.render('admin/home-form', await homeFormLocals(req, res, home, false));
   }));
 
-  app.post('/admin/homes/:id', need(['homes', 'fees', 'availability'], 'edit'), photoUpload, wrap(async (req, res) => {
+  app.post('/admin/homes/:id', need(['homes', 'fees', 'availability'], 'edit'), photoUpload, wrap(saveHomeForm));
+  async function saveHomeForm(req, res) {
     const home = await db.anyHome(req.params.id);
     if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
     const me = req.me, f = req.body;
@@ -699,9 +708,10 @@ module.exports = function mountHub(app, deps) {
     }
     next.details = details;
     await db.saveHome(next);
-    await log(me, me.name + ' updated ' + home.name + ' — ' + [...new Set(changed)].join(', '));
+    if (!req.newHome) await log(me, me.name + ' updated ' + home.name + ' — ' + [...new Set(changed)].join(', '));
+    if (req.newHome) return back(res, '/admin/homes/' + home.id + '/edit', next.name + ' added as a draft.' + pinWarning);
     back(res, '/admin/homes', 'Saved ' + home.name + '. The website shows the change within 30 seconds.' + pinWarning);
-  }));
+  }
 
   /* "10, 11:30, 2pm, 14.00" → ['10:00', '11:30', '14:00'] */
   function parseTimes(raw) {

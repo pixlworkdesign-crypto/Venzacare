@@ -1,25 +1,26 @@
 <%- include('../partials/admin-header') %>
 <% var d = home.details; function sel(a,b){ return a===b ? 'selected' : ''; } %>
 
-<div class="hub-crumb"><a href="/admin/homes">Homes</a> › <%= home.name %></div>
+<div class="hub-crumb"><a href="/admin/homes">Homes</a> › <%= isNew ? 'Add a home' : home.name %></div>
 <div class="hub-head"><div>
-<h1 class="hub-h1"><%= home.name %></h1>
+<h1 class="hub-h1"><%= isNew ? 'Add a home' : home.name %></h1>
 </div>
-<% if (!home.details.archived) { %><div class="row-actions">
+<% if (!isNew && !home.details.archived) { %><div class="row-actions">
   <a class="btn btn--sm btn--muted" href="/care-homes/<%= home.id %>" target="_blank" rel="noopener">View on website ↗</a>
   <% if (canHomes) { %><form action="/admin/homes/<%= home.id %>/archive" method="post" class="inline-form" data-confirm="Make <%= home.name.replace(/"/g, '') %> a draft? Families won’t see it until you make it live again."><input type="hidden" name="back" value="edit" /><button class="btn btn--sm btn--muted">Make draft</button></form><% } %>
 </div><% } %>
 </div>
-<% if (home.details.archived) { %><div class="hub-notice hub-notice--warn hub-notice--action"><span><strong>Draft</strong> — families can’t see this home until you make it live.</span><% if (canHomes) { %><form action="/admin/homes/<%= home.id %>/restore" method="post" class="inline-form"><input type="hidden" name="back" value="edit" /><button class="btn btn--primary btn--sm">Make live</button></form><% } %></div><% } %>
+<% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
+<% if (!isNew && home.details.archived) { %><div class="hub-notice hub-notice--warn hub-notice--action"><span><strong>Draft</strong> — families can’t see this home until you make it live.</span><% if (canHomes) { %><form action="/admin/homes/<%= home.id %>/restore" method="post" class="inline-form"><input type="hidden" name="back" value="edit" /><button class="btn btn--primary btn--sm">Make live</button></form><% } %></div><% } %>
 
-<form action="/admin/homes/<%= home.id %>" method="post" class="admin-form" enctype="multipart/form-data">
+<form action="/admin/homes/<%= isNew ? 'new' : home.id %>" method="post" class="admin-form" enctype="multipart/form-data">
 
   <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
   <div class="panel" style="margin-top:1.5rem;">
     <div class="panel__head"><h2>Basics</h2></div>
     <div class="panel__body">
       <div class="grid-2">
-        <div class="field"><label for="name">Home name</label><input type="text" id="name" name="name" value="<%= home.name %>" /></div>
+        <div class="field"><label for="name">Home name<%= isNew ? ' *' : '' %></label><input type="text" id="name" name="name" value="<%= home.name %>" required /></div>
         <div class="field"><label for="phone">Direct phone number for this home</label><input type="tel" id="phone" name="phone" value="<%= d.phone %>" placeholder="Leave blank to use <%= SITE.phone %>" /></div>
       </div>
       <div class="field"><label for="email">Email address for this home</label><input type="email" id="email" name="email" value="<%= d.email %>" placeholder="Leave blank to use <%= SITE.email %>" style="max-width:28rem;" /></div>
@@ -27,12 +28,12 @@
     </div>
   </div>
 
-  <div class="panel" id="address">
+  <div class="panel" id="sec-address">
     <div class="panel__head"><h2>Address</h2></div>
     <div class="panel__body">
       <div class="field"><label for="address">Address</label><textarea id="address" name="address" rows="2" style="min-height:4.5rem;" autocomplete="street-address" placeholder="e.g. 12 Victoria Road"><%= d.address %></textarea></div>
       <div class="grid-2">
-        <div class="field"><label for="town">Town</label><input id="town" name="town" autocomplete="address-level2" value="<%= home.town %>" /></div>
+        <div class="field"><label for="town">Town<%= isNew ? ' *' : '' %></label><input id="town" name="town" required autocomplete="address-level2" value="<%= home.town %>" /></div>
         <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" autocomplete="postal-code" value="<%= home.postcode %>" style="max-width:12rem;" /></div>
       </div>
     </div>
@@ -127,7 +128,7 @@
   </fieldset>
   <% if (seeAvail) { %>
   <fieldset class="hub-fieldset" <%= canAvail ? "" : "disabled" %>>
-  <div class="panel" id="availability">
+  <div class="panel" id="sec-availability">
     <div class="panel__head"><h2>Room availability</h2></div>
     <div class="panel__body">
       <div class="grid-2">
@@ -183,7 +184,7 @@
   </fieldset>
   <% } %>
   <fieldset class="hub-fieldset" <%= canHomes ? "" : "disabled" %>>
-  <div class="panel" id="cqc">
+  <div class="panel" id="sec-cqc">
     <div class="panel__head"><h2>CQC rating</h2></div>
     <div class="panel__body">
       <div class="grid-2">
@@ -241,12 +242,12 @@
 
   </fieldset>
   <div style="display:flex;gap:.8rem;margin:1.5rem 0 3rem;">
-    <% if (canHomes || canFees || canAvail) { %><button type="submit" class="btn btn--primary">Save changes</button><% } %>
+    <% if (canHomes || canFees || canAvail) { %><button type="submit" class="btn btn--primary"><%= isNew ? 'Add home' : 'Save changes' %></button><% } %>
     <a href="/admin/homes" class="btn btn--muted">Cancel</a>
   </div>
 </form>
 
-<% if (canHomes && me.homes === 'all') { %>
+<% if (!isNew && canHomes && me.homes === 'all') { %>
 <div class="panel" style="margin-bottom:3rem;">
   <div class="panel__head"><h2>Delete this home</h2></div>
   <div class="panel__body">
