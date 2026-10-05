@@ -13,6 +13,22 @@
 <% if (!canEdit) { %><div class="hub-notice">You can see <%= first %>’s access but can’t change it.</div><% } %>
 <% if (p.status === 'paused') { %><div class="hub-notice hub-notice--warn"><%= first %>’s account is paused, so they can’t sign in.</div><% } %>
 
+<% if (canPhoto) { %>
+<form action="/admin/people/<%= p.id %>/photo" method="post" enctype="multipart/form-data" class="hub-card admin-form">
+  <div class="hub-card__head"><h2>Directory photo</h2></div>
+  <div class="hub-card__body staff-photo">
+    <% if (p.photoKey) { %><img src="/admin/staff-photo/<%= p.id %>" alt="Current photo of <%= p.name %>" width="96" height="96" /><% } else { %><span class="hub-avatar hub-avatar--xl"><%= p.name.split(/\s+/).map(function (x) { return x[0]; }).join('').slice(0, 2).toUpperCase() %></span><% } %>
+    <div>
+      <label for="photoFile" class="label"><%= p.photoKey ? 'Replace it' : 'Add a photo' %></label>
+      <input type="file" id="photoFile" name="photoFile" accept="image/jpeg,image/png,image/webp" />
+      <% if (p.photoKey) { %><label class="check-inline"><input type="checkbox" name="removePhoto" value="1" /> Remove the photo</label><% } %>
+      <span class="hint">Shown next to <%= first %>’s name in the staff directory. Only people signed in to the staff hub can see it.</span>
+      <div style="margin-top:.8rem;"><button type="submit" class="btn btn--primary btn--sm">Save photo</button></div>
+    </div>
+  </div>
+</form>
+<% } %>
+
 <form action="/admin/people/<%= p.id %>/access" method="post" id="accessForm">
   <fieldset class="hub-fieldset" <%= locked ? 'disabled' : '' %>>
   <div class="hub-card">

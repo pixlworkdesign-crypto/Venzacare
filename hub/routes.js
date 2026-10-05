@@ -1049,6 +1049,43 @@ module.exports = function mountHub(app, deps) {
     res.render('hub/directory', { title: 'Staff directory', groups, homes, filter });
   }));
 
+  /* ---------- Staff photos ----------
+     A person's photo for the directory. Kept in PRIVATE storage (like CVs),
+     so it's only ever served to someone signed in to the hub. Only people
+     with "Website photos" access (Owner and Admin) can add or change one. */
+  const staffPhotoUpload = uploader(['.jpg', '.jpeg', '.png', '.webp']).single('photoFile');
+  const STAFF_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+  app.get('/admin/staff-photo/:id', need(), wrap(async (req, res) => {
+    const person = await auth.getUser(req.params.id);
+    if (!person || !person.photoKey) return res.status(404).end();
+    const url = await storage.downloadUrl(person.photoKey, 3600);
+    if (url) return res.redirect(url);
+    const local = storage.localPath(person.photoKey);
+    if (!local) return res.status(404).end();
+    res.set('Cache-Control', 'private, max-age=300');
+    res.sendFile(local);
+  }));
+
+  app.post('/admin/people/:id/photo', need('photos', 'edit'), staffPhotoUpload, wrap(async (req, res) => {
+    const p = await personOr404(req, res);
+    if (!p) return;
+    const person = await auth.getUser(p.id);
+    const oldKey = person.photoKey || '';
+    if (req.body.removePhoto) {
+      person.photoKey = '';
+    } else if (req.file) {
+      if (!STAFF_PHOTO_TYPES.includes(req.file.mimetype)) return back(res, '/admin/people/' + p.id, 'Photos must be JPEG, PNG or WebP images.');
+      person.photoKey = (await storage.saveFile('staff-photos', req.file)).key;
+    } else {
+      return back(res, '/admin/people/' + p.id, 'Choose a photo first.');
+    }
+    await auth.saveUser(person);
+    if (oldKey && oldKey !== person.photoKey) await storage.removeFile(oldKey);
+    await log(req.me, req.me.name + (person.photoKey ? ' changed ' : ' removed ') + p.name + '’s directory photo');
+    back(res, '/admin/people/' + p.id, person.photoKey ? 'Photo saved. It now shows in the staff directory.' : 'Photo removed.');
+  }));
+
   /* ---------- My account ---------- */
   app.get('/admin/account', need(), (req, res) => {
     res.render('hub/account', { title: 'My account', error: null });
@@ -1182,6 +1219,7 @@ module.exports = function mountHub(app, deps) {
       canEdit: can(req.me, 'people', 'edit'),
       protect: await protection(req.me, p),
       grantOwner: canGrantOwner(req.me),
+      canPhoto: can(req.me, 'photos', 'edit'),
     });
   }));
 
@@ -1266,6 +1304,7 @@ module.exports = function mountHub(app, deps) {
       return res.render('hub/delete-person', { title: 'Delete ' + p.name, p, certs, error: 'Type their name exactly as shown to confirm.' });
     }
     for (const c of certs) { await storage.removeFile(c.key); await db.records.remove('certificates', c.id); }
+    if (p.photoKey) await storage.removeFile(p.photoKey);
     for (const r of (await db.records.list('post_reads')).filter((x) => x.userId === p.id)) await db.records.remove('post_reads', r.id);
     await db.records.remove('users', p.id);
     await log(req.me, req.me.name + ' deleted ' + p.name + '’s account' + (certs.length ? ' and ' + certs.length + ' certificate' + (certs.length > 1 ? 's' : '') : ''));

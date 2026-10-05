@@ -49,7 +49,7 @@
     <aside class="hub-nav" id="hubNav" aria-label="Staff hub">
       <a href="/admin" class="hub-nav__brand"><img src="/images/logo-white.png" alt="Venza Care" /><span>Staff hub</span></a>
       <a href="/admin/account" class="hub-nav__who<%= currentPath === '/admin/account' ? ' is-on' : '' %>">
-        <span class="hub-avatar"><%= initials %></span>
+        <% if (me.photoKey) { %><img class="hub-avatar hub-avatar--img" src="/admin/staff-photo/<%= me.id %>" alt="" width="36" height="36" /><% } else { %><span class="hub-avatar"><%= initials %></span><% } %>
         <span><b><%= me.name %></b><small><%= me.title %><%= me.builtin ? '' : ' · ' + homesLabel(me) %></small></span>
       </a>
       <nav>

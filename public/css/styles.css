@@ -1185,6 +1185,15 @@ a.contact-list__value:hover { color: var(--green-500); }
 .hub-nav__foot a { color: inherit; }
 .hub-nav__foot button { background: rgba(255,255,255,0.12); color: #fff; border: 0; border-radius: 8px; padding: 0.4rem 0.8rem; font: inherit; cursor: pointer; }
 .hub-nav__foot button:hover { background: rgba(255,255,255,0.22); }
+.hub-avatar--img, .hub-avatar--photo { object-fit: cover; padding: 0; }
+.hub-avatar.hub-avatar--photo, .hub-avatar.hub-avatar--lg { width: 56px; height: 56px; font-size: 1rem; }
+.hub-avatar.hub-avatar--xl { width: 96px; height: 96px; font-size: 1.6rem; }
+.staff-photo { display: flex; gap: 1.25rem; align-items: flex-start; flex-wrap: wrap; }
+.staff-photo > img { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+.staff-photo input[type=checkbox] { width: auto; }
+.staff-photo .hint { display: block; margin-top: 0.4rem; }
+.staff-photo .btn { display: inline-flex; }
+.staff-photo .check-inline { display: flex; gap: 0.4rem; align-items: center; font-weight: 500; margin-top: 0.4rem; }
 .hub-avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.8rem; background: var(--sage-100); color: var(--green-700); flex: none; }
 .hub-top { display: none; }
 
