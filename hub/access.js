@@ -24,7 +24,7 @@ const AREAS = [
 ];
 
 const PRESETS = {
-  'Owner':            { homes: 'edit', photos: 'edit', fees: 'edit', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'edit', noticeboard: 'edit', documents: 'edit', certificates: 'edit', privacy: 'edit', people: 'edit', activity: 'view' },
+  'Site administrator': { homes: 'edit', photos: 'edit', fees: 'edit', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'edit', noticeboard: 'edit', documents: 'edit', certificates: 'edit', privacy: 'edit', people: 'edit', activity: 'view' },
   'Admin':            { homes: 'edit', photos: 'edit', fees: 'edit', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'edit', noticeboard: 'edit', documents: 'edit', certificates: 'edit', privacy: 'none', people: 'edit', activity: 'view' },
   'Home manager':     { homes: 'edit', photos: 'none', fees: 'edit', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'view', noticeboard: 'edit', documents: 'view', certificates: 'view', privacy: 'none', people: 'none', activity: 'view' },
   'Recruitment / HR': { homes: 'view', photos: 'none', fees: 'none', availability: 'none', enquiries: 'none', jobs: 'edit', applications: 'edit', noticeboard: 'view', documents: 'edit', certificates: 'edit', privacy: 'none', people: 'none', activity: 'none' },
@@ -33,27 +33,33 @@ const PRESETS = {
 };
 const PRESET_NAMES = Object.keys(PRESETS);
 // Access levels that count as "managers" for documents shared with managers only.
-const MANAGER_PRESETS = ['Owner', 'Admin', 'Home manager'];
+const MANAGER_PRESETS = ['Site administrator', 'Admin', 'Home manager'];
 
 const RANK = { none: 0, view: 1, edit: 2 };
 const LEVEL_WORDS = { none: 'No access', view: 'View', edit: 'Edit' };
 
 /* The account used when someone signs in with ADMIN_USER / ADMIN_PASS from the
    hosting settings: full access, not stored anywhere, can't be paused. It's
-   the way in on day one, and the emergency key if every owner is locked out. */
+   the way in on day one. Remove ADMIN_PASS from the hosting settings to turn it off. */
 const BUILTIN_OWNER = Object.freeze({
   id: 'owner',
   builtin: true,
-  name: 'Site owner',
+  name: 'Emergency login',
   email: '',
-  title: 'Emergency owner login',
-  preset: 'Owner',
-  perms: Object.assign({}, PRESETS.Owner),
+  title: 'From the hosting settings',
+  preset: 'Site administrator',
+  perms: Object.assign({}, PRESETS['Site administrator']),
   homes: 'all',
   status: 'active',
 });
 
+// Accounts saved before "Owner" was renamed still say "Owner".
+function presetName(preset) {
+  return preset === 'Owner' ? 'Site administrator' : preset;
+}
+
 function normalisePerms(perms, preset) {
+  preset = presetName(preset);
   const base = PRESETS[preset] || PRESETS['Carer / staff'];
   const out = {};
   AREAS.forEach((a) => {
@@ -95,5 +101,5 @@ function homesLabel(user, homeList) {
 
 module.exports = {
   AREAS, PRESETS, PRESET_NAMES, MANAGER_PRESETS, RANK, LEVEL_WORDS, BUILTIN_OWNER,
-  normalisePerms, can, covers, isCustom, homesLabel,
+  normalisePerms, presetName, can, covers, isCustom, homesLabel,
 };

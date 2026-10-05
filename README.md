@@ -20,8 +20,8 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 
 **Staff hub** (`/admin`, also `/staff`)
 - **Individual accounts** — invite people by email (or pass on the link yourself), passwords hashed with scrypt, forgotten-password links, pause and delete
-- **Access for each person** — an access level (Owner, Admin, Home manager, Recruitment / HR, Reception, Carer / staff) fills in None / View / Edit for each area, and any of them can be changed per person. Each person covers the whole company or chosen homes, and only sees those homes' enquiries, jobs, applications and certificates
-- **Owner accounts are locked** — nobody in the hub can change, pause, delete or reset an owner; only the emergency owner login can. Only owners can make someone an owner. Nobody can change their own access
+- **Access for each person** — an access level (Site administrator, Admin, Home manager, Recruitment / HR, Reception, Carer / staff) fills in None / View / Edit for each area, and any of them can be changed per person. Each person covers the whole company or chosen homes, and only sees those homes' enquiries, jobs, applications and certificates
+- **Site administrator accounts are locked** — only another site administrator can change, pause, delete or reset one. Only site administrators can make someone a site administrator. Nobody can change their own access
 - **Homes** — edit details, fees and availability (separate permissions), CQC and managers; add a home; archive / make live
 - **Enquiries** — every visit request, callback and message, moved through Needs a call → Called → Visit booked → Visited → Moved in
 - **Jobs & applications** — as before, now limited to the homes a person covers
@@ -45,8 +45,8 @@ Then open:
 - Public site → http://localhost:3000
 - Admin backoffice → http://localhost:3000/admin/login
 
-**Local emergency owner login:** `admin` / `venza2026` — development only. Sign
-in with it, open **People & access**, invite yourself as an Owner, and use your
+**Local emergency login:** `admin` / `venza2026` — development only. Sign
+in with it, open **People & access**, invite yourself as a Site administrator, and use your
 own account from then on.
 
 With no `DATABASE_URL` set, the app runs on a local JSON file and seeds the four
@@ -97,7 +97,7 @@ list. At minimum:
 | Variable | Why |
 |---|---|
 | `SESSION_SECRET` | Signs sign-in cookies. **Required** — without it the staff hub is switched off. Long and random |
-| `ADMIN_USER`, `ADMIN_PASS` | The **emergency owner login**: how you get in on day one, and the only way to change an owner's account. Keep it secret |
+| `ADMIN_USER`, `ADMIN_PASS` | The **emergency login**: how you get in on day one. Once you've invited yourself as a Site administrator, delete `ADMIN_PASS` and redeploy to switch it off |
 | `DATABASE_URL` | Supabase Postgres. Without it, data is lost on every cold start |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | CV storage |
 
@@ -123,7 +123,7 @@ safe to re-run: nothing is dropped. `/api/health` tells you if it's missing.
 ### "My password isn't working" — checklist
 
 - **Staff sign in with their email and the password they chose from their invite.**
-  The emergency owner login is `ADMIN_USER` / `ADMIN_PASS` from Vercel — not your
+  The emergency login (if switched on) is `ADMIN_USER` / `ADMIN_PASS` from Vercel — not your
   Supabase password, which only goes inside `DATABASE_URL`.
 - **Redeploy after changing environment variables.** Vercel only picks up new
   values on the next deployment.

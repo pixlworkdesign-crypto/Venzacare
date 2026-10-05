@@ -161,7 +161,7 @@ module.exports = function mountHub(app, deps) {
 
     if (auth.isLockedOut(req, identifier)) return fail('Too many wrong attempts. Wait 15 minutes, or ask a manager to send you a new sign-in link.');
 
-    // Emergency owner login from the hosting settings.
+    // Emergency login from the hosting settings (off when ADMIN_PASS is unset).
     if (ADMIN_PASS && identifier.toLowerCase() === ADMIN_USER.toLowerCase() && deps.sameText(password, ADMIN_PASS)) {
       auth.clearFailures(req, identifier);
       auth.setSessionCookie(res, SESSION_SECRET, BUILTIN_OWNER);
@@ -290,7 +290,7 @@ module.exports = function mountHub(app, deps) {
           .map((e) => Object.assign(e, { whenText: e.visitAt.length > 10 ? visits.whenLabel(e.visitAt.slice(0, 10), e.visitAt.slice(11, 16)) : visits.dayLabel(e.visitAt) }))
         : null,
       pendingInvites: users.filter((u) => u.status === 'invited').length,
-      noRealOwner: me.builtin && !users.some((u) => u.preset === 'Owner' && u.status === 'active'),
+      noRealOwner: me.builtin && !users.some((u) => u.preset === 'Site administrator' && u.status === 'active'),
       health: can(me, 'people', 'edit') ? await db.health() : null,
     });
   }));
@@ -303,7 +303,7 @@ module.exports = function mountHub(app, deps) {
 
   /* ---------- Our team ----------
      The people on the public Our team page. Like site images, only people
-     with "Website photos" access (Owner and Admin) can see or change it. */
+     with "Website photos" access (Site administrators and Admins) can see or change it. */
   const teamUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).single('photoFile');
 
   app.get('/admin/team', need('photos', 'edit'), wrap(async (req, res) => {
@@ -359,8 +359,8 @@ module.exports = function mountHub(app, deps) {
 
   /* ---------- Site images ----------
      The fixed pictures on the public pages (homepage banner, Our care…).
-     Only people with "Website photos" access (Owner and Admin) can see or
-     change them. */
+     Only people with "Website photos" access (Site administrators and Admins) can
+     see or change them. */
   app.get('/admin/images', need('photos', 'edit'), (req, res) => {
     res.render('admin/images', { title: 'Site images', slots: SITE_IMAGES, canEdit: true });
   });
@@ -806,7 +806,7 @@ module.exports = function mountHub(app, deps) {
 
   /* ---------- Noticeboard ---------- */
   function postVisible(post, user) {
-    if (['Owner', 'Admin'].includes(user.preset)) return true;
+    if (['Site administrator', 'Admin'].includes(user.preset)) return true;
     const a = post.audience || { type: 'all' };
     if (a.type === 'homes') return user.homes === 'all' || (a.homes || []).some((h) => covers(user, h));
     if (a.type === 'roles') return (a.roles || []).includes(user.preset);
@@ -994,7 +994,7 @@ module.exports = function mountHub(app, deps) {
 
   app.post('/admin/certificates', need(), certUpload.single('file'), wrap(async (req, res) => {
     const me = req.me;
-    if (me.builtin) return back(res, '/admin/documents?tab=certificates', 'The emergency owner login has no profile to hold certificates');
+    if (me.builtin) return back(res, '/admin/documents?tab=certificates', 'The emergency login has no profile to hold certificates');
     let forId = me.id;
     if (req.body.userId && req.body.userId !== me.id) {
       const target = await auth.getUser(req.body.userId);
@@ -1052,7 +1052,7 @@ module.exports = function mountHub(app, deps) {
   /* ---------- Staff photos ----------
      A person's photo for the directory. Kept in PRIVATE storage (like CVs),
      so it's only ever served to someone signed in to the hub. Only people
-     with "Website photos" access (Owner and Admin) can add or change one. */
+     with "Website photos" access (Site administrators and Admins) can add or change one. */
   const staffPhotoUpload = uploader(['.jpg', '.jpeg', '.png', '.webp']).single('photoFile');
   const STAFF_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -1091,7 +1091,7 @@ module.exports = function mountHub(app, deps) {
     res.render('hub/account', { title: 'My account', error: null });
   });
   app.post('/admin/account', need(), wrap(async (req, res) => {
-    if (req.me.builtin) return back(res, '/admin/account', 'The emergency owner login can’t be edited');
+    if (req.me.builtin) return back(res, '/admin/account', 'The emergency login can’t be edited');
     const me = await auth.getUser(req.me.id);
     me.phone = text(req.body.phone, 40);
     if (me.preset !== 'Carer / staff') me.title = text(req.body.title, 80) || me.title;
@@ -1115,18 +1115,18 @@ module.exports = function mountHub(app, deps) {
 
   /* ---------- People & access ---------- */
   /* Rules that stop anyone locking the business out.
-     Owner accounts are locked: nobody in the hub can change, pause, delete
-     or reset an owner — only the emergency owner login from the hosting
-     settings can, so an owner who leaves can still be removed. */
+     Site administrator accounts are locked: only another site administrator
+     (or the emergency login, if it's switched on) can change, pause, delete
+     or reset one, so an Admin can never lock them out. */
   async function protection(me, target) {
     if (target.id === me.id) return 'You can’t change, pause or delete your own account. Ask another admin.';
-    if (target.preset === 'Owner' && !me.builtin) {
-      return 'Owner accounts are locked — nobody can change, pause or delete an owner from here. To change an owner, sign in with the emergency owner login from your hosting settings.';
+    if (target.preset === 'Site administrator' && !me.builtin && me.preset !== 'Site administrator') {
+      return 'Site administrator accounts are locked — only another site administrator can change, pause or delete one.';
     }
     return null;
   }
-  // Only owners can make someone an owner.
-  const canGrantOwner = (me) => me.builtin || me.preset === 'Owner';
+  // Only site administrators can make someone a site administrator.
+  const canGrantOwner = (me) => me.builtin || me.preset === 'Site administrator';
 
   function parseHomes(f, homes) {
     if (f.scope === 'all') return 'all';
@@ -1142,7 +1142,7 @@ module.exports = function mountHub(app, deps) {
   async function createPerson(req, { name, email, preset, homes, title }) {
     const user = {
       id: db.uid('user'), name, email: email.toLowerCase(), preset,
-      title: title || { Owner: 'Owner', Admin: 'Admin', 'Home manager': 'Home manager', 'Recruitment / HR': 'HR adviser', Reception: 'Receptionist', 'Carer / staff': 'Care assistant' }[preset],
+      title: title || { 'Site administrator': 'Site administrator', Admin: 'Admin', 'Home manager': 'Home manager', 'Recruitment / HR': 'HR adviser', Reception: 'Receptionist', 'Carer / staff': 'Care assistant' }[preset],
       perms: Object.assign({}, PRESETS[preset]), homes, status: 'invited', sessionVersion: 0, phone: '',
     };
     await auth.saveUser(user);
@@ -1157,7 +1157,7 @@ module.exports = function mountHub(app, deps) {
     const preset = PRESETS[f.preset] ? f.preset : 'Carer / staff';
     const users = await auth.allUsers();
     let error = null;
-    if (preset === 'Owner' && !canGrantOwner(req.me)) error = 'Only an owner can invite another owner.';
+    if (preset === 'Site administrator' && !canGrantOwner(req.me)) error = 'Only a site administrator can invite another site administrator.';
     else if (!name) error = 'Add their full name.';
     else if (!isEmail(email)) error = 'That email address doesn’t look right.';
     else if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) error = 'Someone with that email already has an account.';
@@ -1191,7 +1191,7 @@ module.exports = function mountHub(app, deps) {
       else if (!isEmail(email)) row.error = 'Email doesn’t look right';
       else if (taken.has(email.toLowerCase())) row.error = 'Already has an account';
       else if (!scope) row.error = 'Home “' + homeName + '” not found';
-      else if (preset === 'Owner') row.error = 'Owners must be invited one at a time';
+      else if (preset === 'Site administrator') row.error = 'Site administrators must be invited one at a time';
       if (!row.error) {
         const { user, link } = await createPerson(req, { name, email, preset, homes: scope === 'all' ? 'all' : [scope] });
         taken.add(email.toLowerCase());
@@ -1230,7 +1230,7 @@ module.exports = function mountHub(app, deps) {
     const blocked = await protection(req.me, p);
     if (blocked) return back(res, '/admin/people/' + p.id, blocked);
     const preset = PRESETS[f.preset] ? f.preset : p.preset;
-    if (preset === 'Owner' && p.preset !== 'Owner' && !canGrantOwner(req.me)) return back(res, '/admin/people/' + p.id, 'Only an owner can make someone an owner');
+    if (preset === 'Site administrator' && p.preset !== 'Site administrator' && !canGrantOwner(req.me)) return back(res, '/admin/people/' + p.id, 'Only a site administrator can make someone a site administrator');
     const homes = parseHomes(f, res.locals.hubHomes);
     if (homes !== 'all' && !homes.length) return back(res, '/admin/people/' + p.id, 'Choose at least one home, or Whole company');
     const perms = {};

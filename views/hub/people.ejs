@@ -21,7 +21,7 @@
     <div class="grid-2">
       <div class="field"><label for="i-preset">Access level</label>
         <select id="i-preset" name="preset">
-          <% PRESET_NAMES.forEach(function (p) { if (p === 'Owner' && !grantOwner) return; %><option <%= (form.preset || 'Carer / staff') === p ? 'selected' : '' %>><%= p %></option><% }) %>
+          <% PRESET_NAMES.forEach(function (p) { if (p === 'Site administrator' && !grantOwner) return; %><option <%= (form.preset || 'Carer / staff') === p ? 'selected' : '' %>><%= p %></option><% }) %>
         </select>
         <span class="hint">You can fine-tune exactly what they can do afterwards.</span>
       </div>
@@ -50,7 +50,7 @@
     <% users.forEach(function (u) { var ini = u.name.split(/\s+/).map(function (x) { return x[0]; }).join('').slice(0, 2).toUpperCase(); %>
       <tr>
         <td><a class="hub-who" href="/admin/people/<%= u.id %>"><span class="hub-avatar"><%= ini %></span><span><strong><%= u.name %></strong><%= u.id === me.id ? ' (you)' : '' %><br /><span class="hint"><%= u.email %></span></span></a></td>
-        <td><%= u.preset %><% if (isCustom(u)) { %> <span class="hub-chip hub-chip--custom">Custom</span><% } %><% if (u.preset === 'Owner') { %> <span class="hub-chip">Locked</span><% } %></td>
+        <td><%= u.preset %><% if (isCustom(u)) { %> <span class="hub-chip hub-chip--custom">Custom</span><% } %><% if (u.preset === 'Site administrator') { %> <span class="hub-chip">Locked</span><% } %></td>
         <td><%= homesLabel(u) %></td>
         <td><span class="hub-pill <%= { active: 'hub-pill--ok', paused: 'hub-pill--warn', invited: 'hub-pill--info' }[u.status] %>"><%= { active: 'Active', paused: 'Paused', invited: 'Invited' }[u.status] %></span></td>
         <td class="hint"><%= u.lastActive ? new Date(u.lastActive).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Never' %></td>

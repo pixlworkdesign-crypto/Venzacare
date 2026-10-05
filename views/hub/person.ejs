@@ -37,7 +37,7 @@
       <div class="field">
         <label for="preset">Access level</label>
         <select id="preset" name="preset" data-presets='<%- JSON.stringify(PRESETS).replace(/'/g, "&#39;") %>'>
-          <% PRESET_NAMES.forEach(function (n) { if (n === 'Owner' && !grantOwner && p.preset !== 'Owner') return; %><option <%= n === p.preset ? 'selected' : '' %>><%= n %></option><% }) %>
+          <% PRESET_NAMES.forEach(function (n) { if (n === 'Site administrator' && !grantOwner && p.preset !== 'Site administrator') return; %><option <%= n === p.preset ? 'selected' : '' %>><%= n %></option><% }) %>
         </select>
         <span class="hint">Picking one fills in the choices below. You can still change any of them for <%= first %> only.</span>
         <label for="title" style="margin-top:.6rem;">Job title</label>

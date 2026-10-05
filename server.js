@@ -31,7 +31,7 @@ const SESSION_SECRET = env('SESSION_SECRET') || (IS_PROD ? '' : 'venza-dev-secre
 
 /* The staff hub needs SESSION_SECRET to sign sign-in cookies. Without it in
    production the hub is sealed shut (the public site stays up — it's the
-   shop window). ADMIN_PASS is only the emergency owner login: without it,
+   shop window). ADMIN_PASS is only the emergency login: without it,
    people still sign in with their own accounts. */
 const HUB_SEALED = IS_PROD && !SESSION_SECRET;
 const MISSING_ADMIN_VARS = [!SESSION_SECRET && 'SESSION_SECRET'].filter(Boolean);
@@ -598,7 +598,7 @@ app.get('/api/health', wrap(async (req, res) => {
     linksUse: siteUrl(req) + (configuredSiteUrl() && !siteUrlProblem() ? '' : ' (the address this page was opened on — set SITE_URL to your main address)'),
     openedOn: req.get('host'),
     adminSignIn: HUB_SEALED ? 'disabled — SESSION_SECRET not set on this deployment' : 'enabled',
-    emergencyOwnerLogin: ADMIN_PASS ? 'set' : 'not set (ADMIN_PASS)',
+    emergencyLogin: ADMIN_PASS ? 'set' : 'not set (ADMIN_PASS)',
     email: require('./mailer').configured() ? 'set up' : 'not set up — invite and reset links are shown on screen instead',
     problems: h.problems,
   });
@@ -793,7 +793,7 @@ if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`\n  Venza Care UK running:`);
     console.log(`  → Public site:  http://localhost:${PORT}`);
-    console.log(`  → Staff hub:    http://localhost:${PORT}/admin/login  (emergency owner login: ${ADMIN_USER} / ${ADMIN_PASS})\n`);
+    console.log(`  → Staff hub:    http://localhost:${PORT}/admin/login  (emergency login: ${ADMIN_USER} / ${ADMIN_PASS})\n`);
   });
 }
 
