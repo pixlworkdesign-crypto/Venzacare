@@ -16,6 +16,7 @@
    ============================================================= */
 
 const db = require('./db');
+const { homeAddress } = require('./content');
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -132,7 +133,7 @@ function calendarFile(home, date, time, siteName) {
     'DTSTART;TZID=Europe/London:' + stamp(date, time),
     'DTEND;TZID=Europe/London:' + stamp(date, end),
     'SUMMARY:' + esc('Visit to ' + home.name),
-    'LOCATION:' + esc(home.name + ', ' + home.town + ' ' + home.postcode),
+    'LOCATION:' + esc(home.name + ', ' + homeAddress(home)),
     'DESCRIPTION:' + esc('Your visit to ' + home.name + ' (' + siteName + ').'),
     'END:VEVENT', 'END:VCALENDAR',
   ].join('\r\n');

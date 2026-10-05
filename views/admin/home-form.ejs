@@ -18,12 +18,19 @@
         <div class="field"><label for="phone">Direct phone number for this home</label><input type="tel" id="phone" name="phone" value="<%= d.phone %>" placeholder="Leave blank to use <%= SITE.phone %>" /></div>
       </div>
       <div class="field"><label for="blurb">Short description</label><textarea id="blurb" name="blurb" rows="3"><%= home.blurb %></textarea></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Address</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="address">Address</label><textarea id="address" name="address" rows="2" style="min-height:4.5rem;" autocomplete="street-address" placeholder="e.g. 12 Victoria Road"><%= d.address %></textarea></div>
       <div class="grid-2">
-        <div class="field"><label for="town">Town</label><input id="town" name="town" value="<%= home.town %>" /></div>
-        <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" value="<%= home.postcode %>" /></div>
+        <div class="field"><label for="town">Town</label><input id="town" name="town" autocomplete="address-level2" value="<%= home.town %>" /></div>
+        <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" autocomplete="postal-code" value="<%= home.postcode %>" style="max-width:12rem;" /></div>
       </div>
       <div class="grid-2">
-        <div class="field"><label for="region">Region</label><input id="region" name="region" value="<%= home.region %>" list="regionList" /><datalist id="regionList"><% (SITE.regions || []).forEach(function (r) { %><option value="<%= r %>"><% }) %></datalist><span class="hint">Used for the “Region” filter on Find a home.</span></div>
+        <div class="field"><label for="region">Region</label><input id="region" name="region" value="<%= home.region %>" list="regionList" /><datalist id="regionList"><% (SITE.regions || []).forEach(function (r) { %><option value="<%= r %>"><% }) %></datalist></div>
         <div class="field"><span class="label">Map position</span>
           <div class="grid-2" style="gap:.5rem;">
             <input id="lat" name="lat" inputmode="decimal" value="<%= home.lat == null ? '' : home.lat %>" placeholder="Latitude" aria-label="Latitude" />
@@ -31,8 +38,14 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head"><h2>Care</h2></div>
+    <div class="panel__body">
       <div class="grid-2">
-        <div class="field"><label for="beds">Beds</label><input type="number" id="beds" name="beds" min="1" value="<%= home.beds %>" /></div>
+        <div class="field"><label for="beds">Number of beds</label><input type="number" id="beds" name="beds" min="1" value="<%= home.beds %>" /></div>
         <div class="field">
           <span class="label">Types of care offered</span>
           <div class="check-grid">

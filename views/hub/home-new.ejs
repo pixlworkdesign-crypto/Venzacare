@@ -5,26 +5,36 @@
 </div></div>
 <% if (error) { %><div class="alert alert--error" role="alert"><%= error %></div><% } %>
 <form action="/admin/homes/new" method="post" class="admin-form">
-  <div class="panel"><div class="panel__body">
-    <div class="grid-2">
-      <div class="field"><label for="name">Home name *</label><input id="name" name="name" required value="<%= form.name || '' %>" /></div>
-      <div class="field"><label for="town">Town *</label><input id="town" name="town" required value="<%= form.town || '' %>" /></div>
+  <div class="panel">
+    <div class="panel__head"><h2>The home</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="name">Home name *</label><input id="name" name="name" required value="<%= form.name || '' %>" placeholder="e.g. Victoria Care Home" /></div>
+      <div class="field"><label for="blurb">Short description</label><textarea id="blurb" name="blurb" rows="3" placeholder="e.g. A friendly 40-bed home near the town centre, with a large garden."><%= form.blurb || '' %></textarea></div>
     </div>
-    <div class="grid-2">
-      <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" value="<%= form.postcode || '' %>" /></div>
+  </div>
+  <div class="panel">
+    <div class="panel__head"><h2>Address</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="address">Address</label><textarea id="address" name="address" rows="2" style="min-height:4.5rem;" autocomplete="street-address" placeholder="e.g. 12 Victoria Road"><%= form.address || '' %></textarea></div>
+      <div class="grid-2">
+        <div class="field"><label for="town">Town *</label><input id="town" name="town" required autocomplete="address-level2" value="<%= form.town || '' %>" placeholder="e.g. Worksop" /></div>
+        <div class="field"><label for="postcode">Postcode</label><input id="postcode" name="postcode" autocomplete="postal-code" value="<%= form.postcode || '' %>" placeholder="e.g. S80 2BJ" style="max-width:12rem;" /></div>
+      </div>
       <div class="field"><label for="region">Region</label>
-        <input id="region" name="region" list="regionList" value="<%= form.region || '' %>" placeholder="e.g. London" />
+        <input id="region" name="region" list="regionList" value="<%= form.region || '' %>" placeholder="e.g. Nottinghamshire" style="max-width:24rem;" />
         <datalist id="regionList"><% regions.forEach(function (r) { %><option value="<%= r %>"><% }) %></datalist>
       </div>
     </div>
-    <div class="grid-2">
-      <div class="field"><label for="beds">Beds</label><input id="beds" name="beds" type="number" min="1" value="<%= form.beds || '' %>" /></div>
-      <div class="field"><span class="label">Types of care</span>
+  </div>
+  <div class="panel">
+    <div class="panel__head"><h2>Care</h2></div>
+    <div class="panel__body">
+      <div class="field"><label for="beds">Number of beds</label><input id="beds" name="beds" type="number" min="1" value="<%= form.beds || '' %>" style="max-width:10rem;" /></div>
+      <div class="field"><span class="label">Types of care offered</span>
         <div class="check-grid"><% careTypes.forEach(function (c) { %><label><input type="checkbox" name="careTypes" value="<%= c %>" checked /> <%= c %></label><% }) %></div>
       </div>
     </div>
-    <div class="field"><label for="blurb">Short description</label><textarea id="blurb" name="blurb" rows="3"><%= form.blurb || '' %></textarea></div>
-  </div></div>
+  </div>
   <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;">
     <button class="btn btn--primary" type="submit">Add home</button>
     <a class="btn btn--muted" href="/admin/homes">Cancel</a>

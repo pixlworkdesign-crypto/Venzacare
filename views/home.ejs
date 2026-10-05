@@ -179,9 +179,9 @@
           <p class="lead" style="font-size:1.05rem;"><% if (slots.length) { %>Pick a time that suits you and it’s booked straight away — no waiting for a call back.<% } else { %>Pick a day that suits you and we’ll call or email to confirm.<% } %> There’s no obligation, and you’re welcome to bring family along.</p>
           <div class="directions">
             <h3>Finding us</h3>
-            <p style="margin:0 0 .4rem;"><%= home.name %>, <%= home.town %> <%= home.postcode %></p>
+            <p style="margin:0 0 .4rem;"><%= home.name %>, <%= homeAddress(home) %></p>
             <% if (d.parking) { %><p class="muted" style="margin:0 0 .6rem;"><%= d.parking %></p><% } %>
-            <a class="care-card__link" href="https://www.google.com/maps/dir/?api=1&destination=<%= encodeURIComponent(home.name + ', ' + home.town + ' ' + home.postcode) %>" target="_blank" rel="noopener">Get directions ↗</a>
+            <a class="care-card__link" href="https://www.google.com/maps/dir/?api=1&destination=<%= encodeURIComponent(home.name + ', ' + homeAddress(home)) %>" target="_blank" rel="noopener">Get directions ↗</a>
           </div>
         </div>
         <div class="apply-card book-card">
@@ -190,7 +190,7 @@
             <span class="booked__tick" aria-hidden="true">✓</span>
             <h3>You’re booked in, <%= booked.name.split(' ')[0] %></h3>
             <p class="booked__when"><%= booked.when %></p>
-            <p class="muted" style="margin:0 0 1rem;"><%= home.name %>, <%= home.town %> <%= home.postcode %></p>
+            <p class="muted" style="margin:0 0 1rem;"><%= home.name %>, <%= homeAddress(home) %></p>
             <div class="booked__actions">
               <a class="btn btn--primary" href="<%= booked.ics %>" download="visit-<%= home.id %>.ics">Add to my calendar</a>
               <a class="btn btn--ghost" href="<%= booked.directions %>" target="_blank" rel="noopener">Get directions ↗</a>

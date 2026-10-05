@@ -22,6 +22,12 @@ function cqcReportUrl(home) {
   return id ? 'https://www.cqc.org.uk/location/' + encodeURIComponent(id) : 'https://www.cqc.org.uk/search/services/care-homes?query=' + encodeURIComponent(home.name + ' ' + home.postcode);
 }
 
+/* A home's full postal address on one line: "12 Victoria Road, Worksop S80 2BJ". */
+function homeAddress(home) {
+  const street = (home.details && home.details.address) || '';
+  return [street, home.town].filter(Boolean).join(', ') + (home.postcode ? ' ' + home.postcode : '');
+}
+
 /* ---------- Photos ----------
    A home photo is either a file bundled with the site ("albany/01.webp",
    served from /images/) or an uploaded one stored as a full URL. */
@@ -216,6 +222,7 @@ function homeJsonLd(home, SITE, base) {
     image: home.photo ? photoAbs(home.photo, base) : undefined,
     address: {
       '@type': 'PostalAddress',
+      streetAddress: d.address || undefined,
       addressLocality: home.town,
       postalCode: home.postcode,
       addressRegion: home.region,
@@ -238,7 +245,7 @@ function ldScript(obj) {
 }
 
 module.exports = {
-  CQC_RATINGS, cqcLabel, cqcClass, cqcReportUrl,
+  CQC_RATINGS, cqcLabel, cqcClass, cqcReportUrl, homeAddress,
   photoSrc, photoAbs, SITE_IMAGES, siteImage,
   FEE_ROWS, gbp, fromPrice, INCLUDED, EXTRAS,
   FEE_FAQS, GENERAL_FAQS, WHAT_TO_BRING,

@@ -355,13 +355,13 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
   // Emails (only if email is set up): the family, and staff who cover this home.
   const SITE = res.locals.SITE;
   const phoneHome = (home.details && home.details.phone) || SITE.phone;
-  const directions = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(home.name + ', ' + home.town + ' ' + home.postcode);
+  const directions = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(home.name + ', ' + content.homeAddress(home));
   if (email) {
     mailer.send({
       to: email,
       subject: 'Your visit to ' + home.name + ' — ' + when,
       heading: 'Your visit is booked',
-      lines: ['Hi ' + name.split(' ')[0] + ',', 'You’re booked to visit ' + home.name + ', ' + home.town + ' ' + home.postcode + ' on ' + when + '.', 'If you need to change the time, call us on ' + phoneHome + '.'],
+      lines: ['Hi ' + name.split(' ')[0] + ',', 'You’re booked to visit ' + home.name + ', ' + content.homeAddress(home) + ' on ' + when + '.', 'If you need to change the time, call us on ' + phoneHome + '.'],
       button: { label: 'Get directions', url: directions },
     }).catch(() => {});
   }

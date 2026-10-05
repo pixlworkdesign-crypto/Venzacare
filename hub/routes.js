@@ -31,6 +31,8 @@ const DOC_TYPES = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.
 const CERT_TYPES = ['.pdf', '.jpg', '.jpeg', '.png', '.heic', '.webp', '.doc', '.docx'];
 
 const text = (v, max) => String(v == null ? '' : v).trim().slice(0, max || 500);
+// A typed-in address (one line or several) as a single line: "Flat 2, 12 Victoria Road".
+const addressLine = (v) => text(String(v == null ? '' : v).split(/[\r\n,]+/).map((s) => s.trim()).filter(Boolean).join(', '), 200);
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || ''));
 const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'home';
 
@@ -474,7 +476,7 @@ module.exports = function mountHub(app, deps) {
       lat: pt ? pt.lat : null, lng: pt ? pt.lng : null,
       beds: parseInt(f.beds, 10) || null, cqc: 'Registered', careTypes, specialisms: [], blurb: text(f.blurb, 600),
       dementiaNote: '', photo: '', gallery: [], sortOrder: existing.length,
-      details: { archived: true },
+      details: { archived: true, address: addressLine(f.address) },
     });
     await log(req.me, req.me.name + ' added ' + name + ' (hidden from the website until it’s made live)');
     back(res, '/admin/homes/' + id + '/edit', name + ' added. It’s hidden from the website until you press “Make live”.');
@@ -519,6 +521,7 @@ module.exports = function mountHub(app, deps) {
     if (can(me, 'homes', 'edit')) {
       Object.assign(details, {
         phone: text(f.phone, 40),
+        address: addressLine(f.address),
         cqcLocationId: text(f.cqcLocationId, 30).replace(/[^0-9A-Za-z-]/g, ''),
         cqcRatedOn: text(f.cqcRatedOn, 40),
         managerName: text(f.managerName, 80),

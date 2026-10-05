@@ -746,6 +746,7 @@ async function saveSettings(patch) {
    value simply hides that part of the page, so nothing is ever invented. */
 const EMPTY_DETAILS = {
   phone: '',             // direct line for this home (falls back to the central number)
+  address: '',           // street address, without town or postcode
   availability: '',      // '' | 'available' | 'limited' | 'waitlist'
   availabilityNote: '',  // e.g. "Two en-suite rooms free from October"
   fees: { residential: null, nursing: null, dementia: null, respite: null }, // £ per week, "from"
