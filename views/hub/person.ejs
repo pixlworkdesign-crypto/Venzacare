@@ -22,7 +22,6 @@
       <label for="photoFile" class="label"><%= p.photoKey ? 'Replace it' : 'Add a photo' %></label>
       <input type="file" id="photoFile" name="photoFile" accept="image/jpeg,image/png,image/webp" />
       <% if (p.photoKey) { %><label class="check-inline"><input type="checkbox" name="removePhoto" value="1" /> Remove the photo</label><% } %>
-      <span class="hint">Shown next to <%= first %>’s name in the staff directory. Only people signed in to the staff hub can see it.</span>
       <div style="margin-top:.8rem;"><button type="submit" class="btn btn--primary btn--sm">Save photo</button></div>
     </div>
   </div>
