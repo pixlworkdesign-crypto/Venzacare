@@ -81,4 +81,9 @@
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
   }
+
+  // Wide tables scroll sideways on phones; let keyboard users scroll them too.
+  document.querySelectorAll('.table-wrap').forEach(function (t) {
+    if (t.scrollWidth > t.clientWidth) { t.tabIndex = 0; t.setAttribute('role', 'region'); t.setAttribute('aria-label', 'Table (scrolls sideways)'); }
+  });
 })();
