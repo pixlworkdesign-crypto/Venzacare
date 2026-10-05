@@ -69,6 +69,10 @@ Object.assign(app.locals, content);
 /* ---------- Middleware ---------- */
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+// Pictures rarely change (uploads get new names), so browsers may keep them
+// for a week; CSS and scripts are re-checked so changes show straight away.
+app.use('/images', express.static(path.join(__dirname, 'public', 'images'), { maxAge: '7d' }));
+app.use('/guides', express.static(path.join(__dirname, 'public', 'guides'), { maxAge: '7d' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Constant-time string comparison, so response timing leaks nothing.

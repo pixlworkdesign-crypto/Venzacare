@@ -1349,7 +1349,7 @@ module.exports = function mountHub(app, deps) {
       if (!req.file) return back(res, '/admin/account', 'Choose a photo first.');
       if (req.body.consent !== '1') return back(res, '/admin/account', 'Tick the box to agree before uploading your photo.');
       if (!STAFF_PHOTO_TYPES.includes(req.file.mimetype)) return back(res, '/admin/account', 'Photos must be JPEG, PNG or WebP images.');
-      me.photoKey = (await storage.saveFile('staff-photos', req.file)).key;
+      me.photoKey = (await storage.saveFile('staff-photos', await storage.optimiseImage(req.file, 800))).key;
       me.photoConsent = { at: new Date().toISOString(), text: PHOTO_CONSENT };
     }
     await auth.saveUser(me);

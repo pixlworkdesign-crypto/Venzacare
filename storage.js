@@ -113,9 +113,27 @@ const PHOTO_BUCKET = process.env.SUPABASE_PHOTO_BUCKET || 'home-photos';
 const PHOTO_DIR = path.join(__dirname, 'public', 'images', 'uploads');
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
 
+/* Shrink an uploaded photo so pages stay fast: turn it the right way up,
+   cap its width and save it as WebP. Phone photos of 4–8 MB usually end up
+   around 200–400 KB. If anything goes wrong, the original is kept. */
+let sharp = null;
+try { sharp = require('sharp'); } catch (e) { sharp = null; }
+async function optimiseImage(file, maxWidth = 1920) {
+  if (!sharp || !file || !file.buffer) return file;
+  try {
+    const buffer = await sharp(file.buffer).rotate().resize({ width: maxWidth, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer();
+    if (buffer.length >= file.buffer.length && file.mimetype === 'image/webp') return file;
+    return Object.assign({}, file, { buffer, mimetype: 'image/webp', size: buffer.length, originalname: String(file.originalname || 'photo').replace(/\.[a-z0-9]+$/i, '') + '.webp' });
+  } catch (e) {
+    console.error('[storage] could not optimise image:', e.message);
+    return file;
+  }
+}
+
 async function savePhoto(file) {
   if (!file || !file.buffer) return '';
   if (!PHOTO_TYPES.includes(file.mimetype)) throw new Error('Photos must be JPEG, PNG, WebP or AVIF images.');
+  file = await optimiseImage(file, 1920);
   const key = safeName(file.originalname);
   if (useSupabase) {
     const { error } = await supabase().storage.from(PHOTO_BUCKET)
@@ -130,7 +148,7 @@ async function savePhoto(file) {
 }
 
 module.exports = {
-  savePhoto,
+  savePhoto, optimiseImage,
   saveFile, saveCv, downloadUrl, removeFile, localPath,
   cvDownloadUrl: downloadUrl,
   localCvPath: localPath,

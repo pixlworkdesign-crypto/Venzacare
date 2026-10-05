@@ -47,12 +47,12 @@ function photoAbs(p, base) {
    SITE.images[key], and a blank means the original picture bundled here. */
 const SITE_IMAGES = [
   { key: 'hero', label: 'Homepage banner', where: 'The big picture at the top of the homepage. Also used when the site is shared on social media.', file: 'hero-home.jpg' },
-  { key: 'about', label: 'About us', where: 'Homepage, next to “Care that starts with getting to know you”.', file: 'about.jpg' },
-  { key: 'careResidential', label: 'Residential care', where: 'Our care page.', file: 'care-residential.jpg' },
-  { key: 'careNursing', label: 'Nursing care', where: 'Our care page.', file: 'care-nursing.jpg' },
-  { key: 'careDementia', label: 'Dementia care', where: 'Our care page.', file: 'care-dementia.jpg' },
-  { key: 'careRespite', label: 'Respite care', where: 'Our care page.', file: 'life.jpg' },
-  { key: 'carePalliative', label: 'End-of-life care', where: 'Our care page.', file: 'care-palliative.jpg' },
+  { key: 'about', label: 'About us', where: 'Homepage, next to “Care that starts with getting to know you”.', file: 'about.webp' },
+  { key: 'careResidential', label: 'Residential care', where: 'Our care page.', file: 'care-residential.webp' },
+  { key: 'careNursing', label: 'Nursing care', where: 'Our care page.', file: 'care-nursing.webp' },
+  { key: 'careDementia', label: 'Dementia care', where: 'Our care page.', file: 'care-dementia.webp' },
+  { key: 'careRespite', label: 'Respite care', where: 'Our care page.', file: 'life.webp' },
+  { key: 'carePalliative', label: 'End-of-life care', where: 'Our care page.', file: 'care-palliative.webp' },
   { key: 'careers', label: 'Careers sharing picture', where: 'Shown when a careers or job page is shared on social media or in a message.', file: 'careers.jpg' },
 ];
 
