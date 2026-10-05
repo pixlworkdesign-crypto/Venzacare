@@ -1027,6 +1027,13 @@ const records = {
   create: (c, id, data) => backend.recCreate(c, id, data),
 };
 
+/* ---------- Our team ----------
+   People shown on the public Our team page, kept as hub records and listed
+   in the order the admin chose (then by name). */
+async function teamMembers() {
+  return (await records.list('team')).sort((a, b) => (a.order || 0) - (b.order || 0) || String(a.name).localeCompare(String(b.name)));
+}
+
 async function messageById(id) {
   return (await messages()).find((m) => m.id === id) || null;
 }
@@ -1045,7 +1052,7 @@ module.exports = {
 
   settings, saveSettings,
   homes, home, allHomes, anyHome, saveHome, removeHome, filterHomes, siteStats,
-  records, uid, messageById,
+  records, uid, messageById, teamMembers,
   jobs, openJobs, job, jobsForHome, jobLocations, createJob, updateJob, toggleJob, deleteJob,
   applications, applicationCounts, addApplication, updateApplication, APPLICATION_STATUSES,
   findPersonData, deletePersonData, expireApplications,

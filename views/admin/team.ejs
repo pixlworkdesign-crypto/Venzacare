@@ -1,0 +1,42 @@
+<%- include('../partials/admin-header') %>
+
+<div class="hub-head">
+  <div>
+    <h1 class="hub-h1">Our team</h1>
+    <p class="muted">The people on the website’s <a href="/our-team" target="_blank" rel="noopener">Our team page</a>, in the order shown. Changes appear straight away.</p>
+  </div>
+  <% if (canEdit) { %><a href="/admin/team/new" class="btn btn--primary">+ Add a team member</a><% } %>
+</div>
+
+<div class="hub-card">
+  <% if (team.length) { %>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Order</th><th>Photo</th><th>Name</th><th>Role</th><th></th></tr></thead>
+      <tbody>
+        <% team.forEach(function (m) { %>
+        <tr>
+          <td class="muted"><%= m.order || '—' %></td>
+          <td><% if (m.photo) { %><img class="team-thumb" src="<%= photoSrc(m.photo) %>" alt="" width="44" height="44" /><% } else { %><span class="muted">None</span><% } %></td>
+          <td><strong><%= m.name %></strong></td>
+          <td><%= m.role || '' %></td>
+          <td style="white-space:nowrap;">
+            <% if (canEdit) { %>
+            <a href="/admin/team/<%= m.id %>/edit" class="btn btn--muted btn--sm">Edit</a>
+            <form action="/admin/team/<%= m.id %>/delete" method="post" class="inline-form" data-confirm="Remove <%= m.name.replace(/"/g, '') %> from the Our team page?">
+              <button type="submit" class="btn btn--muted btn--sm">Remove</button>
+            </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } else { %>
+  <p class="muted">No one on the Our team page yet.<% if (canEdit) { %> <a href="/admin/team/new">Add the first team member</a>.<% } %></p>
+  <% } %>
+</div>
+<% if (!canEdit) { %><p class="hint">Changing this page needs Homes “edit” access for the whole company.</p><% } %>
+
+<%- include('../partials/admin-footer') %>

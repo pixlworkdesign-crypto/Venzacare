@@ -1400,3 +1400,23 @@ a.hub-who:hover strong { text-decoration: underline; }
 .home-photos__item span { display: flex; gap: 0.35rem; align-items: center; }
 .home-photos__item input { width: auto; }
 @media (max-width: 700px) { .home-photos { grid-template-columns: 1fr; } }
+.manager-photo img { width: 96px; height: 96px; object-fit: cover; border-radius: 50%; margin: 0.4rem 0; display: block; }
+.manager-photo input[type=checkbox] { width: auto; }
+.manager-photo .check-inline { display: flex; gap: 0.4rem; align-items: center; font-weight: 500; margin-top: 0.4rem; }
+.site-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; }
+.site-image { display: grid; gap: 0.45rem; align-content: start; }
+.site-image img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 10px; background: #eef4f3; }
+.site-image h2 { font-size: 1.02rem; margin: 0.2rem 0 0; }
+.site-image p { margin: 0; font-size: 0.86rem; }
+.site-image input[type=checkbox] { width: auto; }
+.site-image .check-inline { display: flex; gap: 0.4rem; align-items: center; font-size: 0.86rem; font-weight: 500; }
+
+/* ---------- Our team ---------- */
+.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; }
+.team-card { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 1.75rem 1.25rem; text-align: center; }
+.team-card__photo { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; margin: 0 auto 1rem; display: block; }
+.team-card__initials { display: grid; place-items: center; background: var(--sage-100); color: var(--green-800); font-family: var(--font-display); font-size: 2.6rem; font-weight: 700; }
+.team-card__name { font-size: 1.15rem; margin: 0; }
+.team-card__role { color: var(--green-700); font-weight: 600; margin: 0.25rem 0 0; }
+.team-card__bio { color: var(--muted); font-size: 0.92rem; margin: 0.75rem 0 0; }
+.team-thumb { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: block; }

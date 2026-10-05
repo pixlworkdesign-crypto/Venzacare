@@ -136,7 +136,7 @@
     <% if (d.managerName) { %>
     <!-- MANAGER -->
     <div class="home-section manager-card">
-      <% if (d.managerPhoto) { %><img class="manager-card__photo" src="<%= d.managerPhoto %>" alt="<%= d.managerName %>" loading="lazy" width="120" height="120" /><% } else { %><div class="manager-card__photo manager-card__initials" aria-hidden="true"><%= d.managerName.split(' ').map(function(p){return p[0];}).join('').slice(0,2) %></div><% } %>
+      <% if (d.managerPhoto) { %><img class="manager-card__photo" src="<%= photoSrc(d.managerPhoto) %>" alt="<%= d.managerName %>" loading="lazy" width="120" height="120" /><% } else { %><div class="manager-card__photo manager-card__initials" aria-hidden="true"><%= d.managerName.split(' ').map(function(p){return p[0];}).join('').slice(0,2) %></div><% } %>
       <div>
         <span class="eyebrow">Meet the home manager</span>
         <h2 class="h2" style="font-size:1.5rem;margin:.3rem 0 .6rem;"><%= d.managerName %></h2>

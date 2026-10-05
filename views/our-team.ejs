@@ -1,0 +1,31 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Our team</div>
+    <span class="eyebrow hero__eyebrow">Our team</span>
+    <h1>The people behind the care</h1>
+    <p>Our managers, nurses and carers are the reason our homes feel like home. Here are some of the people you'll meet.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <% if (team.length) { %>
+    <div class="team-grid">
+      <% team.forEach(function (m) { %>
+      <article class="team-card">
+        <% if (m.photo) { %><img class="team-card__photo" src="<%= photoSrc(m.photo) %>" alt="<%= m.name %>" loading="lazy" width="160" height="160" /><% } else { %><div class="team-card__photo team-card__initials" aria-hidden="true"><%= m.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %></div><% } %>
+        <h2 class="team-card__name"><%= m.name %></h2>
+        <% if (m.role) { %><p class="team-card__role"><%= m.role %></p><% } %>
+        <% if (m.bio) { %><p class="team-card__bio"><%= m.bio %></p><% } %>
+      </article>
+      <% }) %>
+    </div>
+    <% } else { %>
+    <p class="lead">We're putting this page together — please check back soon, or <a href="/contact">get in touch</a> to speak to our team.</p>
+    <% } %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

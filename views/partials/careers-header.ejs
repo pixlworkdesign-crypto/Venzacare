@@ -9,7 +9,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:title" content="<%= title ? title + ' · ' : '' %>Careers · <%= SITE.name %>" />
   <meta property="og:url" content="<%= canonical %>" />
-  <meta property="og:image" content="<%= baseUrl %>/images/careers.jpg" />
+  <meta property="og:image" content="<%= photoAbs(siteImage(SITE, 'careers'), baseUrl) %>" />
   <% if (jsonLd) { %><script type="application/ld+json"><%- ldScript(jsonLd) %></script><% } %>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
