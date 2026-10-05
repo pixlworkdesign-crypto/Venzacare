@@ -262,7 +262,33 @@ app.get('/care-homes/:id', wrap(async (req, res) => {
   res.render('home', await homeLocals(req, res, home));
 }));
 
+/* The home manager comes from the staff directory: their current name, and
+   their directory photo only if they agreed to it being shown publicly. */
+async function withManager(home) {
+  const d = home.details || {};
+  if (!d.managerId) return home;
+  const u = await db.records.get('users', d.managerId);
+  return Object.assign({}, home, { details: Object.assign({}, d, {
+    managerName: u ? u.name : '',
+    managerPhoto: u && u.photoKey && u.photoConsent ? '/manager-photo/' + home.id : '',
+  }) });
+}
+
+app.get('/manager-photo/:id', wrap(async (req, res) => {
+  const home = await db.home(req.params.id);
+  const id = home && home.details && home.details.managerId;
+  const user = id && (await db.records.get('users', id));
+  if (!user || !user.photoKey || !user.photoConsent) return res.status(404).end();
+  res.set('Cache-Control', 'public, max-age=300');
+  const url = await storage.downloadUrl(user.photoKey, 3600);
+  if (url) return res.redirect(url);
+  const local = storage.localPath(user.photoKey);
+  if (!local) return res.status(404).end();
+  res.sendFile(local);
+}));
+
 async function homeLocals(req, res, home, extra) {
+  home = await withManager(home);
   const SITE = res.locals.SITE;
   return Object.assign({
     title: home.name + ' care home, ' + home.town,

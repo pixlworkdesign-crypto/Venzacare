@@ -49,7 +49,6 @@ const csvUpload = uploader(['.csv', '.txt']);
 const photoUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).fields([
   { name: 'photoFile', maxCount: 1 },
   { name: 'galleryFiles', maxCount: 20 },
-  { name: 'managerPhotoFile', maxCount: 1 },
 ]);
 const siteImageUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).fields(SITE_IMAGES.map((s) => ({ name: 'img_' + s.key, maxCount: 1 })));
 
@@ -491,6 +490,7 @@ module.exports = function mountHub(app, deps) {
       jobCount: (await db.jobs()).filter((j) => j.homeId === home.id).length,
       canHomes: can(req.me, 'homes', 'edit'), canPhotos: can(req.me, 'homes', 'edit') && can(req.me, 'photos', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
       seeFees: can(req.me, 'fees', 'view'), seeAvail: can(req.me, 'availability', 'view'),
+      staff: (await auth.allUsers()).filter((u) => u.status !== 'invited').sort((a, b) => a.name.localeCompare(b.name)),
     });
   }));
 
@@ -524,9 +524,7 @@ module.exports = function mountHub(app, deps) {
         address: addressLine(f.address),
         cqcLocationId: text(f.cqcLocationId, 30).replace(/[^0-9A-Za-z-]/g, ''),
         cqcRatedOn: text(f.cqcRatedOn, 40),
-        managerName: text(f.managerName, 80),
         managerBio: text(f.managerBio, 800),
-        managerPhoto: can(me, 'photos', 'edit') && f.removeManagerPhoto ? '' : home.details.managerPhoto || '',
         carehomeUrl: /^https:\/\/(www\.)?carehome\.co\.uk\//.test(text(f.carehomeUrl, 300)) ? text(f.carehomeUrl, 300) : '',
         reviewScore: text(f.reviewScore, 6),
         reviewCount: text(f.reviewCount, 8),
@@ -568,12 +566,15 @@ module.exports = function mountHub(app, deps) {
         }
         if (photo !== home.photo || gallery.length !== (home.gallery || []).length) changed.push('photos');
       }
-      // Manager photo: a new upload replaces it; "remove" (above) clears it.
-      const managerFile = ((req.files || {}).managerPhotoFile || [])[0];
-      if (managerFile && can(me, 'photos', 'edit')) {
-        try { details.managerPhoto = await storage.savePhoto(managerFile); } catch (err) { return back(res, '/admin/homes/' + home.id + '/edit', err.message); }
+      // Manager: picked from the staff directory. Their name is copied here for
+      // lists and searches; the public page reads name and photo live from
+      // the directory. "keep" leaves a manager typed in before this existed.
+      if (f.managerId !== 'keep') {
+        const manager = f.managerId ? await auth.getUser(text(f.managerId, 80)) : null;
+        const ok = manager && !manager.builtin && manager.status !== 'invited';
+        Object.assign(details, { managerId: ok ? manager.id : '', managerName: ok ? manager.name : '', managerPhoto: '' });
       }
-      if (details.managerPhoto !== (home.details.managerPhoto || '')) changed.push('manager photo');
+      if (details.managerId !== (home.details.managerId || '') || details.managerName !== home.details.managerName) changed.push('manager');
       if (cqc !== home.cqc) changed.push('CQC rating (now ' + (cqc === 'Registered' ? 'not yet rated' : cqc) + ')');
       Object.assign(next, {
         name: text(f.name, 80) || home.name,

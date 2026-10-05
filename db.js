@@ -754,6 +754,7 @@ const EMPTY_DETAILS = {
   feesNote: '',          // e.g. "Nursing fees shown before NHS-funded nursing care (FNC)"
   cqcLocationId: '',     // e.g. 1-123456789 — powers the official CQC widget
   cqcRatedOn: '',        // date of the latest report
+  managerId: '',         // a person from the staff directory
   managerName: '',
   managerBio: '',
   managerPhoto: '',
