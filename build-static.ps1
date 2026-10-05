@@ -224,10 +224,10 @@ function JobCard($j){
 
 # ------------------------------------------------------------------ HOME PAGE
 $careTypesHome = @(
-  @{t='Residential care'; img='care-residential.jpg'; pos='center top'; d='Help with everyday things — washing, dressing, meals and medication — in a comfortable home, while keeping as much independence as you like.'}
-  @{t='Nursing care'; img='care-nursing.jpg'; pos='center top'; d='Round-the-clock care from registered nurses for ongoing medical needs and long-term health conditions.'}
-  @{t='Dementia care'; img='care-dementia.jpg'; pos='center top'; d='Care from teams experienced in dementia, in calm, familiar surroundings that help residents feel settled and understood.'}
-  @{t='End-of-life care'; img='care-palliative.jpg'; pos='center'; d='Gentle, dignified care in the final months, working closely with your GP and family. Available at Kentford Manor.'}
+  @{t='Residential care'; img='care-residential.webp'; pos='center top'; d='Help with everyday things — washing, dressing, meals and medication — in a comfortable home, while keeping as much independence as you like.'}
+  @{t='Nursing care'; img='care-nursing.webp'; pos='center top'; d='Round-the-clock care from registered nurses for ongoing medical needs and long-term health conditions.'}
+  @{t='Dementia care'; img='care-dementia.webp'; pos='center top'; d='Care from teams experienced in dementia, in calm, familiar surroundings that help residents feel settled and understood.'}
+  @{t='End-of-life care'; img='care-palliative.webp'; pos='center'; d='Gentle, dignified care in the final months, working closely with your GP and family. Available at Kentford Manor.'}
 )
 $careCards = ($careTypesHome | ForEach-Object {
 @"
@@ -293,7 +293,7 @@ $homePage += @"
   <span class="trustbar__item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Family always welcome</span>
 </div></div>
 <section class="section section--alt"><div class="container"><div class="split">
-  <div class="split__media split__media--bordered has-photo" style="background-image:url('images/life.jpg');"></div>
+  <div class="split__media split__media--bordered has-photo" style="background-image:url('images/life.webp');"></div>
   <div><span class="eyebrow">Life in our homes</span><h2 class="h2">There's more to the day than care</h2><p class="lead">Good days are made of small things — something to do, a proper meal, time outdoors and a visit from the people who matter. Each home runs its own programme of activities shaped around what residents actually enjoy.</p>
   <ul style="list-style:none;padding:0;margin:1.5rem 0;display:grid;gap:0.8rem;">
     <li style="display:flex;gap:0.7rem;align-items:flex-start;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#20a7bc" stroke-width="2.2" style="flex:none;margin-top:2px"><path d="M20 6 9 17l-5-5"/></svg><span>A regular programme of activities and outings</span></li>
@@ -304,7 +304,7 @@ $homePage += @"
   <a href="our-care.html" class="btn btn--primary">More about life with us</a></div>
 </div></div></section>
 <section class="section section--alt about-split"><div class="container"><div class="split split--reverse">
-  <div class="split__media split__media--bordered has-photo" style="background-image:url('images/about.jpg');"></div>
+  <div class="split__media split__media--bordered has-photo" style="background-image:url('images/about.webp');"></div>
   <div><span class="eyebrow">About Venza Care</span><h2 class="h2">Care that starts with getting to know you</h2><p class="lead">Across our four homes in London and Bedford, around 300 people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. We offer residential, nursing, dementia and end-of-life care, but it always begins with the person, never the task.</p><p>Our carers and nurses take time to learn the little things — the name of a grandchild, a favourite song, the routine that makes a day feel right. Every home is registered with and inspected by the Care Quality Commission.</p><div class="hero__cta" style="margin-top:1.5rem;"><a href="our-care.html" class="btn btn--primary">Our approach to care</a><a href="care-homes.html" class="btn btn--ghost">Find a home</a></div></div>
 </div></div></section>
 <section class="section section--green"><div class="container">
@@ -332,10 +332,10 @@ W 'index.html' $homePage
 
 # ------------------------------------------------------------------ OUR CARE
 $careDetail = @(
-  @{t='Residential care'; img='care-residential.jpg'; pos='center 22%'; d='For people who no longer manage easily at home, residential care offers help with everyday things — washing, dressing, meals and medication — in a comfortable home, with a team on hand day and night. You keep your own routines and as much independence as you like.'}
-  @{t='Nursing care'; img='care-nursing.jpg'; pos='center 22%'; d='When health needs go beyond day-to-day support, our registered nurses provide care around the clock — for long-term conditions, recovery after a hospital stay, and ongoing clinical needs — working closely with local GPs and community health teams.'}
-  @{t='Dementia care'; img='care-dementia.jpg'; pos='center 22%'; d='Our teams are experienced in caring for people living with dementia, in calm, familiar surroundings designed to feel safe. We take time to learn each resident''s history and routines, so they are known and understood — including on the harder days. At Fieldway in Mitcham, a dedicated floor specialises in dementia care.'}
-  @{t='End-of-life care'; img='care-palliative.jpg'; pos='center'; d='In someone''s final months, our focus is comfort, dignity and choice. We work closely with your GP, district nurses and family to manage symptoms and make sure no one is alone. End-of-life care is available at Kentford Manor, near Newmarket.'}
+  @{t='Residential care'; img='care-residential.webp'; pos='center 22%'; d='For people who no longer manage easily at home, residential care offers help with everyday things — washing, dressing, meals and medication — in a comfortable home, with a team on hand day and night. You keep your own routines and as much independence as you like.'}
+  @{t='Nursing care'; img='care-nursing.webp'; pos='center 22%'; d='When health needs go beyond day-to-day support, our registered nurses provide care around the clock — for long-term conditions, recovery after a hospital stay, and ongoing clinical needs — working closely with local GPs and community health teams.'}
+  @{t='Dementia care'; img='care-dementia.webp'; pos='center 22%'; d='Our teams are experienced in caring for people living with dementia, in calm, familiar surroundings designed to feel safe. We take time to learn each resident''s history and routines, so they are known and understood — including on the harder days. At Fieldway in Mitcham, a dedicated floor specialises in dementia care.'}
+  @{t='End-of-life care'; img='care-palliative.webp'; pos='center'; d='In someone''s final months, our focus is comfort, dignity and choice. We work closely with your GP, district nurses and family to manage symptoms and make sure no one is alone. End-of-life care is available at Kentford Manor, near Newmarket.'}
 )
 $i=0
 $careBlocks = ($careDetail | ForEach-Object {

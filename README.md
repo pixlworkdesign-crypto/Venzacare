@@ -183,7 +183,7 @@ A few high-impact spots use **placeholder photography** stored in `public/images
 | File | Used on | Source |
 |---|---|---|
 | `hero.jpg` | Homepage hero | Pexels (free commercial licence) |
-| `life.jpg` | Homepage "Meaningful moments" section | Pexels (free commercial licence) |
+| `life.webp` | Homepage "Meaningful moments" section | Pexels (free commercial licence) |
 | `careers.jpg` | Careers page hero | Pexels (free commercial licence) |
 | `logo.png`, `logo-white.png` | Brand logos | Venza Care |
 
