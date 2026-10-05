@@ -564,8 +564,8 @@ module.exports = function mountHub(app, deps) {
       dementiaNote: '', photo: '', gallery: [], sortOrder: existing.length,
       details: { archived: true, address: addressLine(f.address) },
     });
-    await log(req.me, req.me.name + ' added ' + name + ' (hidden from the website until it’s made live)');
-    back(res, '/admin/homes/' + id + '/edit', name + ' added. It’s hidden from the website until you press “Make live”.');
+    await log(req.me, req.me.name + ' added ' + name + ' as a draft');
+    back(res, '/admin/homes/' + id + '/edit', name + ' added as a draft.');
   }));
 
   app.get('/admin/homes/:id/edit', need(['homes', 'fees', 'availability'], 'view'), wrap(async (req, res) => {
@@ -718,7 +718,7 @@ module.exports = function mountHub(app, deps) {
   app.post('/admin/homes/:id/delete', need('homes', 'edit'), wrap(async (req, res) => {
     const home = await db.anyHome(req.params.id);
     if (!home || req.me.homes !== 'all') return res.redirect('/admin/homes');
-    if (!home.details.archived) return back(res, '/admin/homes/' + home.id + '/edit', 'Hide the home from the website before deleting it');
+    if (!home.details.archived) return back(res, '/admin/homes/' + home.id + '/edit', 'Make the home a draft before deleting it');
     const attached = (await db.jobs()).filter((j) => j.homeId === home.id).length;
     if (attached) return back(res, '/admin/homes/' + home.id + '/edit', home.name + ' still has ' + attached + ' job(s) attached');
     if (text(req.body.confirm, 120).toLowerCase() !== home.name.toLowerCase()) return back(res, '/admin/homes/' + home.id + '/edit', 'Type the home’s name exactly to delete it');
@@ -734,7 +734,7 @@ module.exports = function mountHub(app, deps) {
       await db.saveHome(Object.assign({}, home, { details: Object.assign({}, home.details, { archived }) }));
       await log(req.me, req.me.name + (archived ? ' archived ' + home.name + ' (hidden from the website)' : ' made ' + home.name + ' live on the website'));
       const to = req.body.back === 'edit' ? '/admin/homes/' + home.id + '/edit' : '/admin/homes';
-      back(res, to, archived ? home.name + ' is hidden from the website.' : home.name + ' is live on the website.');
+      back(res, to, archived ? home.name + ' is now a draft.' : home.name + ' is live on the website.');
     }));
   }
 

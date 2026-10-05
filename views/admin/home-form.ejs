@@ -5,7 +5,7 @@
 <div class="hub-head"><div>
 <h1 class="hub-h1"><%= home.name %></h1>
 </div></div>
-<% if (home.details.archived) { %><div class="hub-notice hub-notice--warn hub-notice--action"><span><strong>Not on the website yet.</strong> Families can’t see this home until you make it live.</span><% if (canHomes) { %><form action="/admin/homes/<%= home.id %>/restore" method="post" class="inline-form"><input type="hidden" name="back" value="edit" /><button class="btn btn--primary btn--sm">Make live</button></form><% } %></div><% } %>
+<% if (home.details.archived) { %><div class="hub-notice hub-notice--warn hub-notice--action"><span><strong>Draft</strong> — families can’t see this home until you make it live.</span><% if (canHomes) { %><form action="/admin/homes/<%= home.id %>/restore" method="post" class="inline-form"><input type="hidden" name="back" value="edit" /><button class="btn btn--primary btn--sm">Make live</button></form><% } %></div><% } %>
 
 <form action="/admin/homes/<%= home.id %>" method="post" class="admin-form" enctype="multipart/form-data">
 
@@ -248,7 +248,7 @@
 <div class="panel" style="margin-bottom:3rem;">
   <div class="panel__head"><h2>Delete this home</h2></div>
   <div class="panel__body">
-    <% if (!home.details.archived) { %><p class="muted" style="margin:0;">Hide the home from the website first.</p>
+    <% if (!home.details.archived) { %><p class="muted" style="margin:0;">Make the home a draft first.</p>
     <% } else if (jobCount) { %><p class="muted" style="margin:0;"><%= home.name %> still has <%= jobCount %> job<%= jobCount === 1 ? '' : 's' %> attached. Delete or move <%= jobCount === 1 ? 'it' : 'them' %> first.</p>
     <% } else { %>
     <form action="/admin/homes/<%= home.id %>/delete" method="post" class="hub-inline" data-confirm="Delete <%= home.name.replace(/"/g, '') %> for good? This can’t be undone.">
