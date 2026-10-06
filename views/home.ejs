@@ -145,6 +145,21 @@
     </div>
     <% } %>
 
+    <% if (homeTeam.length) { %>
+    <div class="home-section" id="team">
+      <h2 class="h2" style="font-size:1.6rem;">Meet the team</h2>
+      <div class="home-team">
+        <% homeTeam.forEach(function (m) { %>
+        <div class="home-team__person">
+          <% if (m.photo) { %><img src="<%= m.photo %>" alt="<%= m.name %>" loading="lazy" width="96" height="96" /><% } else { %><span class="home-team__initials" aria-hidden="true"><%= m.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %></span><% } %>
+          <strong><%= m.name %></strong>
+          <% if (m.title) { %><span><%= m.title %></span><% } %>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
     <% if (d.testimonials && d.testimonials.length) { %>
     <div class="home-section">
       <h2 class="h2" style="font-size:1.6rem;">What families say</h2>

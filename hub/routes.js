@@ -337,7 +337,9 @@ module.exports = function mountHub(app, deps) {
     const staff = (await auth.allUsers())
       .filter((u) => u.status !== 'invited' && !onTeam.has(u.id))
       .sort((a, b) => a.name.localeCompare(b.name));
-    res.render('admin/team', { title: 'Our team', team, staff, canEdit: true, hidden: !!(await db.settings()).teamHidden });
+    const homeStaff = (await auth.allUsers()).filter((u) => u.status !== 'invited' && u.homes !== 'all' && (u.homes || []).length)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    res.render('admin/team', { title: 'Our team', team, staff, homeStaff, canEdit: true, hidden: !!(await db.settings()).teamHidden });
   }));
 
   // Put someone from the staff directory on the page, at the end.
@@ -367,6 +369,20 @@ module.exports = function mountHub(app, deps) {
   }));
 
   // Show or hide the whole Our team page (and its menu and footer links).
+  // Home teams: which staff appear in "Meet the team" on their home's page.
+  // One choice per person; they show on every home they work at.
+  app.post('/admin/team/home-staff', need('photos', 'edit'), wrap(async (req, res) => {
+    const on = new Set([].concat(req.body.show || []));
+    let changed = 0;
+    for (const u of await auth.allUsers()) {
+      if (u.status === 'invited' || u.homes === 'all') continue;
+      const want = on.has(u.id);
+      if (!!u.showOnWebsite !== want) { u.showOnWebsite = want; await auth.saveUser(u); changed++; }
+    }
+    if (changed) await log(req.me, req.me.name + ' changed who appears in Meet the team on the home pages');
+    back(res, '/admin/team#home-teams', 'Saved. The home pages show the change straight away.');
+  }));
+
   app.post('/admin/team/visibility', need('photos', 'edit'), wrap(async (req, res) => {
     const show = req.body.show === '1';
     await db.saveSettings({ teamHidden: !show });

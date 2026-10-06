@@ -1608,3 +1608,16 @@ a.hub-who:hover strong { text-decoration: underline; }
 .vs-list li:last-child { border-bottom: 0; }
 .table .num { text-align: right; }
 @media (max-width: 560px) { .vs-bar { grid-template-columns: 7rem 1fr 2.6rem; } }
+/* Home page: Meet the team */
+.home-team { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.2rem; }
+.home-team__person { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.home-team__person img, .home-team__initials { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; margin-bottom: 0.4rem; }
+.home-team__initials { display: grid; place-items: center; background: var(--sage-100); color: var(--green-800); font: 700 1.6rem var(--font-display); }
+.home-team__person strong { color: var(--green-900); }
+.home-team__person span { font-size: 0.88rem; color: var(--muted); }
+/* checkbox styled as a switch */
+.switch-check { display: inline-flex; align-items: center; cursor: pointer; }
+.switch-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch-check input:checked + .switch__track { background: var(--green-600); }
+.switch-check input:checked + .switch__track::after { transform: translateX(16px); }
+.switch-check input:focus-visible + .switch__track { outline: 3px solid var(--green-500); outline-offset: 2px; }

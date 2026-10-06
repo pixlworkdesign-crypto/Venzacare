@@ -192,6 +192,19 @@ app.get('/', wrap(async (req, res) => {
 
 // A linked team member's directory photo. Staff photos sit in private
 // storage, so this hands out only those of people on the Our team page.
+// A home team member's directory photo: only for staff shown on the website
+// who agreed to their photo being shown.
+app.get('/staff-photo/:id', wrap(async (req, res) => {
+  const user = await db.records.get('users', req.params.id);
+  if (!user || !user.showOnWebsite || !user.photoKey || !user.photoConsent || user.status !== 'active') return res.status(404).end();
+  res.set('Cache-Control', 'public, max-age=300');
+  const url = await storage.downloadUrl(user.photoKey, 3600);
+  if (url) return res.redirect(url);
+  const local = storage.localPath(user.photoKey);
+  if (!local) return res.status(404).end();
+  res.sendFile(local);
+}));
+
 app.get('/team-photo/:id', wrap(async (req, res) => {
   const member = res.locals.hasTeam && (await db.records.get('team', req.params.id));
   const user = member && member.userId && (await db.records.get('users', member.userId));
@@ -332,6 +345,15 @@ app.get('/manager-photo/:id', wrap(async (req, res) => {
   res.sendFile(local);
 }));
 
+// "Meet the team" on a home's page: staff at that home that an admin has
+// chosen to show, the manager first-named elsewhere so left out here.
+async function homeTeam(home) {
+  const users = await db.records.list('users');
+  return users.filter((u) => u.showOnWebsite && u.status === 'active' && Array.isArray(u.homes) && u.homes.includes(home.id) && u.id !== (home.details || {}).managerId)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((u) => ({ name: u.name, title: u.title || '', photo: u.photoKey && u.photoConsent ? '/staff-photo/' + u.id : '' }));
+}
+
 async function homeLocals(req, res, home, extra) {
   home = await withManager(home);
   const SITE = res.locals.SITE;
@@ -341,6 +363,7 @@ async function homeLocals(req, res, home, extra) {
     home,
     jobs: await db.jobsForHome(home.id),
     jsonLd: homeJsonLd(home, SITE, res.locals.baseUrl),
+    homeTeam: await homeTeam(home),
     visitSent: false,
     visitForm: {},
     visitError: null,
