@@ -14,6 +14,11 @@
       <a href="#visit" class="btn btn--gold">Book a visit</a>
       <a href="tel:<%= homeTel %>" class="btn btn--outline-light">Call <%= homePhone %></a>
     </div>
+    <a class="hero-team" href="/care-homes/<%= home.id %>/team">
+      <% if (!team.manager.example) { %><span class="hero-team__face"><% if (team.manager.photo) { %><img src="<%= photoSrc(team.manager.photo) %>" alt="" /><% } else { %><%= team.manager.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %><% } %></span>
+      <span class="hero-team__txt"><b><%= team.manager.name %></b><span>Home Manager</span></span><% } %>
+      <span class="hero-team__go">Meet the team <span aria-hidden="true">→</span></span>
+    </a>
   </div>
 </section>
 <% if (home.photo) { %><div class="home-hero__photo" role="img" aria-label="Outside <%= home.name %>" style="background-image:url('<%= photoSrc(home.photo) %>');"></div><% } %>
@@ -244,6 +249,7 @@
               <a class="btn btn--primary" href="<%= booked.ics %>" download="visit-<%= home.id %>.ics">Add to my calendar</a>
               <a class="btn btn--ghost" href="<%= booked.directions %>" target="_blank" rel="noopener">Get directions ↗</a>
             </div>
+            <a class="booked__team" href="/care-homes/<%= home.id %>/team"><span><%= booked.meetText %></span><b>Meet the team →</b></a>
             <p class="hint" style="margin-top:1rem;">Need to change it? Call <a href="tel:<%= booked.phone.replace(/\s/g, '') %>"><%= booked.phone %></a>. We look forward to meeting you.</p>
           </div>
           <% } else if (visitSent) { %>

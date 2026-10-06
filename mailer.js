@@ -19,21 +19,22 @@ function escapeHtml(s) {
 }
 
 // A plain, readable layout: a heading, paragraphs, and an optional button.
-function render({ heading, lines = [], button }) {
+function render({ heading, lines = [], button, link }) {
   const html =
     '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#1f302c;line-height:1.5">' +
     '<h2 style="color:#0d4f5c;font-size:20px">' + escapeHtml(heading) + '</h2>' +
     lines.map((l) => '<p>' + escapeHtml(l) + '</p>').join('') +
     (button ? '<p><a href="' + escapeHtml(button.url) + '" style="display:inline-block;background:#16808f;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">' + escapeHtml(button.label) + '</a></p><p style="font-size:13px;color:#5a6b66">Or copy this link: ' + escapeHtml(button.url) + '</p>' : '') +
+    (link ? '<p>' + escapeHtml(link.text) + ' <a href="' + escapeHtml(link.url) + '" style="color:#16808f;font-weight:bold">' + escapeHtml(link.label) + '</a></p>' : '') +
     '<p style="font-size:13px;color:#5a6b66">Venza Care UK</p></div>';
-  const text = [heading, ...lines, button ? button.label + ': ' + button.url : ''].filter(Boolean).join('\n\n');
+  const text = [heading, ...lines, button ? button.label + ': ' + button.url : '', link ? link.text + ' ' + link.label + ': ' + link.url : ''].filter(Boolean).join('\n\n');
   return { html, text };
 }
 
 /* Send one email. Returns true if it was accepted for delivery. */
-async function send({ to, subject, heading, lines, button, replyTo }) {
+async function send({ to, subject, heading, lines, button, link, replyTo }) {
   if (!configured() || !to) return false;
-  const body = render({ heading: heading || subject, lines, button });
+  const body = render({ heading: heading || subject, lines, button, link });
   try {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',

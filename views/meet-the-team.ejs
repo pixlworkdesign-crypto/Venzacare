@@ -1,0 +1,30 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/css/team.css" />
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Meet the team</div>
+    <span class="eyebrow hero__eyebrow">Our people</span>
+    <h1>Meet the team</h1>
+    <p>Choose a home to meet its manager and team.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <ul class="mtt-homes">
+      <% homes.forEach(function (x) { var h = x.home, m = x.manager; %>
+      <li>
+        <a class="mtt-home" href="/care-homes/<%= h.id %>/team">
+          <span class="mtt-home__pic"<% if (h.photo) { %> style="background-image:url('<%= photoSrc(h.photo) %>')"<% } %>></span>
+          <span class="mtt-home__body">
+            <% if (!m.example) { %><span class="mtt-home__mgr"><span class="mtt-home__face"><% if (m.photo) { %><img src="<%= photoSrc(m.photo) %>" alt="" /><% } else { %><%= m.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %><% } %></span><span><b><%= m.name %></b><small>Home Manager</small></span></span><% } %>
+            <strong><%= h.name %></strong>
+            <span class="mtt-home__town"><%= h.town %><%= x.count ? ' · ' + x.count + ' in the team' : '' %></span>
+            <span class="mtt-home__go">Meet the team <span aria-hidden="true">→</span></span>
+          </span>
+        </a>
+      </li>
+      <% }) %>
+    </ul>
+  </div>
+</section>
+<%- include('partials/footer') %>

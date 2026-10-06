@@ -406,6 +406,20 @@ async function teamData(home, SITE) {
   };
 }
 
+// Meet the team: choose a home (linked from the main menu).
+app.get('/meet-the-team', wrap(async (req, res) => {
+  const homes = await Promise.all((await db.homes()).map(async (h) => {
+    const home = await withManager(h);
+    const t = await teamData(home, res.locals.SITE);
+    return { home, manager: t.manager, count: t.template ? 0 : t.total };
+  }));
+  res.render('meet-the-team', {
+    title: 'Meet the team',
+    description: 'Meet the managers and teams at every ' + res.locals.SITE.name + ' home.',
+    homes,
+  });
+}));
+
 app.get('/care-homes/:id/team', wrap(async (req, res) => {
   const found = await db.home(req.params.id);
   if (!found) return notFound(res);
@@ -514,6 +528,9 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
   const SITE = res.locals.SITE;
   const phoneHome = (home.details && home.details.phone) || SITE.phone;
   const directions = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(home.name + ', ' + content.homeAddress(home));
+  // "You'll be shown round by …" only when the home has a real manager set.
+  const mgr = (await withManager(home)).details.managerName;
+  const meetText = mgr ? 'You’ll be shown round by ' + mgr.split(/\s+/)[0] + ' — meet the team before you come' : 'Meet the people you’ll see on the day';
   if (email) {
     mailer.send({
       to: email,
@@ -521,6 +538,7 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
       heading: 'Your visit is booked',
       lines: ['Hi ' + name.split(' ')[0] + ',', 'You’re booked to visit ' + home.name + ', ' + content.homeAddress(home) + ' on ' + when + '.', 'If you need to change the time, call us on ' + phoneHome + '.'],
       button: { label: 'Get directions', url: directions },
+      link: { text: meetText + '.', label: 'Meet the team', url: res.locals.baseUrl + '/care-homes/' + home.id + '/team' },
     }).catch(() => {});
   }
   alert(req, res, 'Visit booked online — ' + home.name + ', ' + when, [['Name', name], ['Phone', phone], ['Email', email], ['Care needed', f.careType], ['Notes', f.notes]], email, '/admin/enquiries?tab=progress');
@@ -539,7 +557,7 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
     booked: {
       when, name,
       ics: 'data:text/calendar;charset=utf-8,' + encodeURIComponent(visits.calendarFile(home, date, time, SITE.name)),
-      directions, phone: phoneHome,
+      directions, phone: phoneHome, meetText,
     },
   }));
 }));
@@ -816,7 +834,7 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const base = siteUrl(req);
-  const paths = ['/', '/about-us', '/our-care', '/help-and-advice', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
+  const paths = ['/', '/about-us', '/our-care', '/help-and-advice', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/meet-the-team', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
     '/privacy', '/cookies', '/accessibility'];
   (await db.homes()).forEach((h) => paths.push('/care-homes/' + h.id));
   (await db.openJobs()).forEach((j) => paths.push('/careers/' + j.id));

@@ -215,3 +215,34 @@ html { scroll-padding-top: 140px; }
 .tm .tm-example--bar { border-radius: 0; border-width: 0 0 2px; justify-content: center; text-align: center; }
 .tm .tm-ex-tag { position: absolute; z-index: 4; top: .6rem; right: .6rem; background: #fff4d6; color: #5a3d00; border: 1px solid #cf9c3c; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: .15rem .45rem; border-radius: 999px; }
 .tm .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
+
+/* Home page banner: manager + Meet the team */
+.hero-team { display: inline-flex; align-items: center; gap: .75rem; margin-top: 1.1rem; padding: .45rem 1.1rem .45rem .45rem; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.28); color: #fff; text-decoration: none; backdrop-filter: blur(4px); transition: background .2s; }
+.hero-team:hover { background: rgba(255,255,255,.24); color: #fff; }
+.hero-team:focus-visible { outline: 3px solid var(--gold-400); outline-offset: 3px; }
+.hero-team__face { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--gold-400); color: var(--green-900); font: 700 .95rem var(--font-display); flex: none; }
+.hero-team__face img { width: 100%; height: 100%; object-fit: cover; }
+.hero-team__txt { display: flex; flex-direction: column; line-height: 1.2; font-size: .92rem; }
+.hero-team__txt span { opacity: .85; font-size: .82rem; }
+.hero-team__go { font-weight: 700; padding-left: .3rem; }
+.hero-team__txt + .hero-team__go { border-left: 1px solid rgba(255,255,255,.3); padding-left: .75rem; }
+
+/* Meet the team: choose a home */
+.mtt-homes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.4rem; }
+.mtt-home { display: flex; flex-direction: column; height: 100%; background: var(--paper); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; color: inherit; text-decoration: none; transition: transform .2s, box-shadow .2s; }
+.mtt-home:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); color: inherit; }
+.mtt-home:focus-visible { outline: 3px solid var(--green-500); outline-offset: 3px; }
+.mtt-home__pic { display: block; aspect-ratio: 16 / 9; background: var(--sage-100) center / cover no-repeat; }
+.mtt-home__body { display: flex; flex-direction: column; gap: .3rem; padding: 1.1rem 1.2rem 1.3rem; flex: 1; }
+.mtt-home__mgr { display: flex; align-items: center; gap: .6rem; margin-top: -2.4rem; margin-bottom: .4rem; }
+.mtt-home__mgr b { display: block; font-size: .9rem; } .mtt-home__mgr small { color: var(--muted); }
+.mtt-home__face { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: var(--shadow-sm); display: grid; place-items: center; background: var(--gold-400); color: var(--green-900); font: 700 1rem var(--font-display); flex: none; }
+.mtt-home__face img { width: 100%; height: 100%; object-fit: cover; }
+.mtt-home__mgr > span:last-child { margin-top: 1.6rem; }
+.mtt-home strong { font-size: 1.15rem; color: var(--green-900); }
+.mtt-home__town { color: var(--muted); font-size: .92rem; }
+.mtt-home__go { margin-top: auto; padding-top: .6rem; font-weight: 700; color: var(--green-700); }
+/* Visit confirmation: link to the team */
+.booked__team { display: flex; flex-direction: column; gap: .15rem; margin-top: 1rem; padding: .85rem 1rem; border-radius: 14px; background: var(--sage-100, #e2f1f0); color: var(--green-900); text-decoration: none; }
+.booked__team b { color: var(--green-700); }
+.booked__team:hover { background: #d4ebe8; color: var(--green-900); }
