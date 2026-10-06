@@ -1541,7 +1541,6 @@ a.hub-who:hover strong { text-decoration: underline; }
 .quote-row { display: grid; grid-template-columns: 1fr 14rem; gap: 0.6rem; align-items: start; }
 .quote-row textarea { min-height: 3.2rem; }
 @media (max-width: 640px) { .quote-row { grid-template-columns: 1fr; } }
-.list-rows--stat { grid-template-columns: 8rem 1fr; }
 .qa-rows { display: grid; gap: 1rem; }
 .qa-row { display: grid; gap: 0.4rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
 .qa-row:last-child { border-bottom: 0; padding-bottom: 0; }

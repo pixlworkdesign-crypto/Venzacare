@@ -232,7 +232,6 @@ const DEFAULT_TEXT = {
   aboutTitle: 'Care that starts with getting to know you',
   aboutText: 'Across our homes, people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. Our carers and nurses take time to learn the little things: a grandchild’s name, a favourite song, the routine that makes a day feel right.',
   aboutPoints: ['A regular programme of activities and outings', 'Freshly prepared meals, with special diets catered for', 'Comfortable lounges and gardens to enjoy', 'Residential, nursing, dementia and respite care'],
-  stats: [{ num: '100%', label: 'CQC-registered homes' }, { num: '', label: 'Types of care, from residential to nursing' }, { num: '24/7', label: 'Registered nursing on site' }],
 };
 function textOf(SITE) {
   return Object.assign({}, DEFAULT_TEXT, (SITE && SITE.text) || {});

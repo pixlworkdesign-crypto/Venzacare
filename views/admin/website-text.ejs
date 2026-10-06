@@ -33,16 +33,6 @@
     </div>
   </div>
 
-  <div class="panel">
-    <div class="panel__head"><h2>Homepage — at a glance</h2></div>
-    <div class="panel__body list-rows list-rows--stat">
-      <% T.stats.forEach(function (x, n) { %>
-      <input name="statnum_<%= n %>" value="<%= x.num %>" maxlength="12" aria-label="Figure <%= n + 1 %>" <%- n === 1 ? 'placeholder="Automatic"' : '' %> />
-      <input name="statlabel_<%= n %>" value="<%= x.label %>" maxlength="80" aria-label="Label <%= n + 1 %>" />
-      <% }) %>
-    </div>
-  </div>
-
   <% [['faq', 'Questions families ask', faqs], ['fee', 'Fees questions', feeFaqs]].forEach(function (sec) { %>
   <div class="panel">
     <div class="panel__head"><h2><%= sec[1] %></h2></div>

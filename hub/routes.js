@@ -549,7 +549,6 @@ module.exports = function mountHub(app, deps) {
       }
       return out;
     };
-    const stats = [0, 1, 2].map((n) => ({ num: text(f['statnum_' + n], 12), label: text(f['statlabel_' + n], 80) }));
     const T = {
       heroTitle: text(f.heroTitle, 120) || DEFAULT_TEXT.heroTitle,
       heroLead: text(f.heroLead, 300),
@@ -558,7 +557,6 @@ module.exports = function mountHub(app, deps) {
       aboutTitle: text(f.aboutTitle, 120) || DEFAULT_TEXT.aboutTitle,
       aboutText: text(f.aboutText, 1200),
       aboutPoints: lines(f.aboutPoints, 120).slice(0, 8),
-      stats,
     };
     await db.saveSettings({ text: T, faqs: qa('faq'), feeFaqs: qa('fee'), whatToBring: lines(f.bring, 160).slice(0, 40) });
     await log(req.me, req.me.name + ' updated the website text');
