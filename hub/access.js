@@ -9,7 +9,6 @@
 
 const AREAS = [
   { key: 'homes', label: 'Homes', hint: 'Home details, CQC rating, manager, photos — add or archive a home', levels: ['none', 'view', 'edit'] },
-  { key: 'fees', label: 'Fees', hint: 'Weekly prices shown on the website', levels: ['none', 'view', 'edit'] },
   { key: 'photos', label: 'Website photos', hint: 'Site images, the Our team page, and each home’s photos and manager photo', levels: ['none', 'edit'] },
   { key: 'availability', label: 'Room availability', hint: 'The “rooms available” / “waiting list” badge on the website', levels: ['none', 'view', 'edit'] },
   { key: 'enquiries', label: 'Enquiries & visit requests', hint: 'Families asking about care, callbacks and visits', levels: ['none', 'view', 'edit'] },
@@ -24,12 +23,12 @@ const AREAS = [
 ];
 
 const PRESETS = {
-  'Site administrator': { homes: 'edit', photos: 'edit', fees: 'edit', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'edit', noticeboard: 'edit', documents: 'edit', certificates: 'edit', privacy: 'edit', people: 'edit', activity: 'view' },
-  'Admin':            { homes: 'edit', photos: 'edit', fees: 'edit', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'edit', noticeboard: 'edit', documents: 'edit', certificates: 'edit', privacy: 'none', people: 'edit', activity: 'view' },
-  'Home manager':     { homes: 'edit', photos: 'none', fees: 'edit', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'view', noticeboard: 'edit', documents: 'view', certificates: 'view', privacy: 'none', people: 'none', activity: 'view' },
-  'Recruitment / HR': { homes: 'view', photos: 'none', fees: 'none', availability: 'none', enquiries: 'none', jobs: 'edit', applications: 'edit', noticeboard: 'view', documents: 'edit', certificates: 'edit', privacy: 'none', people: 'none', activity: 'none' },
-  'Reception':        { homes: 'view', photos: 'none', fees: 'view', availability: 'view', enquiries: 'edit', jobs: 'none', applications: 'none', noticeboard: 'view', documents: 'view', certificates: 'none', privacy: 'none', people: 'none', activity: 'none' },
-  'Carer / staff':    { homes: 'none', photos: 'none', fees: 'none', availability: 'none', enquiries: 'none', jobs: 'none', applications: 'none', noticeboard: 'view', documents: 'view', certificates: 'none', privacy: 'none', people: 'none', activity: 'none' },
+  'Site administrator': { homes: 'edit', photos: 'edit', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'edit', noticeboard: 'edit', documents: 'edit', certificates: 'edit', privacy: 'edit', people: 'edit', activity: 'view' },
+  'Admin':            { homes: 'edit', photos: 'edit', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'edit', noticeboard: 'edit', documents: 'edit', certificates: 'edit', privacy: 'none', people: 'edit', activity: 'view' },
+  'Home manager':     { homes: 'edit', photos: 'none', availability: 'edit', enquiries: 'edit', jobs: 'edit', applications: 'view', noticeboard: 'edit', documents: 'view', certificates: 'view', privacy: 'none', people: 'none', activity: 'view' },
+  'Recruitment / HR': { homes: 'view', photos: 'none', availability: 'none', enquiries: 'none', jobs: 'edit', applications: 'edit', noticeboard: 'view', documents: 'edit', certificates: 'edit', privacy: 'none', people: 'none', activity: 'none' },
+  'Reception':        { homes: 'view', photos: 'none', availability: 'view', enquiries: 'edit', jobs: 'none', applications: 'none', noticeboard: 'view', documents: 'view', certificates: 'none', privacy: 'none', people: 'none', activity: 'none' },
+  'Carer / staff':    { homes: 'none', photos: 'none', availability: 'none', enquiries: 'none', jobs: 'none', applications: 'none', noticeboard: 'view', documents: 'view', certificates: 'none', privacy: 'none', people: 'none', activity: 'none' },
 };
 const PRESET_NAMES = Object.keys(PRESETS);
 // Access levels that count as "managers" for documents shared with managers only.

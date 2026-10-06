@@ -9,7 +9,7 @@ const express = require('express');
 const multer = require('multer');
 const db = require('./db');
 const content = require('./content');
-const { FEE_FAQS, GENERAL_FAQS, faqJsonLd, homeJsonLd } = content;
+const { GENERAL_FAQS, faqJsonLd, homeJsonLd } = content;
 const storage = require('./storage');
 const mountHub = require('./hub/routes');
 const visits = require('./visits');
@@ -64,7 +64,7 @@ const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).cat
 /* ---------- View engine ---------- */
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-// Helpers every template can use (CQC labels, fee formatting, FAQ copy…)
+// Helpers every template can use (CQC labels, FAQ copy…)
 Object.assign(app.locals, content);
 
 /* ---------- Middleware ---------- */
@@ -182,7 +182,7 @@ app.get('/', wrap(async (req, res) => {
   const openJobs = await db.openJobs();
   res.render('index', {
     jsonLd: content.orgJsonLd(res.locals.SITE, res.locals.baseUrl),
-    description: 'Venza Care UK runs care homes' + (res.locals.townText ? ' in ' + res.locals.townText : '') + ' — residential, nursing, dementia, respite and end-of-life care. See fees and CQC ratings, and book a visit.',
+    description: 'Venza Care UK runs care homes' + (res.locals.townText ? ' in ' + res.locals.townText : '') + ' — residential, nursing, dementia, respite and end-of-life care. See CQC ratings and book a visit.',
     homes: await db.homes(),
     jobs: openJobs.filter((j) => j.featured).slice(0, 3),
     openCount: openJobs.length,
@@ -237,7 +237,7 @@ app.get('/about-us', (req, res) => {
 app.get('/help-and-advice', (req, res) => {
   res.render('help-and-advice', {
     title: 'Help & advice',
-    description: 'Help with choosing a care home: fees and funding, CQC ratings, answers to common questions and free guides for families.',
+    description: 'Help with choosing a care home: CQC ratings, answers to common questions and free guides for families.',
   });
 });
 
@@ -249,17 +249,8 @@ app.get('/our-care', wrap(async (req, res) => {
   });
 }));
 
-// Fees & funding (CMA: indicative prices, what's included, extras, deposits)
-app.get('/fees-and-funding', wrap(async (req, res) => {
-  const faqs = content.feeFaqsOf(res.locals.SITE);
-  res.render('fees', {
-    title: 'Fees & funding',
-    description: 'Weekly care-home fees at every Venza Care UK home, what is included, optional extras, deposits, fee reviews and the funding help available — in plain English.',
-    homes: await db.homes(),
-    faqs,
-    jsonLd: faqJsonLd(faqs),
-  });
-}));
+// The old fees page is gone; send old links somewhere useful.
+app.get('/fees-and-funding', (req, res) => res.redirect(301, '/help-and-advice'));
 
 // CQC ratings (Regulation 20A: every location's rating, one click from the menu)
 app.get('/cqc-ratings', wrap(async (req, res) => {
@@ -274,7 +265,7 @@ app.get('/cqc-ratings', wrap(async (req, res) => {
 app.get('/faqs', (req, res) => {
   res.render('faqs', {
     title: 'Questions families ask',
-    description: 'Answers to the questions families ask most about Venza Care UK homes — visiting, fees, moving in, what to bring, dementia care and more.',
+    description: 'Answers to the questions families ask most about Venza Care UK homes — visiting, moving in, what to bring, dementia care and more.',
     faqs: content.faqsOf(res.locals.SITE),
     jsonLd: faqJsonLd(content.faqsOf(res.locals.SITE)),
   });
@@ -315,7 +306,7 @@ app.get('/compare', wrap(async (req, res) => {
   const picked = await Promise.all(ids.map((id) => withManager(all.find((h) => h.id === id))));
   res.render('compare', {
     title: 'Compare our care homes',
-    description: 'Compare Venza Care UK homes side by side — weekly fees, CQC ratings, types of care, specialist care and facilities.',
+    description: 'Compare Venza Care UK homes side by side — CQC ratings, types of care, specialist care and facilities.',
     all, picked,
   });
 }));
@@ -422,7 +413,7 @@ async function homeLocals(req, res, home, extra) {
   const SITE = res.locals.SITE;
   return Object.assign({
     title: home.name + ' care home, ' + home.town,
-    description: `${home.name} is a ${home.beds}-bed care home in ${home.town} (${home.postcode}) offering ${home.careTypes.map(lower).join(', ')}. See fees, photos and the CQC rating, and book a visit.`,
+    description: `${home.name} is a ${home.beds}-bed care home in ${home.town} (${home.postcode}) offering ${home.careTypes.map(lower).join(', ')}. See photos and the CQC rating, and book a visit.`,
     home,
     jobs: await db.jobsForHome(home.id),
     jsonLd: homeJsonLd(home, SITE, res.locals.baseUrl),
@@ -816,7 +807,7 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const base = siteUrl(req);
-  const paths = ['/', '/about-us', '/our-care', '/help-and-advice', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
+  const paths = ['/', '/about-us', '/our-care', '/help-and-advice', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
     '/privacy', '/cookies', '/accessibility'];
   (await db.homes()).forEach((h) => paths.push('/care-homes/' + h.id));
   (await db.openJobs()).forEach((j) => paths.push('/careers/' + j.id));
@@ -885,12 +876,9 @@ async function buildKnowledge() {
   (await db.homes()).forEach((h) => {
     const cqc = 'CQC rating: ' + content.cqcLabel(h);
     const d = h.details || {};
-    const fees = content.FEE_ROWS.filter((r) => d.fees && d.fees[r.key])
-      .map((r) => `${r.label} from ${content.gbp(d.fees[r.key])}/week`).join('; ');
     const avail = { available: 'rooms available now', limited: 'limited availability', waitlist: 'waiting list' }[d.availability];
     lines.push(
       `- ${h.name} (${h.town}, ${h.postcode}, ${h.region}): ${h.beds} beds, ${cqc}. ` +
-        (fees ? `Fees: ${fees}${d.feesUpdated ? ' (as of ' + d.feesUpdated + ')' : ''}. ` : 'Fees: not published yet — ask people to call. ') +
         (avail ? `Availability: ${avail}${d.availabilityNote ? ' — ' + d.availabilityNote : ''}. ` : '') +
         (d.managerName ? `Home manager: ${d.managerName}. ` : '') +
         `Page: /care-homes/${h.id} — families can book a visit there instantly by picking a free time. ` +
@@ -915,7 +903,7 @@ async function buildKnowledge() {
 
   lines.push(`\n## How to get in touch / next steps`);
   lines.push(`- Find a home and filter by region/care type at /care-homes.`);
-  lines.push(`- Fees, what's included and funding help: /fees-and-funding. CQC ratings: /cqc-ratings. Common questions: /faqs.`);
+  lines.push(`- CQC ratings: /cqc-ratings. Common questions: /faqs.`);
   lines.push(`- Book a visit or send an enquiry at /contact, or call ${S.phone}.`);
   lines.push(`- Browse and apply for jobs at /careers.`);
   return lines.join('\n');

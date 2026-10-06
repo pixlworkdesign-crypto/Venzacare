@@ -16,7 +16,7 @@ const db = require('../db');
 const storage = require('../storage');
 const mailer = require('../mailer');
 const visits = require('../visits');
-const { DEFAULT_TEXT, textOf, faqsOf, feeFaqsOf, whatToBringOf, SITE_IMAGES, FACILITY_GROUPS, careTypesOf, careTypeNames, specialistCareOf, facilitiesOf, facilityNames, homeFacilityNames, feeItemsOf } = require('../content');
+const { DEFAULT_TEXT, textOf, faqsOf, whatToBringOf, SITE_IMAGES, FACILITY_GROUPS, careTypesOf, careTypeNames, specialistCareOf, facilitiesOf, facilityNames, homeFacilityNames } = require('../content');
 const auth = require('./auth');
 const analytics = require('../analytics');
 const access = require('./access');
@@ -321,7 +321,7 @@ module.exports = function mountHub(app, deps) {
   }));
 
   /* ---------- Homes ---------- */
-  app.get('/admin/homes', need(['homes', 'fees', 'availability'], 'view'), wrap(async (req, res) => {
+  app.get('/admin/homes', need(['homes', 'availability'], 'view'), wrap(async (req, res) => {
     const list = (await db.allHomes()).filter((h) => covers(req.me, h.id));
     res.render('admin/homes', { title: 'Homes', homes: list });
   }));
@@ -450,7 +450,7 @@ module.exports = function mountHub(app, deps) {
   const needCare = [need('homes', 'edit'), (req, res, next) => (req.me.homes === 'all' ? next() : deny(res, 'Only people who cover the whole company can change the types of care.'))];
 
   app.get('/admin/care-types', ...needCare, (req, res) => {
-    res.render('admin/care-types', { title: 'Care & facilities', types: careTypesOf(res.locals.SITE), specialist: specialistCareOf(res.locals.SITE), facilities: facilitiesOf(res.locals.SITE), feeItems: feeItemsOf(res.locals.SITE) });
+    res.render('admin/care-types', { title: 'Care & facilities', types: careTypesOf(res.locals.SITE), specialist: specialistCareOf(res.locals.SITE), facilities: facilitiesOf(res.locals.SITE) });
   });
 
   app.post('/admin/care-types', ...needCare, careUpload, wrap(async (req, res) => {
@@ -489,7 +489,7 @@ module.exports = function mountHub(app, deps) {
 
     const specialistCare = [...new Set(String(f.specialist || '').split(/\r?\n/).map((s) => text(s, 60)).filter(Boolean))];
 
-    // Facilities and fee items: rows of name (+ orig for renames); a cleared name removes the row.
+    // Facilities: rows of name (+ orig for renames); a cleared name removes the row.
     const rows = (prefix, max) => {
       const out = [], ren = {};
       for (let n = 0; n < 200 && (f[prefix + n] !== undefined || f[prefix + 'orig_' + n] !== undefined); n++) {
@@ -500,28 +500,21 @@ module.exports = function mountHub(app, deps) {
       }
       return { out, ren };
     };
-    const fac = rows('fac_', 80), fee = rows('fee_', 120);
+    const fac = rows('fac_', 80);
     const groupNames = FACILITY_GROUPS.map((g) => g.name);
     const facilities = [];
     for (const r of fac.out) if (!facilities.some((x) => x.name === r.name)) facilities.push({ name: r.name, group: groupNames.includes(f['facgroup_' + r.n]) ? f['facgroup_' + r.n] : 'Other' });
     const facNames = facilities.map((x) => x.name);
-    const feeItems = [];
-    for (const r of fee.out) if (!feeItems.some((x) => x.name === r.name)) feeItems.push({ name: r.name, usually: f['feeusually_' + r.n] === 'extra' ? 'extra' : 'included' });
 
     // Carry renames and removals through to every home.
     for (const h of await db.allHomes()) {
       const d = h.details || {};
       const careTypes = (h.careTypes || []).filter((c) => !removed.includes(c)).map((c) => renames[c] || c);
       const homeFac = Array.isArray(d.facilities) ? homeFacilityNames(h).map((x) => fac.ren[x] || x).filter((x) => facNames.includes(x)) : d.facilities;
-      let homeFee = d.feeItems;
-      if (homeFee) {
-        homeFee = {};
-        for (const [k, v] of Object.entries(d.feeItems)) { const nk = fee.ren[k] || k; if (feeItems.some((x) => x.name === nk)) homeFee[nk] = v; }
-      }
-      const next = Object.assign({}, h, { careTypes, details: Object.assign({}, d, { facilities: homeFac, feeItems: homeFee }) });
+      const next = Object.assign({}, h, { careTypes, details: Object.assign({}, d, { facilities: homeFac }) });
       if (JSON.stringify(next) !== JSON.stringify(h)) await db.saveHome(next);
     }
-    await db.saveSettings({ careTypes: types, specialistCare, facilities, feeItems });
+    await db.saveSettings({ careTypes: types, specialistCare, facilities });
     const what = [].concat(
       Object.entries(renames).map(([a, b]) => 'renamed ' + a + ' to ' + b),
       removed.map((r) => 'removed ' + r),
@@ -532,11 +525,11 @@ module.exports = function mountHub(app, deps) {
   }));
 
   /* ---------- Website text ----------
-     Homepage wording, the FAQs, the fees FAQs and the moving-in checklist.
+     Homepage wording, the FAQs and the moving-in checklist.
      Whole-company home editors (same as Care & facilities). */
   app.get('/admin/website-text', ...needCare, (req, res) => {
     const SITE = res.locals.SITE;
-    res.render('admin/website-text', { title: 'Website text', T: textOf(SITE), faqs: faqsOf(SITE), feeFaqs: feeFaqsOf(SITE), bring: whatToBringOf(SITE) });
+    res.render('admin/website-text', { title: 'Website text', T: textOf(SITE), faqs: faqsOf(SITE), bring: whatToBringOf(SITE) });
   });
   app.post('/admin/website-text', ...needCare, wrap(async (req, res) => {
     const f = req.body;
@@ -558,7 +551,7 @@ module.exports = function mountHub(app, deps) {
       aboutText: text(f.aboutText, 1200),
       aboutPoints: lines(f.aboutPoints, 120).slice(0, 8),
     };
-    await db.saveSettings({ text: T, faqs: qa('faq'), feeFaqs: qa('fee'), whatToBring: lines(f.bring, 160).slice(0, 40) });
+    await db.saveSettings({ text: T, faqs: qa('faq'), whatToBring: lines(f.bring, 160).slice(0, 40) });
     await log(req.me, req.me.name + ' updated the website text');
     back(res, '/admin/website-text', 'Saved. The website shows the change within 30 seconds.');
   }));
@@ -627,18 +620,18 @@ module.exports = function mountHub(app, deps) {
   async function homeFormLocals(req, res, home, isNew) {
     return {
       title: isNew ? 'Add a home' : 'Edit ' + home.name, home, isNew, careTypes: careNames(res), specialistCare: specialistCareOf(res.locals.SITE),
-      facilityList: facilitiesOf(res.locals.SITE), feeItems: feeItemsOf(res.locals.SITE), error: null,
+      facilityList: facilitiesOf(res.locals.SITE), error: null,
       visitSettings: visits.settingsFor(home), DAY_NAMES: visits.DAY_NAMES, timeLabel: visits.timeLabel,
       jobCount: isNew ? 0 : (await db.jobs()).filter((j) => j.homeId === home.id).length,
-      canHomes: can(req.me, 'homes', 'edit'), canPhotos: can(req.me, 'homes', 'edit') && can(req.me, 'photos', 'edit'), canFees: can(req.me, 'fees', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
-      seeFees: can(req.me, 'fees', 'view'), seeAvail: can(req.me, 'availability', 'view'),
+      canHomes: can(req.me, 'homes', 'edit'), canPhotos: can(req.me, 'homes', 'edit') && can(req.me, 'photos', 'edit'), canAvail: can(req.me, 'availability', 'edit'),
+      seeAvail: can(req.me, 'availability', 'view'),
       staff: (await auth.allUsers()).filter((u) => u.status !== 'invited').sort((a, b) => a.name.localeCompare(b.name)),
     };
   }
   const blankHome = (res) => ({
     id: '', name: '', town: '', postcode: '', region: '', lat: null, lng: null, beds: null, cqc: 'Registered',
     careTypes: careNames(res), specialisms: [], blurb: '', dementiaNote: '', photo: '', gallery: [],
-    details: Object.assign({}, db.EMPTY_DETAILS, { fees: Object.assign({}, db.EMPTY_DETAILS.fees), archived: true }),
+    details: Object.assign({}, db.EMPTY_DETAILS, { archived: true }),
   });
 
   app.get('/admin/homes/new', need('homes', 'edit'), wrap(async (req, res) => {
@@ -667,21 +660,17 @@ module.exports = function mountHub(app, deps) {
     return saveHomeForm(req, res);
   }));
 
-  app.get('/admin/homes/:id/edit', need(['homes', 'fees', 'availability'], 'view'), wrap(async (req, res) => {
+  app.get('/admin/homes/:id/edit', need(['homes', 'availability'], 'view'), wrap(async (req, res) => {
     const home = await db.anyHome(req.params.id);
     if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
     res.render('admin/home-form', await homeFormLocals(req, res, home, false));
   }));
 
-  app.post('/admin/homes/:id', need(['homes', 'fees', 'availability'], 'edit'), photoUpload, wrap(saveHomeForm));
+  app.post('/admin/homes/:id', need(['homes', 'availability'], 'edit'), photoUpload, wrap(saveHomeForm));
   async function saveHomeForm(req, res) {
     const home = await db.anyHome(req.params.id);
     if (!home || !covers(req.me, home.id)) return res.redirect('/admin/homes');
     const me = req.me, f = req.body;
-    const price = (v) => {
-      const n = parseFloat(String(v || '').replace(/[£,\s]/g, ''));
-      return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
-    };
     const details = Object.assign({}, home.details);
     const next = Object.assign({}, home);
     const changed = [];
@@ -691,22 +680,6 @@ module.exports = function mountHub(app, deps) {
       details.availability = ['available', 'limited', 'waitlist'].includes(f.availability) ? f.availability : '';
       details.availabilityNote = text(f.availabilityNote, 200);
       if (details.availability !== home.details.availability || details.availabilityNote !== home.details.availabilityNote) changed.push('availability');
-    }
-    if (can(me, 'fees', 'edit')) {
-      const fees = { residential: price(f.feeResidential), nursing: price(f.feeNursing), dementia: price(f.feeDementia), respite: price(f.feeRespite) };
-      if (JSON.stringify(fees) !== JSON.stringify(home.details.fees) || text(f.feesUpdated, 40) !== home.details.feesUpdated || text(f.feesNote, 400) !== home.details.feesNote) changed.push('fees');
-      details.fees = fees;
-      details.feesUpdated = text(f.feesUpdated, 40);
-      details.feesNote = text(f.feesNote, 400);
-      if (f.feeItemsSection) {
-        const items = {};
-        feeItemsOf(res.locals.SITE).forEach((it, n) => {
-          const how = f['fee_' + n];
-          items[it.name] = ['included', 'extra', 'no'].includes(how) ? how : it.usually;
-        });
-        if (JSON.stringify(items) !== JSON.stringify(home.details.feeItems || {})) changed.push('what the fee covers');
-        details.feeItems = items;
-      }
     }
     if (can(me, 'homes', 'edit')) {
       Object.assign(details, {

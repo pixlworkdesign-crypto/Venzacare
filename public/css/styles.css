@@ -322,7 +322,7 @@ textarea { resize: vertical; min-height: 120px; }
 .home-card .btn { margin-top: auto; }
 
 /* ---------- Guides ---------- */
-.guides { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
+.guides { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
 .guide-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.4rem; box-shadow: var(--shadow-sm); }
 .guide-card .ic { color: var(--gold-600); margin-bottom: 0.8rem; }
 .guide-card h4 { font-size: 1.05rem; margin-bottom: 0.4rem; }
@@ -1025,7 +1025,7 @@ a.contact-list__value:hover { color: var(--green-500); }
 }
 
 /* =========================================================
-   v5 — fixes + fees, CQC, visit booking, FAQs
+   v5 — fixes + CQC, visit booking, FAQs
    ========================================================= */
 
 /* Hero content needs the same side gutter as every other section
@@ -1048,9 +1048,6 @@ a.contact-list__value:hover { color: var(--green-500); }
 .avail-badge.is-available { background: #1f7a4d; color: #fff; }
 .avail-badge.is-limited { background: var(--gold-400); color: var(--green-900); }
 .avail-badge.is-waitlist { background: rgba(255,255,255,0.95); color: var(--muted); }
-.home-card .home-card__price { margin: 0.2rem 0 1rem; color: var(--ink); font-size: 0.95rem; }
-.home-card__price strong { color: var(--green-800); font-size: 1.1rem; }
-.home-card__price .u { text-decoration: underline; }
 
 /* Home page hero: text on solid colour, photo alongside (desktop) or below (phone) */
 .home-hero.has-photo {
@@ -1073,25 +1070,7 @@ a.contact-list__value:hover { color: var(--green-500); }
 .avail-line.is-available .dot { background: #1f7a4d; }
 .avail-line.is-limited .dot { background: var(--gold-500); }
 
-/* Fee tables */
-.fee-table-wrap { overflow-x: auto; background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
-.fee-table { margin: 0; min-width: 0; }
-.fee-table th[scope="row"] { font-weight: 600; text-align: left; }
-.fee-table td strong { color: var(--green-800); font-size: 1.1rem; }
-.fee-town { display: block; font-weight: 400; font-size: 0.85rem; }
-.fee-note { font-size: 0.9rem; margin-top: 0.8rem; }
-.included-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem; }
 .plain-list { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.45rem; }
-@media (max-width: 760px) {
-  .included-grid { grid-template-columns: 1fr; }
-  /* The all-homes fee table becomes one card per home on phones */
-  .fee-table--all thead { display: none; }
-  .fee-table--all, .fee-table--all tbody, .fee-table--all tr, .fee-table--all th, .fee-table--all td { display: block; width: 100%; }
-  .fee-table--all tr { padding: 0.9rem 1rem; border-bottom: 1px solid var(--line); }
-  .fee-table--all th[scope="row"] { padding: 0 0 0.4rem; border: 0; }
-  .fee-table--all td { display: flex; justify-content: space-between; padding: 0.3rem 0; border: 0; }
-  .fee-table--all td::before { content: attr(data-label); color: var(--muted); }
-}
 
 /* CQC */
 .cqc-box { display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; align-items: start; background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 1.5rem; }
@@ -1159,8 +1138,6 @@ a.contact-list__value:hover { color: var(--green-500); }
   .nav__links a { font-size: 0.9rem; }
   .nav__call { display: none; }
 }
-.fee-table tbody th[scope="row"] { text-transform: none; letter-spacing: 0; font-size: 0.98rem; color: var(--ink); }
-.included-grid .tick-list { grid-template-columns: 1fr; }
 
 /* Job page: the role description first, then the application form — both full width */
 .job-detail--stacked { grid-template-columns: 1fr; gap: 2.5rem; }
@@ -1493,9 +1470,7 @@ a.hub-who:hover strong { text-decoration: underline; }
 .hub-notice--action { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .list-rows { display: grid; gap: 0.5rem; }
 .list-rows--pair { grid-template-columns: 1fr 12rem; }
-.fee-items { display: grid; gap: 0.4rem; margin-top: 0.4rem; }
-.fee-item { display: grid; grid-template-columns: 1fr 11rem; gap: 0.8rem; align-items: center; }
-@media (max-width: 640px) { .list-rows--pair, .fee-item { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .list-rows--pair { grid-template-columns: 1fr; } }
 
 /* Staff hub: Homes as tiles */
 .home-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 3rem; }

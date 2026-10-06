@@ -94,7 +94,7 @@ function Footer{
       </div>
       <div><h4>Our care</h4><a href="our-care.html">Residential care</a><a href="our-care.html">Nursing care</a><a href="our-care.html">Dementia care</a><a href="our-care.html">End-of-life care</a></div>
       <div><h4>Explore</h4><a href="care-homes.html">Find a care home</a><a href="careers.html" target="_blank" rel="noopener">Careers &amp; jobs</a><a href="contact.html">Contact us</a><a href="/admin/login">Staff / admin login</a></div>
-      <div><h4>Information</h4><a href="#">CQC ratings</a><a href="#">Fees &amp; funding</a><a href="privacy.html">Privacy policy</a><a href="cookies.html">Cookie policy</a><a href="accessibility.html">Accessibility</a></div>
+      <div><h4>Information</h4><a href="#">CQC ratings</a><a href="privacy.html">Privacy policy</a><a href="cookies.html">Cookie policy</a><a href="accessibility.html">Accessibility</a></div>
     </div>
     <div class="footer__bottom"><span>© 2026 Venza Care UK Ltd. Registered in England &amp; Wales. Regulated by the Care Quality Commission.</span><span>Static preview · placeholder content</span></div>
   </div>
@@ -248,7 +248,6 @@ $careOpts = (@('Residential Care','Nursing Care','Dementia Care','Respite Care',
 
 $guides = @(
   @{t='A guide to choosing a care home'; d='What to look for, questions to ask and how to know it feels right.'; pdf='guides/choosing-a-care-home.pdf'}
-  @{t='Understanding fees &amp; funding'; d='NHS, local authority and self-funding explained in plain English.'; pdf='guides/understanding-fees-and-funding.pdf'}
   @{t='Living well with dementia'; d='Practical advice and reassurance for families and carers.'; pdf='guides/living-well-with-dementia.pdf'}
   @{t='Making the move easier'; d='How to help a loved one settle in and feel at home quickly.'; pdf='guides/making-the-move-easier.pdf'}
 )
@@ -623,7 +622,7 @@ $ct += @"
   <div><h2 style="margin-top:0;">Send us a message</h2><p class="muted">Fill in the form and we'll get back to you, usually within one working day.</p>
   <form action="#" method="post" style="max-width:560px;" onsubmit="alert('This is a static preview — the live site delivers enquiries to the admin backoffice.'); return false;"><div class="admin-form">
     <div class="grid-2"><div class="field"><label for="name">Your name *</label><input type="text" id="name" name="name" required /></div><div class="field"><label for="email">Email *</label><input type="email" id="email" name="email" required /></div></div>
-    <div class="grid-2"><div class="field"><label for="phone">Phone</label><input type="tel" id="phone" name="phone" /></div><div class="field"><label for="subject">Subject</label><select id="subject" name="subject"><option>General enquiry</option><option>Arranging care</option><option>Book a visit</option><option>Fees &amp; funding</option><option>Careers</option></select></div></div>
+    <div class="grid-2"><div class="field"><label for="phone">Phone</label><input type="tel" id="phone" name="phone" /></div><div class="field"><label for="subject">Subject</label><select id="subject" name="subject"><option>General enquiry</option><option>Arranging care</option><option>Book a visit</option><option>Careers</option></select></div></div>
     <div class="field"><label for="message">Message *</label><textarea id="message" name="message" required></textarea></div>
     <button type="submit" class="btn btn--primary">Send message</button>
   </div></form></div>

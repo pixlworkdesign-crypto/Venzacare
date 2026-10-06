@@ -8,10 +8,9 @@
 </div>
 
 <div class="home-tiles">
-  <% homes.forEach(function(h){ var d = h.details; var from = fromPrice(h);
+  <% homes.forEach(function(h){ var d = h.details;
        var missing = [];
        if (!h.photo) missing.push('photos');
-       if (!from) missing.push('fees');
        if (!d.availability) missing.push('availability');
        if (!d.managerName) missing.push('manager');
        if (!d.cqcLocationId) missing.push('CQC ID');

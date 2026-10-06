@@ -96,7 +96,7 @@ create index if not exists messages_created_idx on messages (created_at desc);
 
 -- ---- Additions (safe to re-run on an existing database) ----------------
 
--- Per-home extras: fees, availability, manager, CQC location id, reviews.
+-- Per-home extras: availability, manager, CQC location id, reviews.
 alter table homes add column if not exists details jsonb not null default '{}'::jsonb;
 
 -- Visit bookings arrive as their own kind of message.

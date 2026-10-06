@@ -105,48 +105,10 @@ function careImage(SITE, c) {
   return SITE_IMAGES.some((s) => s.key === c.image) ? siteImage(SITE, c.image) : photoSrc(c.image);
 }
 
-/* ---------- Fees ---------- */
-const FEE_ROWS = [
-  { key: 'residential', label: 'Residential care' },
-  { key: 'nursing', label: 'Nursing care' },
-  { key: 'dementia', label: 'Dementia care' },
-  { key: 'respite', label: 'Respite (per week)' },
-];
-
-function gbp(n) {
-  return '£' + Number(n).toLocaleString('en-GB', { maximumFractionDigits: 0 });
-}
-
-// The lowest published weekly fee for a home, or null.
-function fromPrice(home) {
-  const f = (home.details && home.details.fees) || {};
-  const vals = FEE_ROWS.map((r) => f[r.key]).filter((v) => typeof v === 'number' && v > 0);
-  return vals.length ? Math.min.apply(null, vals) : null;
-}
-
-const INCLUDED = [
-  'Your room, with all heating, lighting, water and council tax',
-  'All the care set out in your care plan, 24 hours a day',
-  'Three freshly cooked meals a day, snacks and drinks, and special diets',
-  'Laundry, including personal clothing',
-  'Daily cleaning of your room',
-  'The home’s activities programme, and most in-house events',
-  'Wi-Fi throughout the home',
-];
-
-const EXTRAS = [
-  'Hairdressing, beauty treatments and chiropody',
-  'Newspapers, magazines and personal toiletries of your choice',
-  'Private phone line or TV licence in your room',
-  'Trips with an entrance fee, and escorts to non-NHS appointments',
-  'Dry cleaning',
-];
-
-/* ---------- Facilities and what the fee covers ----------
-   Site-wide lists managed in the staff hub (Care & facilities), with each
-   home ticking its own: details.facilities (names) and details.feeItems
-   ({ name: 'included' | 'extra' | 'no' }). A home that hasn't been set up
-   yet shows the defaults. */
+/* ---------- Facilities ----------
+   A site-wide list managed in the staff hub (Care & facilities), with each
+   home ticking its own: details.facilities (names). A home that hasn't been
+   set up yet shows the defaults. */
 const FACILITY_GROUPS = [
   { name: 'Rooms', icon: 'M3 12h18v6M3 18v-8a1 1 0 0 1 1-1h7v5' },
   { name: 'Indoor spaces', icon: 'M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z' },
@@ -204,22 +166,6 @@ function homeFacilities(SITE, home) {
   return FACILITY_GROUPS.map((g) => ({ group: g.name, icon: g.icon, items: all.filter((f) => f.group === g.name && mine.includes(f.name)).map((f) => f.name) }))
     .filter((g) => g.items.length);
 }
-function feeItemsOf(SITE) {
-  if (SITE && Array.isArray(SITE.feeItems)) return SITE.feeItems;
-  return INCLUDED.map((name) => ({ name, usually: 'included' })).concat(EXTRAS.map((name) => ({ name, usually: 'extra' })));
-}
-// The site-wide "usually" lists (Fees & funding page) or one home's own.
-function feeLists(SITE, home) {
-  const own = home && home.details && home.details.feeItems;
-  const out = { included: [], extras: [] };
-  for (const item of feeItemsOf(SITE)) {
-    const how = own && own[item.name] ? own[item.name] : item.usually;
-    if (how === 'included') out.included.push(item.name);
-    else if (how === 'extra') out.extras.push(item.name);
-  }
-  return out;
-}
-
 /* ---------- Website text ----------
    Homepage wording, FAQs and the moving-in checklist, editable in the staff
    hub (Website text) and kept in site settings. Blank settings mean these
@@ -228,7 +174,7 @@ const DEFAULT_TEXT = {
   heroTitle: 'Better Care. Better Living.',
   heroLead: 'High-quality care that supports independence, comfort and wellbeing.',
   homesTitle: '', // blank: "Homes with their own character"
-  homesLead: 'Every home offers residential, nursing and dementia care, so as needs change your loved one rarely has to move. Prices and CQC ratings are shown up front.',
+  homesLead: 'Every home offers residential, nursing and dementia care, so as needs change your loved one rarely has to move. CQC ratings are shown up front.',
   aboutTitle: 'Care that starts with getting to know you',
   aboutText: 'Across our homes, people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. Our carers and nurses take time to learn the little things: a grandchild’s name, a favourite song, the routine that makes a day feel right.',
   teamValues: [
@@ -247,41 +193,9 @@ function textOf(SITE) {
   return T;
 }
 function faqsOf(SITE) { return SITE && Array.isArray(SITE.faqs) ? SITE.faqs : GENERAL_FAQS; }
-function feeFaqsOf(SITE) { return SITE && Array.isArray(SITE.feeFaqs) ? SITE.feeFaqs : FEE_FAQS; }
 function whatToBringOf(SITE) { return SITE && Array.isArray(SITE.whatToBring) ? SITE.whatToBring : WHAT_TO_BRING; }
 
 /* ---------- FAQs ---------- */
-const FEE_FAQS = [
-  {
-    q: 'Why is the fee shown as “from”?',
-    a: 'Every resident’s fee is set after a free care-needs assessment, and depends on the level of care needed and the room chosen. The “from” price is the lowest weekly fee for that type of care at that home. We confirm your exact fee in writing before you agree to anything.',
-  },
-  {
-    q: 'Do you ask for a deposit?',
-    a: 'We do not charge an upfront admin or assessment fee. If you want to hold a room before moving in, we will explain any reservation charge in writing first — it is always deducted from your first invoice, and refunded if we cannot meet the care needs we agreed.',
-  },
-  {
-    q: 'How and when do fees go up?',
-    a: 'Fees are reviewed once a year, in April. We give at least 28 days’ written notice of any change and explain the reason. Fees may also change if care needs change significantly — we will always talk this through with you first.',
-  },
-  {
-    q: 'What happens to fees after a resident dies?',
-    a: 'Fees stop three days after a resident passes away, giving the family time to collect belongings without rushing. We never charge for a room that has been cleared.',
-  },
-  {
-    q: 'Does the NHS pay towards nursing care?',
-    a: 'If you need nursing care, the NHS pays a weekly contribution called NHS-funded nursing care (FNC) directly to the home. Our nursing prices show clearly whether FNC is included. If your needs are mainly health needs, you may qualify for NHS Continuing Healthcare, which covers the full cost.',
-  },
-  {
-    q: 'What help is there if I cannot pay the full fee?',
-    a: 'In England, your local council may help if your savings and assets are below the upper capital limit (currently £23,250). Your home may be counted, but not if a partner or certain relatives still live there. A deferred payment agreement can let you pay later from the sale of your home. Self-funders can usually claim Attendance Allowance, whatever their savings.',
-  },
-  {
-    q: 'Do you accept council-funded residents?',
-    a: 'Yes. Where the council’s rate is lower than our fee, a family member or friend may be able to pay the difference (a “top-up”). We will be open about this before any decision is made.',
-  },
-];
-
 const GENERAL_FAQS = [
   {
     q: 'Can we visit before deciding?',
@@ -385,8 +299,6 @@ function homeJsonLd(home, SITE, base) {
   if (typeof home.lat === 'number' && typeof home.lng === 'number') {
     data.geo = { '@type': 'GeoCoordinates', latitude: home.lat, longitude: home.lng };
   }
-  const from = fromPrice(home);
-  if (from) data.priceRange = 'From ' + gbp(from) + ' per week';
   return data;
 }
 
@@ -400,8 +312,7 @@ module.exports = {
   CQC_RATINGS, cqcLabel, cqcClass, cqcReportUrl, homeAddress,
   photoSrc, photoAbs, SITE_IMAGES, siteImage,
   DEFAULT_CARE_TYPES, DEFAULT_SPECIALIST_CARE, careTypesOf, careTypeNames, specialistCareOf, careImage,
-  FACILITY_GROUPS, facilitiesOf, facilityNames, homeFacilityNames, homeFacilities, feeItemsOf, feeLists,
-  FEE_ROWS, gbp, fromPrice, INCLUDED, EXTRAS,
-  FEE_FAQS, GENERAL_FAQS, WHAT_TO_BRING, DEFAULT_TEXT, textOf, faqsOf, feeFaqsOf, whatToBringOf,
+  FACILITY_GROUPS, facilitiesOf, facilityNames, homeFacilityNames, homeFacilities,
+  GENERAL_FAQS, WHAT_TO_BRING, DEFAULT_TEXT, textOf, faqsOf, whatToBringOf,
   faqJsonLd, orgJsonLd, homeJsonLd, ldScript,
 };

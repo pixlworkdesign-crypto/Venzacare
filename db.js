@@ -752,9 +752,6 @@ const EMPTY_DETAILS = {
   visitingHours: '',     // e.g. "Any time"
   availability: '',      // '' | 'available' | 'limited' | 'waitlist'
   availabilityNote: '',  // e.g. "Two en-suite rooms free from October"
-  fees: { residential: null, nursing: null, dementia: null, respite: null }, // £ per week, "from"
-  feesUpdated: '',       // e.g. "September 2026" — shown next to the prices
-  feesNote: '',          // e.g. "Nursing fees shown before NHS-funded nursing care (FNC)"
   cqcLocationId: '',     // e.g. 1-123456789 — powers the official CQC widget
   cqcRatedOn: '',        // date of the latest report
   managerId: '',         // a person from the staff directory
@@ -772,7 +769,6 @@ const EMPTY_DETAILS = {
 
 function withDetails(h) {
   const d = Object.assign({}, EMPTY_DETAILS, h.details || {});
-  d.fees = Object.assign({}, EMPTY_DETAILS.fees, (h.details && h.details.fees) || {});
   return Object.assign({}, h, { details: d });
 }
 

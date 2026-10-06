@@ -26,7 +26,7 @@
     .fact b { font-size: 11.5pt; color: var(--teal); }
     .blurb { margin: 0; font-size: 10.2pt; }
     h2 { font: 600 11.5pt Poppins, sans-serif; color: var(--teal); margin: 0 0 1.5mm; }
-    .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+    .cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5mm; }
     ul { margin: 0; padding-left: 4mm; } li { margin: .2mm 0; }
     .fac { columns: 3; column-gap: 6mm; font-size: 8.8pt; }
     .fac h3 { font: 600 9pt Inter, sans-serif; color: var(--teal2); margin: 0 0 .5mm; break-after: avoid; }
@@ -45,9 +45,9 @@
   </style>
 </head>
 <body>
-<% var d = home.details || {}; var phone = d.phone || SITE.phone; var from = fromPrice(home);
+<% var d = home.details || {}; var phone = d.phone || SITE.phone;
    var availWords = { available: 'Rooms free now', limited: 'One or two rooms free', waitlist: 'Waiting list' };
-   var fl = feeLists(SITE, home); var facs = homeFacilities(SITE, home); var quote = (d.testimonials || [])[0]; %>
+   var facs = homeFacilities(SITE, home); var quote = (d.testimonials || [])[0]; %>
 <div class="bar"><button type="button" onclick="window.print()">Print or save as PDF</button><a href="/care-homes/<%= home.id %>">Back to <%= home.name %></a></div>
 <main class="sheet">
   <header class="top">
@@ -64,7 +64,6 @@
     <div class="facts">
       <div class="fact"><span>CQC rating</span><b><%= cqcLabel(home) %></b></div>
       <div class="fact"><span>Beds</span><b><%= home.beds || '—' %></b></div>
-      <div class="fact"><span>Weekly fees</span><b><%= from ? 'from ' + gbp(from) : 'Call us' %></b></div>
       <div class="fact"><span>Rooms</span><b><%= availWords[d.availability] || 'Call us' %></b></div>
       <% if (d.managerName) { %><div class="fact"><span>Home manager</span><b><%= d.managerName %></b></div><% } %>
       <% if (d.visitingHours) { %><div class="fact"><span>Visiting</span><b><%= d.visitingHours %></b></div><% } %>
@@ -76,7 +75,6 @@
   <section class="cols">
     <div><h2>Types of care</h2><ul><% home.careTypes.forEach(function (c) { %><li><%= c %></li><% }) %></ul></div>
     <% if (home.specialisms && home.specialisms.length) { %><div><h2>Specialist care</h2><ul><% home.specialisms.slice(0, 10).forEach(function (s) { %><li><%= s %></li><% }) %></ul></div><% } %>
-    <div><h2>Weekly fees from</h2><ul><% FEE_ROWS.forEach(function (r) { var v = d.fees && d.fees[r.key]; if (v) { %><li><%= r.label %>: <b><%= gbp(v) %></b></li><% } }) %><% if (!from) { %><li>Call us for current prices</li><% } %></ul></div>
   </section>
 
   <% if (facs.length) { %>
@@ -85,11 +83,6 @@
     <div class="fac"><% facs.forEach(function (g) { %><div><h3><%= g.group %></h3><ul><% g.items.forEach(function (x) { %><li><%= x %></li><% }) %></ul></div><% }) %></div>
   </section>
   <% } %>
-
-  <section class="cols" style="grid-template-columns:1fr 1fr;">
-    <% if (fl.included.length) { %><div><h2>Included in the fee</h2><ul><% fl.included.forEach(function (x) { %><li><%= x %></li><% }) %></ul></div><% } %>
-    <% if (fl.extras.length) { %><div><h2>Optional extras</h2><ul><% fl.extras.forEach(function (x) { %><li><%= x %></li><% }) %></ul></div><% } %>
-  </section>
 
   <% if (quote) { %><div class="quote">“<%= quote.quote %>”<% if (quote.by) { %><small>— <%= quote.by %></small><% } %></div><% } %>
 

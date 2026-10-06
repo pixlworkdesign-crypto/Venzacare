@@ -13,7 +13,6 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 - **Careers** — filterable jobs board pulling live from the backoffice
 - **Job detail + application form** — with optional CV upload
 - **Contact** — enquiry form and callback requests
-- **Fees & funding** — weekly prices per home, what's included, extras, deposits and funding help
 - **CQC ratings** — every home's rating with links to the reports (and the CQC widget when a location ID is set)
 - **FAQs** — common questions plus a "what to bring" checklist
 - **Book a visit instantly** — each home page shows free visiting times for the next few weeks; the family picks one and it's confirmed on the spot (with an add-to-calendar link). Double bookings are impossible, even when two people click at once. Each home sets its own days, times, visits per slot, notice and closed dates in the staff hub. "None of these times work?" still sends a request
@@ -22,7 +21,7 @@ A modern UK care-group website with a built-in **careers board** and an **admin 
 - **Individual accounts** — invite people by email (or pass on the link yourself), passwords hashed with scrypt, forgotten-password links, pause and delete
 - **Access for each person** — an access level (Site administrator, Admin, Home manager, Recruitment / HR, Reception, Carer / staff) fills in None / View / Edit for each area, and any of them can be changed per person. Each person covers the whole company or chosen homes, and only sees those homes' enquiries, jobs, applications and certificates
 - **Site administrator accounts are locked** — only another site administrator can change, pause, delete or reset one. Only site administrators can make someone a site administrator. Nobody can change their own access
-- **Homes** — edit details, fees and availability (separate permissions), CQC and managers; add a home; archive / make live
+- **Homes** — edit details and availability (separate permissions), CQC and managers; add a home; archive / make live
 - **Enquiries** — every visit request, callback and message, moved through Needs a call → Called → Visit booked → Visited → Moved in
 - **Jobs & applications** — as before, now limited to the homes a person covers
 - **Noticeboard** — posts for everyone, a home or a role; pin, must-read with "seen by", optional email
@@ -140,10 +139,7 @@ safe to re-run: nothing is dropped. `/api/health` tells you if it's missing.
 
 ### Content to confirm before going live
 
-- Fee terms in `content.js` (what's included, extras, deposits, fee reviews,
-  fees after death) are typical CMA-compliant wording, **not** confirmed policy.
-  They must match your residents' contract.
-- Fees, availability, CQC ratings and location IDs, managers and review links are
+- Availability, CQC ratings and location IDs, managers and review links are
   entered per home in **Admin → Homes**. Blank fields are simply hidden.
 
 ### Other optional settings
