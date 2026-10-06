@@ -8,7 +8,7 @@
 
 <% if (canPost) { %>
 <details class="hub-card hub-compose" id="new-post">
-  <summary>Write a new post</summary>
+  <summary>New post</summary>
   <form action="/admin/noticeboard" method="post" class="admin-form">
     <div class="field"><label for="p-title">Title</label><input id="p-title" name="title" maxlength="140" required /></div>
     <div class="field"><label for="p-body">Message</label><textarea id="p-body" name="body" rows="5" required></textarea></div>
@@ -50,7 +50,7 @@
         <% if (canPost) { %>
         <span class="hub-bar" aria-hidden="true"><i style="width:<%= Math.round(100 * p.seen / Math.max(p.total, 1)) %>%"></i></span>
         <span class="tabnum hint">Seen by <%= p.seen %> of <%= p.total %></span>
-        <% if (p.notSeen.length) { %><details class="hub-mini"><summary>Who hasn’t?</summary><p class="hint"><%= p.notSeen.join(', ') %></p></details><% } %>
+        <% if (p.notSeen.length) { %><details class="hub-mini"><summary>Not read yet</summary><p class="hint"><%= p.notSeen.join(', ') %></p></details><% } %>
         <% } %>
         <% if (p.mine) { %><span class="hub-pill hub-pill--ok">You’ve read this</span>
         <% } else { %><form action="/admin/noticeboard/<%= p.id %>/read" method="post"><button class="btn btn--sm btn--primary">I’ve read this</button></form><% } %>
