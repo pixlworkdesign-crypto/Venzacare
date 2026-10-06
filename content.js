@@ -225,17 +225,20 @@ function feeLists(SITE, home) {
    hub (Website text) and kept in site settings. Blank settings mean these
    defaults. */
 const DEFAULT_TEXT = {
-  heroTitle: 'The care home you’d choose for your own family',
-  heroLead: '',  // blank: "Warm, welcoming care homes across <live areas>, …"
+  heroTitle: 'Better Care. Better Living.',
+  heroLead: 'High-quality care that supports independence, comfort and wellbeing.',
   homesTitle: '', // blank: "Homes with their own character"
   homesLead: 'Every home offers residential, nursing and dementia care, so as needs change your loved one rarely has to move. Prices and CQC ratings are shown up front.',
   aboutTitle: 'Care that starts with getting to know you',
   aboutText: 'Across our homes, people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. Our carers and nurses take time to learn the little things: a grandchild’s name, a favourite song, the routine that makes a day feel right.',
   aboutPoints: ['A regular programme of activities and outings', 'Freshly prepared meals, with special diets catered for', 'Comfortable lounges and gardens to enjoy', 'Residential, nursing, dementia and respite care'],
-  stats: [{ num: '100%', label: 'CQC-registered homes' }, { num: '', label: 'Types of care, from residential to nursing' }, { num: '24/7', label: 'Registered nursing on site' }],
 };
 function textOf(SITE) {
-  return Object.assign({}, DEFAULT_TEXT, (SITE && SITE.text) || {});
+  const T = Object.assign({}, DEFAULT_TEXT, (SITE && SITE.text) || {});
+  // Saved before the new tagline: the old headline or a blank line means "use the default".
+  if (!T.heroTitle || T.heroTitle === 'The care home you’d choose for your own family') T.heroTitle = DEFAULT_TEXT.heroTitle;
+  if (!T.heroLead) T.heroLead = DEFAULT_TEXT.heroLead;
+  return T;
 }
 function faqsOf(SITE) { return SITE && Array.isArray(SITE.faqs) ? SITE.faqs : GENERAL_FAQS; }
 function feeFaqsOf(SITE) { return SITE && Array.isArray(SITE.feeFaqs) ? SITE.feeFaqs : FEE_FAQS; }

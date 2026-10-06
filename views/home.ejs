@@ -145,30 +145,63 @@
     </div>
     <% } %>
 
-    <% if (d.testimonials && d.testimonials.length) { %>
-    <div class="home-section">
-      <h2 class="h2" style="font-size:1.6rem;">What families say</h2>
-      <div class="quote-grid">
-        <% d.testimonials.forEach(function (t) { %>
-        <figure class="quote-card"><blockquote>“<%= t.quote %>”</blockquote><% if (t.by) { %><figcaption>— <%= t.by %></figcaption><% } %></figure>
+    <% if (homeTeam.length) { %>
+    <div class="home-section" id="team">
+      <h2 class="h2" style="font-size:1.6rem;">Meet the team</h2>
+      <div class="home-team">
+        <% homeTeam.forEach(function (m) { %>
+        <div class="home-team__person">
+          <% if (m.photo) { %><img src="<%= m.photo %>" alt="<%= m.name %>" loading="lazy" width="96" height="96" /><% } else { %><span class="home-team__initials" aria-hidden="true"><%= m.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %></span><% } %>
+          <strong><%= m.name %></strong>
+          <% if (m.title) { %><span><%= m.title %></span><% } %>
+        </div>
         <% }) %>
       </div>
     </div>
     <% } %>
 
-    <% if (d.googleUrl && !d.carehomeUrl) { %>
-    <div class="home-section review-strip">
-      <div></div>
-      <div><strong>Reviews on Google</strong></div>
-      <a class="btn btn--ghost btn--sm" href="<%= d.googleUrl %>" target="_blank" rel="noopener">Read the reviews ↗</a>
+    <% var revs = d.testimonials || []; if (revs.length || d.carehomeUrl || d.googleUrl) { %>
+    <div class="home-section reviews" id="reviews">
+      <div class="reviews__head">
+        <% if (d.reviewScore) { %><span class="reviews__score" aria-label="Review score <%= d.reviewScore %> out of 10"><%= d.reviewScore %></span><% } %>
+        <div class="reviews__title">
+          <h2><%= d.carehomeUrl && d.reviewScore ? 'carehome.co.uk review score for ' + home.name : 'What families say' %></h2>
+          <% if (d.reviewCount) { %><span><%= d.reviewCount %> reviews</span><% } %>
+        </div>
+        <div class="reviews__links">
+          <% if (d.carehomeUrl) { %><a href="<%= d.carehomeUrl %>" target="_blank" rel="noopener">Read all<%= d.reviewCount ? ' ' + d.reviewCount : '' %> reviews ↗</a><% } %>
+          <% if (d.googleUrl) { %><a href="<%= d.googleUrl %>" target="_blank" rel="noopener">Google reviews ↗</a><% } %>
+        </div>
+      </div>
+      <% if (revs.length) { %>
+      <div class="reviews__wrap">
+        <button type="button" class="reviews__nav reviews__nav--prev" aria-label="Previous reviews" hidden>&#8249;</button>
+        <div class="reviews__track" tabindex="0" aria-label="Reviews">
+          <% revs.forEach(function (t) { var st = Math.max(0, Math.min(5, parseInt(t.stars, 10) || 0)); %>
+          <figure class="review-card">
+            <div class="review-card__top">
+              <% if (st) { %><span class="review-card__stars" aria-label="<%= st %> out of 5 stars"><% for (var k = 1; k <= 5; k++) { %><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" class="<%= k <= st ? 'on' : '' %>"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg><% } %></span><% } else { %><span></span><% } %>
+              <% if (t.date) { %><time datetime="<%= t.date %>"><%= new Date(t.date + (t.date.length === 7 ? '-01' : '') + 'T12:00:00').toLocaleDateString('en-GB', t.date.length === 7 ? { month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short', year: 'numeric' }) %></time><% } %>
+            </div>
+            <blockquote><%= t.quote %></blockquote>
+            <% if (t.name || t.by) { %><figcaption><%= t.name || '' %><%= t.name && t.by ? ' (' + t.by + ')' : (t.by || '') %></figcaption><% } %>
+          </figure>
+          <% }) %>
+        </div>
+        <button type="button" class="reviews__nav reviews__nav--next" aria-label="More reviews" hidden>&#8250;</button>
+      </div>
+      <% } %>
     </div>
-    <% } %>
-    <% if (d.carehomeUrl) { %>
-    <div class="home-section review-strip">
-      <div><% if (d.reviewScore) { %><strong class="review-strip__score"><%= d.reviewScore %></strong><span class="muted"> / 10</span><% } %></div>
-      <div><strong>Independent reviews on carehome.co.uk</strong><% if (d.reviewCount) { %><br /><span class="muted">from <%= d.reviewCount %> reviews by residents and families</span><% } %></div>
-      <span class="review-strip__links"><a class="btn btn--ghost btn--sm" href="<%= d.carehomeUrl %>" target="_blank" rel="noopener">Read the reviews ↗</a><% if (d.googleUrl) { %> <a class="btn btn--ghost btn--sm" href="<%= d.googleUrl %>" target="_blank" rel="noopener">Google reviews ↗</a><% } %></span>
-    </div>
+    <script>
+      (function () {
+        var wrap = document.querySelector('#reviews .reviews__wrap'); if (!wrap) return;
+        var track = wrap.querySelector('.reviews__track'), prev = wrap.querySelector('.reviews__nav--prev'), next = wrap.querySelector('.reviews__nav--next');
+        function sync() { prev.hidden = track.scrollLeft < 8; next.hidden = track.scrollLeft + track.clientWidth >= track.scrollWidth - 8; }
+        function go(dir) { track.scrollBy({ left: dir * track.clientWidth * 0.9, behavior: 'smooth' }); }
+        prev.addEventListener('click', function () { go(-1); }); next.addEventListener('click', function () { go(1); });
+        track.addEventListener('scroll', sync, { passive: true }); window.addEventListener('resize', sync); sync();
+      })();
+    </script>
     <% } %>
 
     <% if (home.gallery && home.gallery.length) { %>

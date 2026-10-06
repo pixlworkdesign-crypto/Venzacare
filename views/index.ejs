@@ -68,18 +68,6 @@
   </div>
 </section>
 
-<!-- STATS (figures computed live from our real home data) -->
-<section class="section section--green">
-  <div class="container">
-    <div class="section-head center" style="margin-inline:auto;">
-      <span class="eyebrow" style="color:var(--gold-400)">Venza Care at a glance</span>
-      <h2 class="h2" style="color:#fff;">Trusted care, by the numbers</h2>
-    </div>
-    <div class="stats stats--3">
-      <% T.stats.filter(function (x) { return x.label; }).forEach(function (x) { %><div class="stat"><div class="stat__num"><%= x.num || stats.careTypes %></div><div class="stat__label"><%= x.label %></div></div><% }) %>
-    </div>
-  </div>
-</section>
 
 
 <!-- GUIDES -->

@@ -12,7 +12,7 @@
     <div class="panel__head"><h2>Homepage — top</h2></div>
     <div class="panel__body">
       <div class="field"><label for="heroTitle">Main headline</label><input id="heroTitle" name="heroTitle" value="<%= T.heroTitle %>" maxlength="120" /></div>
-      <div class="field"><label for="heroLead">Line under the headline</label><textarea id="heroLead" name="heroLead" rows="2" style="min-height:4.5rem;" maxlength="300" placeholder="Warm, welcoming care homes across <%= areaText || '…' %>, where every day is built around the person — not the routine."><%= T.heroLead %></textarea></div>
+      <div class="field"><label for="heroLead">Line under the headline</label><textarea id="heroLead" name="heroLead" rows="2" style="min-height:4.5rem;" maxlength="300"><%= T.heroLead %></textarea></div>
     </div>
   </div>
 
@@ -30,16 +30,6 @@
       <div class="field"><label for="aboutTitle">Heading</label><input id="aboutTitle" name="aboutTitle" value="<%= T.aboutTitle %>" maxlength="120" /></div>
       <div class="field"><label for="aboutText">Text</label><textarea id="aboutText" name="aboutText" rows="4" maxlength="1200"><%= T.aboutText %></textarea></div>
       <div class="field"><label for="aboutPoints">Ticked points (one per line)</label><textarea id="aboutPoints" name="aboutPoints" rows="4"><%= T.aboutPoints.join('\n') %></textarea></div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="panel__head"><h2>Homepage — at a glance</h2></div>
-    <div class="panel__body list-rows list-rows--stat">
-      <% T.stats.forEach(function (x, n) { %>
-      <input name="statnum_<%= n %>" value="<%= x.num %>" maxlength="12" aria-label="Figure <%= n + 1 %>" <%- n === 1 ? 'placeholder="Automatic"' : '' %> />
-      <input name="statlabel_<%= n %>" value="<%= x.label %>" maxlength="80" aria-label="Label <%= n + 1 %>" />
-      <% }) %>
     </div>
   </div>
 

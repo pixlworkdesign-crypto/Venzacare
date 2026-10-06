@@ -337,7 +337,9 @@ module.exports = function mountHub(app, deps) {
     const staff = (await auth.allUsers())
       .filter((u) => u.status !== 'invited' && !onTeam.has(u.id))
       .sort((a, b) => a.name.localeCompare(b.name));
-    res.render('admin/team', { title: 'Our team', team, staff, canEdit: true, hidden: !!(await db.settings()).teamHidden });
+    const homeStaff = (await auth.allUsers()).filter((u) => u.status !== 'invited' && u.homes !== 'all' && (u.homes || []).length)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    res.render('admin/team', { title: 'Our team', team, staff, homeStaff, canEdit: true, hidden: !!(await db.settings()).teamHidden });
   }));
 
   // Put someone from the staff directory on the page, at the end.
@@ -367,6 +369,20 @@ module.exports = function mountHub(app, deps) {
   }));
 
   // Show or hide the whole Our team page (and its menu and footer links).
+  // Home teams: which staff appear in "Meet the team" on their home's page.
+  // One choice per person; they show on every home they work at.
+  app.post('/admin/team/home-staff', need('photos', 'edit'), wrap(async (req, res) => {
+    const on = new Set([].concat(req.body.show || []));
+    let changed = 0;
+    for (const u of await auth.allUsers()) {
+      if (u.status === 'invited' || u.homes === 'all') continue;
+      const want = on.has(u.id);
+      if (!!u.showOnWebsite !== want) { u.showOnWebsite = want; await auth.saveUser(u); changed++; }
+    }
+    if (changed) await log(req.me, req.me.name + ' changed who appears in Meet the team on the home pages');
+    back(res, '/admin/team#home-teams', 'Saved. The home pages show the change straight away.');
+  }));
+
   app.post('/admin/team/visibility', need('photos', 'edit'), wrap(async (req, res) => {
     const show = req.body.show === '1';
     await db.saveSettings({ teamHidden: !show });
@@ -533,7 +549,6 @@ module.exports = function mountHub(app, deps) {
       }
       return out;
     };
-    const stats = [0, 1, 2].map((n) => ({ num: text(f['statnum_' + n], 12), label: text(f['statlabel_' + n], 80) }));
     const T = {
       heroTitle: text(f.heroTitle, 120) || DEFAULT_TEXT.heroTitle,
       heroLead: text(f.heroLead, 300),
@@ -542,7 +557,6 @@ module.exports = function mountHub(app, deps) {
       aboutTitle: text(f.aboutTitle, 120) || DEFAULT_TEXT.aboutTitle,
       aboutText: text(f.aboutText, 1200),
       aboutPoints: lines(f.aboutPoints, 120).slice(0, 8),
-      stats,
     };
     await db.saveSettings({ text: T, faqs: qa('faq'), feeFaqs: qa('fee'), whatToBring: lines(f.bring, 160).slice(0, 40) });
     await log(req.me, req.me.name + ' updated the website text');
@@ -706,7 +720,14 @@ module.exports = function mountHub(app, deps) {
         carehomeUrl: /^https:\/\/(www\.)?carehome\.co\.uk\//.test(text(f.carehomeUrl, 300)) ? text(f.carehomeUrl, 300) : '',
         googleUrl: /^https:\/\/((www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|g\.page)\//.test(text(f.googleUrl, 400)) ? text(f.googleUrl, 400) : '',
         testimonials: Object.keys(f).filter((k) => /^tq_\d+$/.test(k)).sort((a, b) => a.slice(3) - b.slice(3))
-          .map((k) => ({ quote: text(f[k], 600), by: text(f['tby_' + k.slice(3)], 80) })).filter((t) => t.quote).slice(0, 12),
+          .map((k) => {
+            const n = k.slice(3);
+            return {
+              quote: text(f[k], 600), by: text(f['tby_' + n], 80), name: text(f['tname_' + n], 40),
+              stars: Math.max(0, Math.min(5, parseInt(f['tstars_' + n], 10) || 0)) || '',
+              date: /^\d{4}-\d{2}$/.test(f['tdate_' + n]) ? f['tdate_' + n] : '',
+            };
+          }).filter((t) => t.quote).slice(0, 20),
         reviewScore: text(f.reviewScore, 6),
         reviewCount: text(f.reviewCount, 8),
         parking: text(f.parking, 400),

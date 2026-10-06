@@ -70,4 +70,26 @@
   <% } %>
 </div>
 
+<% if (canEdit) { %>
+<form action="/admin/team/home-staff" method="post" class="hub-card" id="home-teams">
+  <div class="hub-card__head"><h2>Home teams</h2></div>
+  <% if (!homeStaff.length) { %><div class="hub-card__body"><p class="muted" style="margin:0;">No home staff in the directory yet.</p></div><% } else { %>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Name</th><th>Home</th><th>Photo</th><th>Show on website</th></tr></thead>
+    <tbody>
+      <% homeStaff.forEach(function (u) { %>
+      <tr>
+        <td><strong><%= u.name %></strong><% if (u.title) { %><div class="hint"><%= u.title %></div><% } %></td>
+        <td><%= homesLabel(u) %></td>
+        <td><%= u.photoKey && u.photoConsent ? 'Yes' : u.photoKey ? 'No consent' : '—' %></td>
+        <td><label class="switch-check"><input type="checkbox" name="show" value="<%= u.id %>" <%= u.showOnWebsite ? 'checked' : '' %> /><span class="switch__track" aria-hidden="true"></span><span class="sr-only">Show <%= u.name %> on the website</span></label></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+  <div class="hub-card__body"><button type="submit" class="btn btn--primary">Save</button></div>
+  <% } %>
+</form>
+<% } %>
+
 <%- include('../partials/admin-footer') %>
