@@ -720,7 +720,14 @@ module.exports = function mountHub(app, deps) {
         carehomeUrl: /^https:\/\/(www\.)?carehome\.co\.uk\//.test(text(f.carehomeUrl, 300)) ? text(f.carehomeUrl, 300) : '',
         googleUrl: /^https:\/\/((www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|g\.page)\//.test(text(f.googleUrl, 400)) ? text(f.googleUrl, 400) : '',
         testimonials: Object.keys(f).filter((k) => /^tq_\d+$/.test(k)).sort((a, b) => a.slice(3) - b.slice(3))
-          .map((k) => ({ quote: text(f[k], 600), by: text(f['tby_' + k.slice(3)], 80) })).filter((t) => t.quote).slice(0, 12),
+          .map((k) => {
+            const n = k.slice(3);
+            return {
+              quote: text(f[k], 600), by: text(f['tby_' + n], 80), name: text(f['tname_' + n], 40),
+              stars: Math.max(0, Math.min(5, parseInt(f['tstars_' + n], 10) || 0)) || '',
+              date: /^\d{4}-\d{2}$/.test(f['tdate_' + n]) ? f['tdate_' + n] : '',
+            };
+          }).filter((t) => t.quote).slice(0, 20),
         reviewScore: text(f.reviewScore, 6),
         reviewCount: text(f.reviewCount, 8),
         parking: text(f.parking, 400),

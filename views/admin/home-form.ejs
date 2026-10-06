@@ -236,12 +236,17 @@
       </div>
       <div class="field"><label for="googleUrl">Link to this home on Google Maps</label><input type="url" id="googleUrl" name="googleUrl" value="<%= d.googleUrl %>" placeholder="https://maps.app.goo.gl/…" /></div>
       <div class="field">
-        <span class="label">What families say</span>
+        <span class="label">Reviews from families</span>
         <div class="quotes">
           <% (d.testimonials || []).concat([{}, {}]).forEach(function (t, n) { %>
           <div class="quote-row">
-            <textarea name="tq_<%= n %>" rows="2" maxlength="600" aria-label="Quote <%= n + 1 %>" <%- t.quote ? '' : 'placeholder="e.g. The staff are fantastic and always make us feel welcome."' %>><%= t.quote || '' %></textarea>
-            <input name="tby_<%= n %>" value="<%= t.by || '' %>" maxlength="80" aria-label="Who said it" placeholder="e.g. Daughter of a resident" />
+            <textarea name="tq_<%= n %>" rows="2" maxlength="600" aria-label="Review <%= n + 1 %>" <%- t.quote ? '' : 'placeholder="e.g. The staff are fantastic and always make us feel welcome."' %>><%= t.quote || '' %></textarea>
+            <div class="quote-row__meta">
+              <input name="tname_<%= n %>" value="<%= t.name || '' %>" maxlength="40" aria-label="Name" placeholder="Name, e.g. Andrea G" />
+              <input name="tby_<%= n %>" value="<%= t.by || '' %>" maxlength="80" aria-label="Who they are" placeholder="e.g. Daughter of resident" />
+              <select name="tstars_<%= n %>" aria-label="Stars"><option value="">Stars</option><% [5, 4, 3, 2, 1].forEach(function (k) { %><option value="<%= k %>" <%= +t.stars === k ? 'selected' : '' %>><%= '★'.repeat(k) %></option><% }) %></select>
+              <input type="month" name="tdate_<%= n %>" value="<%= (t.date || '').slice(0, 7) %>" aria-label="Month" />
+            </div>
           </div>
           <% }) %>
         </div>
