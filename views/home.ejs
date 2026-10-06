@@ -18,14 +18,16 @@
 </section>
 <% if (home.photo) { %><div class="home-hero__photo" role="img" aria-label="Outside <%= home.name %>" style="background-image:url('<%= photoSrc(home.photo) %>');"></div><% } %>
 
-<section class="section">
+<link rel="stylesheet" href="/css/team.css" />
+<%- include('partials/home-subnav', { home: home, current: 'home', team: team }) %>
+<section class="section" id="overview">
   <div class="container">
     <div class="job-detail">
       <div class="prose">
         <p class="lead"><%= home.blurb %></p>
         <h2>About this home</h2>
         <p><%= home.name %> is a<%= home.beds ? ' ' + home.beds + '-bed' : '' %> care home in <%= home.town %>.</p>
-        <div class="care-panel">
+        <div class="care-panel" id="care">
           <h3>Types of care</h3>
           <ul class="tick-list">
             <% home.careTypes.forEach(function(c){ %>
@@ -73,7 +75,7 @@
         </ul>
         <a href="#visit" class="btn btn--primary btn--block">Book a visit</a>
         <a href="tel:<%= homeTel %>" class="btn btn--ghost btn--block mt-1">Call the home</a>
-        <p class="home-aside__more"><a href="/care-homes/<%= home.id %>/brochure" target="_blank" rel="noopener">Printable brochure</a> · <a href="/compare?h=<%= home.id %>">Compare with other homes</a></p>
+        <p class="home-aside__more"><a href="/care-homes/<%= home.id %>/brochure" target="_blank" rel="noopener">Printable brochure</a> · <a href="/compare?h=<%= home.id %>">Compare with other homes</a><br /><a href="/care-homes/<%= home.id %>/team">Meet the team</a></p>
       </aside>
     </div>
 
@@ -133,32 +135,28 @@
       </div>
     </div>
 
-    <% if (d.managerName) { %>
-    <!-- MANAGER -->
-    <div class="home-section manager-card">
-      <% if (d.managerPhoto) { %><img class="manager-card__photo" src="<%= photoSrc(d.managerPhoto) %>" alt="<%= d.managerName %>" loading="lazy" width="120" height="120" /><% } else { %><div class="manager-card__photo manager-card__initials" aria-hidden="true"><%= d.managerName.split(' ').map(function(p){return p[0];}).join('').slice(0,2) %></div><% } %>
-      <div>
-        <span class="eyebrow">Meet the home manager</span>
-        <h2 class="h2" style="font-size:1.5rem;margin:.3rem 0 .6rem;"><%= d.managerName %></h2>
-        <% if (d.managerBio) { %><p style="margin:0;"><%= d.managerBio %></p><% } %>
-      </div>
-    </div>
-    <% } %>
-
-    <% if (homeTeam.length) { %>
-    <div class="home-section" id="team">
+    <!-- MEET THE TEAM (preview; the full page is /care-homes/<id>/team) -->
+    <% var tmIni = function (n) { return String(n).split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase(); };
+       var tmG = ['g2', 'g6', 'g8', 'g3', 'g7']; var tmFaces = team.members.slice(0, 5); %>
+    <div class="home-section tm" id="team">
       <h2 class="h2" style="font-size:1.6rem;">Meet the team</h2>
-      <div class="home-team">
-        <% homeTeam.forEach(function (m) { %>
-        <div class="home-team__person">
-          <% if (m.photo) { %><img src="<%= m.photo %>" alt="<%= m.name %>" loading="lazy" width="96" height="96" /><% } else { %><span class="home-team__initials" aria-hidden="true"><%= m.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %></span><% } %>
-          <strong><%= m.name %></strong>
-          <% if (m.title) { %><span><%= m.title %></span><% } %>
+      <% if (team.template) { %><p class="tm-example" role="note" style="margin-bottom:1rem;"><span>⚠</span><span><strong>Example only — template.</strong> Real team members will appear here once they’re added in the staff hub.</span></p><% } %>
+      <div class="team-preview">
+        <div class="mgr-mini">
+          <div class="ph ph--g3" role="img" aria-label="<%= team.manager.photo ? team.manager.name : 'Photo placeholder for ' + team.manager.name %>"><span><%= tmIni(team.manager.name) %></span><% if (team.manager.photo) { %><img src="<%= photoSrc(team.manager.photo) %>" alt="" loading="lazy" /><% } %></div>
+          <div><b><%= team.manager.name %></b><span><%= team.manager.title %></span></div>
         </div>
-        <% }) %>
+        <a href="/care-homes/<%= home.id %>/team" class="btn btn--gold">Meet the team <span aria-hidden="true">→</span></a>
+        <% if (tmFaces.length) { %>
+        <div class="preview-faces">
+          <div class="stack" aria-hidden="true">
+            <% tmFaces.forEach(function (m, i) { %><div class="ph ph--<%= tmG[i % tmG.length] %>"><span><%= tmIni(m.name) %></span><% if (m.photo) { %><img src="<%= m.photo %>" alt="" loading="lazy" /><% } %></div><% }) %>
+            <% if (team.members.length > tmFaces.length) { %><div class="stack__more">+<%= team.members.length - tmFaces.length %> more</div><% } %>
+          </div>
+        </div>
+        <% } %>
       </div>
     </div>
-    <% } %>
 
     <% var revs = d.testimonials || []; if (revs.length || d.carehomeUrl || d.googleUrl) { %>
     <div class="home-section reviews" id="reviews">

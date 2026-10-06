@@ -231,6 +231,12 @@ const DEFAULT_TEXT = {
   homesLead: 'Every home offers residential, nursing and dementia care, so as needs change your loved one rarely has to move. Prices and CQC ratings are shown up front.',
   aboutTitle: 'Care that starts with getting to know you',
   aboutText: 'Across our homes, people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. Our carers and nurses take time to learn the little things: a grandchild’s name, a favourite song, the routine that makes a day feel right.',
+  teamValues: [
+    { title: 'Kindness first', line: 'Every task starts with a smile and a hello.' },
+    { title: 'Know the person', line: 'Life stories, routines and favourite songs — not just care notes.' },
+    { title: 'Open doors', line: 'Families welcome, and questions always answered.' },
+    { title: 'Always learning', line: 'Training for every role, from the kitchen to the care team.' },
+  ],
   aboutPoints: ['A regular programme of activities and outings', 'Freshly prepared meals, with special diets catered for', 'Comfortable lounges and gardens to enjoy', 'Residential, nursing, dementia and respite care'],
 };
 function textOf(SITE) {

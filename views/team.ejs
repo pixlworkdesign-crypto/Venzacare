@@ -1,0 +1,178 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/css/team.css" />
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet" />
+<% var d = home.details || {}, T = team, M = T.manager;
+   var ini = function (n) { return String(n).split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase(); };
+   var tel = T.phone.replace(/\s/g, ''), base = '/care-homes/' + home.id;
+   var grads = ['g2', 'g6', 'g8', 'g3', 'g4', 'g7', 'g5', 'g1'];
+   var revs = d.testimonials || [];
+   var clock = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+   var quoteIc = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.2 6C4.9 7.2 3 9.7 3 13v5h7v-7H6.3c.2-1.8 1.3-3.3 2.9-4.1L7.2 6Zm10 0C14.9 7.2 13 9.7 13 13v5h7v-7h-3.7c.2-1.8 1.3-3.3 2.9-4.1L17.2 6Z"/></svg>';
+   var faces = [M].concat(T.members).slice(0, 4); %>
+<div class="tm">
+<% if (T.template) { %>
+<div class="tm-example tm-example--bar" role="note"><span>⚠</span><span><strong>Example only — this team is a template.</strong> Real team members will appear here once they’re added in the staff hub.</span></div>
+<% } %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › <a href="/care-homes">Our homes</a> › <a href="<%= base %>"><%= home.name %></a> › Meet the team</div>
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow hero__eyebrow"><%= home.name %></span>
+        <h1>Meet the team</h1>
+        <p class="page-hero__lead">The faces behind every cuppa, care plan and chat at <%= home.name %>, <%= home.town %>.</p>
+        <ul class="facts">
+          <li class="fact"><span class="fact__ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span><strong><%= T.total %></strong> people in the team<%= T.template ? ' (example)' : '' %></span></li>
+          <% if (T.nursing) { %><li class="fact"><span class="fact__ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.65-9.5 9-9.5 9Z"/></svg></span><span>Nurses on site <strong>24/7</strong></span></li><% } %>
+        </ul>
+      </div>
+      <div class="faces" aria-hidden="true">
+        <% faces.forEach(function (m, i) { %><div class="ph ph--<%= grads[i % grads.length] %>"><span><%= ini(m.name) %></span><% if (m.photo) { %><img src="<%= photoSrc(m.photo) %>" alt="" loading="lazy" /><% } %></div><% }) %>
+        <% if (T.total > faces.length) { %><div class="faces__more">+<%= T.total - faces.length %></div><% } %>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<%- include('partials/home-subnav', { home: home, current: 'team', team: T }) %>
+
+<div class="tm">
+<section class="section section--alt" aria-labelledby="welcome-title">
+  <div class="container welcome">
+    <div class="welcome__media">
+      <div class="ph ph--g3 welcome__photo" role="img" aria-label="<%= M.photo ? M.name : 'Photo placeholder for ' + M.name %>"><span><%= ini(M.name) %></span><% if (M.photo) { %><img src="<%= photoSrc(M.photo) %>" alt="<%= M.name %>" /><% } %><% if (M.example) { %><span class="tm-ex-tag">Example</span><% } %></div>
+    </div>
+    <article class="letter">
+      <% if (M.exampleLetter) { %><p class="tm-example" role="note"><span>⚠</span><span><strong>Example welcome — template.</strong> Replace it on the home’s page in the staff hub (Home manager).</span></p><% } %>
+      <span class="eyebrow">A welcome from <%= M.first %></span>
+      <h2 id="welcome-title">Welcome to <%= home.name %></h2>
+      <p class="salute">Dear families,</p>
+      <% M.letter.forEach(function (p) { %><p><%= p %></p><% }) %>
+      <p class="sig" aria-hidden="true"><%= M.first %></p>
+      <p class="sig-name"><b><%= M.name %></b> · <%= M.title %></p>
+      <% if (M.chips.length) { %><ul class="chips" aria-label="<%= M.first %>'s credentials"><% M.chips.forEach(function (c) { %><li class="chip"><%= c %></li><% }) %></ul><% } %>
+      <div class="welcome__cta">
+        <% if (T.booking) { %>
+        <a href="<%= base %>#visit" class="btn btn--gold"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Book a visit with <%= M.first %></a>
+        <% } %>
+        <a href="<%= base %>/brochure" class="btn btn--ghost" target="_blank" rel="noopener"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/></svg>Download our brochure</a>
+        <a href="tel:<%= tel %>" class="btn <%= T.booking ? 'btn--ghost' : 'btn--gold' %>"><%= T.booking ? 'Call ' + T.phone : 'Call to arrange a visit' %></a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="team-title">
+  <div class="container">
+    <div class="team-head">
+      <div class="section-head">
+        <span class="eyebrow">The <%= home.name %> team</span>
+        <h2 class="h2" id="team-title">Who you’ll meet</h2>
+        <% if (T.members.some(function (m) { return m.loveLine; })) { %><p class="hover-hint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Hover a card to hear from them</p><% } %>
+      </div>
+      <% if (T.depts.length > 1) { %>
+      <div class="fmenu" id="fmenu">
+        <div class="fmenu__ctl">
+          <button type="button" class="fbtn" id="fbtn" aria-haspopup="menu" aria-expanded="false" aria-controls="fmenu-list"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4"/></svg><span id="fbtn-label">Filter by role</span><span class="fbtn__caret" aria-hidden="true">▾</span></button>
+          <button type="button" class="fclear" id="fclear" aria-label="Clear filter, show everyone" hidden>✕</button>
+        </div>
+        <ul class="fmenu__list" id="fmenu-list" role="menu" aria-label="Filter by role" hidden>
+          <li role="none"><button type="button" role="menuitemradio" aria-checked="true" data-filter="all" tabindex="-1">Everyone <span class="n"><%= T.members.length %></span></button></li>
+          <% T.depts.forEach(function (x) { %><li role="none"><button type="button" role="menuitemradio" aria-checked="false" data-filter="<%= x.key %>" data-dept="<%= x.key %>" tabindex="-1"><span class="dot" aria-hidden="true"></span><%= x.name %> <span class="n"><%= x.n %></span></button></li><% }) %>
+        </ul>
+      </div>
+      <% } %>
+    </div>
+    <% if (T.template) { %><p class="tm-example" role="note" style="margin-bottom:1.2rem;"><span>⚠</span><span><strong>Example team — template only.</strong> These people aren’t real.</span></p><% } %>
+    <p class="grid-status sr-only" id="grid-status" aria-live="polite">Showing all <%= T.members.length %> team members</p>
+    <ul class="team-grid" id="team-grid">
+      <% T.members.forEach(function (m, i) { %>
+      <li data-dept="<%= m.deptKey %>">
+        <article class="person" tabindex="0" aria-labelledby="p<%= i %>-n">
+          <div class="person__media">
+            <% if (m.department) { %><span class="tag"><%= m.department %></span><% } %>
+            <% if (T.template) { %><span class="tm-ex-tag">Example</span><% } %>
+            <div class="ph ph--<%= grads[i % grads.length] %>" role="img" aria-label="<%= m.photo ? m.name : 'No photo yet' %>"><span><%= ini(m.name) %></span><% if (m.photo) { %><img src="<%= m.photo %>" alt="" loading="lazy" /><% } %></div>
+            <% if (m.loveLine) { %><span class="love-hint" aria-hidden="true"><%- quoteIc %></span><% } %>
+          </div>
+          <div class="person__body">
+            <h3 class="person__name" id="p<%= i %>-n"><%= m.name %></h3>
+            <% if (m.title) { %><p class="person__role"><%= m.title %></p><% } %>
+            <% if (m.department) { %><span class="person__dept-sm"><%= m.department %></span><% } %>
+            <% if (m.startYear) { %><span class="tenure"><%- clock %>Here since <%= m.startYear %></span><% } %>
+          </div>
+          <% if (m.loveLine) { %><p class="love"><span class="love__label">What I love about my job</span><%= m.loveLine %></p><% } %>
+        </article>
+      </li>
+      <% }) %>
+      <% if (T.jobs) { %>
+      <li class="join-li">
+        <a class="join" href="/careers">
+          <span class="join__ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+          <h3>Your face here?</h3>
+          <p>We’re hiring at <%= home.name %>.</p>
+          <span class="go">See jobs <span aria-hidden="true">→</span></span>
+        </a>
+      </li>
+      <% } %>
+    </ul>
+  </div>
+</section>
+
+<% if (T.values.length) { %>
+<section class="section section--alt" aria-labelledby="values-title">
+  <div class="container">
+    <div class="section-head center"><span class="eyebrow">How we work</span><h2 class="h2" id="values-title">What the team stands for</h2></div>
+    <ul class="values">
+      <% var vIcons = ['<path d="M12 21s-7-4.35-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.65-9.5 9-9.5 9Z"/>', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', '<path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M14 12h.01"/>', '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>'];
+         T.values.forEach(function (v, i) { %>
+      <li class="value"><span class="value__ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><%- vIcons[i % vIcons.length] %></svg></span><h3><%= v.title %></h3><p><%= v.line %></p></li>
+      <% }) %>
+    </ul>
+  </div>
+</section>
+<% } %>
+
+<% if (revs.length) { %>
+<section class="section" id="reviews" aria-labelledby="rv-team-title">
+  <div class="container">
+    <div class="rv-head">
+      <% if (d.reviewScore) { %><div class="rv-score" aria-hidden="true"><%= d.reviewScore %></div><% } %>
+      <div class="rv-head__txt"><span class="eyebrow">Families on our staff</span><h2 id="rv-team-title">What families say</h2><% if (d.reviewScore) { %><p>carehome.co.uk score <strong><%= d.reviewScore %> out of 10</strong><%= d.reviewCount ? ' · ' + d.reviewCount + ' reviews' : '' %></p><% } %></div>
+      <% if (d.carehomeUrl) { %><a class="rv-all" href="<%= d.carehomeUrl %>" target="_blank" rel="noopener">Read all<%= d.reviewCount ? ' ' + d.reviewCount : '' %> reviews ↗</a><% } %>
+    </div>
+    <div class="rv-wrap">
+      <button type="button" class="rv-btn rv-btn--prev" aria-label="Previous reviews" aria-controls="rv-team"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <ul class="rv-row" id="rv-team" tabindex="0" aria-label="Reviews">
+        <% revs.forEach(function (t) { var st = Math.max(0, Math.min(5, parseInt(t.stars, 10) || 0)); %>
+        <li class="rv-card">
+          <div class="rv-top"><% if (st) { %><span class="rv-stars" role="img" aria-label="<%= st %> out of 5 stars"><%= '★'.repeat(st) + '☆'.repeat(5 - st) %></span><% } else { %><span></span><% } %><% if (t.date) { %><span class="rv-date"><%= new Date(t.date + (t.date.length === 7 ? '-01' : '') + 'T12:00:00').toLocaleDateString('en-GB', t.date.length === 7 ? { month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short', year: 'numeric' }) %></span><% } %></div>
+          <p class="rv-text"><%= t.quote %></p>
+          <% if (t.name || t.by) { %><p class="rv-by"><%= t.name || '' %><% if (t.by) { %> <span>(<%= t.by %>)</span><% } %></p><% } %>
+        </li>
+        <% }) %>
+      </ul>
+      <button type="button" class="rv-btn rv-btn--next" aria-label="More reviews" aria-controls="rv-team"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<section class="section" style="padding-top:0" aria-label="Next steps">
+  <div class="container">
+    <div class="cta-card cta-card--visit cta-card--wide">
+      <span class="eyebrow hero__eyebrow"><%= T.booking ? 'Come and say hello' : 'Come and see us' %></span>
+      <h2><%= T.booking ? 'Book a visit' : 'Come and see us' %></h2>
+      <p><%= T.booking ? 'Meet ' + M.first + ' and the team, and see ' + home.name + ' for yourself.' : 'Call ' + T.phone + ' to arrange a visit.' %></p>
+      <div class="cta-card__btns">
+        <% if (T.booking) { %><a href="<%= base %>#visit" class="btn btn--gold">Book a visit</a><a href="tel:<%= tel %>" class="btn btn--outline-light"><%= T.phone %></a>
+        <% } else { %><a href="tel:<%= tel %>" class="btn btn--gold">Call to arrange a visit</a><% } %>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+<script src="/js/team.js" defer></script>
+<%- include('partials/footer') %>
