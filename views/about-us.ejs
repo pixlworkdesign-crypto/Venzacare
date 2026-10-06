@@ -1,0 +1,95 @@
+<%- include('partials/header') %>
+<% var T = textOf(SITE); %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › About us</div>
+    <span class="eyebrow hero__eyebrow">About us</span>
+    <h1>About Venza Care</h1>
+    <p>We run care homes where people are known, not just cared for: residential, nursing, dementia, respite and end-of-life care, all regulated by the Care Quality Commission.</p>
+  </div>
+</section>
+
+<!-- ABOUT + LIFE (merged) -->
+<section class="section about-split">
+  <div class="container">
+    <div class="split">
+      <div class="split__media split__media--bordered has-photo" style="background-image:url('<%= siteImage(SITE, 'about') %>');"></div>
+      <div>
+        <span class="eyebrow">About Venza Care</span>
+        <h2 class="h2"><%= T.aboutTitle %></h2>
+        <% if (T.aboutText) { %><p class="lead"><%= T.aboutText %></p><% } %>
+        <ul style="list-style:none;padding:0;margin:1.5rem 0;display:grid;gap:0.8rem;">
+          <% T.aboutPoints.forEach(function(p){ %>
+          <li style="display:flex;gap:0.7rem;align-items:flex-start;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#20a7bc" stroke-width="2.2" style="flex:none;margin-top:2px"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><%= p %></span>
+          </li>
+          <% }) %>
+        </ul>
+        <div class="hero__cta">
+          <a href="/our-care" class="btn btn--primary">Our approach to care</a>
+          <a href="/care-homes" class="btn btn--ghost">Find a home</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY FAMILIES CHOOSE US -->
+<section class="section section--alt">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow">Why families choose us</span>
+      <h2 class="h2">The things that matter most</h2>
+      <p class="lead" style="margin-inline:auto;">Choosing a care home is one of the hardest decisions a family makes. Here's what you can count on from every Venza Care home.</p>
+    </div>
+    <div class="testi-grid">
+      <% var values=[
+        {t:'Known, not just cared for', d:'A named carer who learns your routines, your stories and the little things that make a day feel right.'},
+        {t:'Care that adapts', d:'Residential, nursing and dementia care under one roof, so as needs change your loved one rarely has to move home.'},
+        {t:'Family always welcome', d:'Open visiting, a named contact at each home, and a team that picks up the phone whenever you need to talk.'}
+      ]; values.forEach(function(v){ %>
+      <div class="quote-card">
+        <div class="care-card__icon" style="margin-bottom:1rem;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h3 style="font-size:1.2rem;"><%= v.t %></h3>
+        <p style="color:var(--muted);margin:0;"><%= v.d %></p>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM + CQC -->
+<section class="section">
+  <div class="container">
+    <div class="care-grid">
+      <% if (hasTeam) { %>
+      <a href="/our-team" class="care-card"><div class="care-card__body">
+        <h3>Meet our team</h3>
+        <p>The managers, nurses and carers who look after our residents.</p>
+        <span class="care-card__link">Our team →</span>
+      </div></a>
+      <% } %>
+      <a href="/our-care" class="care-card"><div class="care-card__body">
+        <h3>Our care</h3>
+        <p>What residential, nursing, dementia, respite and end-of-life care each mean.</p>
+        <span class="care-card__link">Our approach to care →</span>
+      </div></a>
+      <a href="/cqc-ratings" class="care-card"><div class="care-card__body">
+        <h3>CQC ratings</h3>
+        <p>The latest inspection rating for every home, with the full reports.</p>
+        <span class="care-card__link">See our ratings →</span>
+      </div></a>
+      <% if (!hasTeam) { %>
+      <a href="/care-homes" class="care-card"><div class="care-card__body">
+        <h3>Our homes</h3>
+        <p>Find a home near you, with photos, fees and free visiting times.</p>
+        <span class="care-card__link">Find a care home →</span>
+      </div></a>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

@@ -1608,3 +1608,14 @@ a.hub-who:hover strong { text-decoration: underline; }
 .vs-list li:last-child { border-bottom: 0; }
 .table .num { text-align: right; }
 @media (max-width: 560px) { .vs-bar { grid-template-columns: 7rem 1fr 2.6rem; } }
+
+/* ---------- Top bar: small links for professionals and job seekers ---------- */
+.topbar { background: var(--green-900); font-size: 0.85rem; }
+.topbar__inner { width: min(100% - 2.5rem, var(--maxw)); margin-inline: auto; display: flex; justify-content: flex-end; gap: 1.5rem; padding: 0.4rem 0; }
+.topbar a { color: rgba(255,255,255,0.85); font-weight: 500; }
+.topbar a:hover, .topbar a.is-active { color: #fff; text-decoration: underline; }
+/* The top bar's links also sit at the foot of the phone menu. */
+.nav__links .nav__extra { display: none; }
+@media (max-width: 960px) {
+  .nav__links .nav__extra { display: block; font-size: 0.9rem; color: var(--muted); }
+}

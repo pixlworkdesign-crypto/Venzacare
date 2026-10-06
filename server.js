@@ -214,6 +214,20 @@ app.get('/our-team', wrap(async (req, res, next) => {
   });
 }));
 
+app.get('/about-us', (req, res) => {
+  res.render('about-us', {
+    title: 'About us',
+    description: 'About Venza Care UK: care homes where people are known, not just cared for. Residential, nursing, dementia, respite and end-of-life care, regulated by the CQC.',
+  });
+});
+
+app.get('/help-and-advice', (req, res) => {
+  res.render('help-and-advice', {
+    title: 'Help & advice',
+    description: 'Help with choosing a care home: fees and funding, CQC ratings, answers to common questions and free guides for families.',
+  });
+});
+
 app.get('/our-care', wrap(async (req, res) => {
   res.render('our-care', {
     title: 'Our care',
@@ -729,7 +743,7 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const base = siteUrl(req);
-  const paths = ['/', '/our-care', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
+  const paths = ['/', '/about-us', '/our-care', '/help-and-advice', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
     '/privacy', '/cookies', '/accessibility'];
   (await db.homes()).forEach((h) => paths.push('/care-homes/' + h.id));
   (await db.openJobs()).forEach((j) => paths.push('/careers/' + j.id));

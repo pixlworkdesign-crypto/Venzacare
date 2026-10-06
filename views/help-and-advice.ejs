@@ -1,0 +1,60 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › Help &amp; advice</div>
+    <span class="eyebrow hero__eyebrow">Help &amp; advice</span>
+    <h1>Help with choosing care</h1>
+    <p>Fees, funding, inspection ratings and the questions families ask most, in plain English. If you can’t find what you need, call us on <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>" style="color:#fff;text-decoration:underline;"><%= SITE.phone %></a>.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="care-grid">
+      <% [
+        { href: '/fees-and-funding', t: 'Fees & funding', d: 'Weekly fees at every home, what’s included, and the funding help available from the NHS and your council.', l: 'See fees and funding' },
+        { href: '/cqc-ratings', t: 'CQC ratings', d: 'The latest Care Quality Commission rating for every home, with links to the full inspection reports.', l: 'See our ratings' },
+        { href: '/faqs', t: 'Questions families ask', d: 'Visiting, moving in, what to bring, dementia care and more.', l: 'Read the answers' },
+        { href: '/compare', t: 'Compare our homes', d: 'Fees, care, specialisms and facilities side by side.', l: 'Compare homes' },
+        { href: '/our-care', t: 'Types of care', d: 'What residential, nursing, dementia, respite and end-of-life care each mean.', l: 'Explore our care' },
+        { href: '/professionals', t: 'For professionals', d: 'Discharge teams, social workers and case managers: see each home’s specialist care and make a referral.', l: 'Make a referral' }
+      ].forEach(function (c) { %>
+      <a href="<%= c.href %>" class="care-card"><div class="care-card__body">
+        <h3><%= c.t %></h3>
+        <p><%= c.d %></p>
+        <span class="care-card__link"><%= c.l %> →</span>
+      </div></a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt" id="guides">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow">Free guides</span>
+      <h2 class="h2">Guides for families</h2>
+      <p class="lead" style="margin-inline:auto;">Download, print or share with the rest of the family. Free, with no obligation.</p>
+    </div>
+    <div class="guides">
+      <% [
+        { t: 'A guide to choosing a care home', d: 'What to look for, questions to ask and how to know it feels right.', pdf: '/guides/choosing-a-care-home.pdf' },
+        { t: 'Understanding fees & funding', d: 'NHS, local authority and self-funding explained in plain English.', pdf: '/guides/understanding-fees-and-funding.pdf' },
+        { t: 'Living well with dementia', d: 'Practical advice and reassurance for families and carers.', pdf: '/guides/living-well-with-dementia.pdf' },
+        { t: 'Making the move easier', d: 'How to help a loved one settle in and feel at home quickly.', pdf: '/guides/making-the-move-easier.pdf' }
+      ].forEach(function (g) { %>
+      <div class="guide-card">
+        <div class="ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13ZM4 19.5A2.5 2.5 0 0 0 6.5 22H20"/></svg></div>
+        <h4><%= g.t %></h4>
+        <p><%= g.d %></p>
+        <a href="<%= g.pdf %>" class="care-card__link" download target="_blank" rel="noopener">Download free
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>
+        </a>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

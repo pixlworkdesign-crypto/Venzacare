@@ -227,7 +227,7 @@ function feeLists(SITE, home) {
 const DEFAULT_TEXT = {
   heroTitle: 'The care home you’d choose for your own family',
   heroLead: '',  // blank: "Warm, welcoming care homes across <live areas>, …"
-  homesTitle: '', // blank: "<N> homes, each with its own character"
+  homesTitle: '', // blank: "Homes with their own character"
   homesLead: 'Every home offers residential, nursing and dementia care, so as needs change your loved one rarely has to move. Prices and CQC ratings are shown up front.',
   aboutTitle: 'Care that starts with getting to know you',
   aboutText: 'Across our homes, people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. Our carers and nurses take time to learn the little things: a grandchild’s name, a favourite song, the routine that makes a day feel right.',
