@@ -1711,7 +1711,7 @@ module.exports = function mountHub(app, deps) {
     const kind = { visit: 'Visit request', callback: 'Call back', enquiry: 'Message' };
     const rows = [['Received', 'Name', 'Phone', 'Email', 'Home', 'Type', 'Subject', 'Message', 'Best time', 'Stage', 'Visit', 'Booked online', 'Note', 'Last updated']]
       .concat(list.map((e) => [
-        new Date(e.createdAt).toLocaleString('en-GB'), e.name, e.phone, e.email, e.home, kind[e.kind] || 'Message', e.subject, e.message, e.bestTime,
+        new Date(e.createdAt).toLocaleString('en-GB'), e.name, e.phone, e.email, e.home, e.subject === 'Professional referral' ? 'Professional referral' : kind[e.kind] || 'Message', e.subject, e.message, e.bestTime,
         e.stage, e.visitAt ? new Date(e.visitAt).toLocaleString('en-GB') : '', e.online ? 'Yes' : '', e.note,
         e.stageUpdatedAt ? new Date(e.stageUpdatedAt).toLocaleString('en-GB') : '',
       ]));

@@ -614,6 +614,72 @@ app.post('/callback', wrap(async (req, res) => {
   res.render('contact', await contactLocals({ cbForm: req.body }));
 }));
 
+/* For professionals: discharge teams, social workers, CHC teams and case
+   managers referring someone in. Referrals land in the enquiries list as a
+   message with the subject "Professional referral", so no new table is
+   needed. Only initials and age are asked for — no names or NHS numbers. */
+const REFERRAL_URGENCY = ['', 'Ready for discharge now', 'Within a week', 'Within a month', 'Planning ahead'];
+const REFERRAL_FUNDING = ['', 'NHS Continuing Healthcare', 'Local authority', 'Self-funded', 'Not sure yet'];
+
+async function professionalsLocals(extra) {
+  const homes = await db.homes();
+  const specialisms = [...new Set(homes.flatMap((h) => h.specialisms || []))].sort();
+  return Object.assign({
+    title: 'For professionals',
+    description: 'Refer someone to a Venza Care UK home. For hospital discharge teams, social workers, Continuing Healthcare teams and case managers — see each home’s specialist care and send a referral.',
+    homes, specialisms, urgencies: REFERRAL_URGENCY, fundings: REFERRAL_FUNDING,
+    sent: false, error: null, form: {},
+  }, extra || {});
+}
+
+app.get('/professionals', wrap(async (req, res) => {
+  res.render('professionals', await professionalsLocals());
+}));
+
+app.post('/professionals/refer', wrap(async (req, res) => {
+  const f = req.body || {};
+  if (f.website) return res.redirect('/professionals'); // honeypot
+  const t = (v, n) => String(v || '').trim().slice(0, n);
+  const list = (v) => [].concat(v || []).map((x) => t(x, 80)).filter(Boolean);
+  const locals = await professionalsLocals();
+  const pick = (v, allowed) => (allowed.includes(v) ? v : '');
+  const form = {
+    name: t(f.name, 120), role: t(f.role, 120), organisation: t(f.organisation, 160),
+    phone: t(f.phone, 40), email: t(f.email, 200),
+    initials: t(f.initials, 6), age: /^\d{1,3}$/.test(t(f.age, 3)) ? t(f.age, 3) : '',
+    location: pick(t(f.location, 40), ['In hospital', 'At home', 'In another care home', 'Other']),
+    urgency: pick(t(f.urgency, 40), REFERRAL_URGENCY), funding: pick(t(f.funding, 40), REFERRAL_FUNDING),
+    care: list(f.care).filter((c) => content.careTypeNames(res.locals.SITE).includes(c)),
+    needs: list(f.needs).filter((s) => locals.specialisms.includes(s)),
+    home: pick(t(f.home, 120), locals.homes.map((h) => h.name)),
+    notes: t(f.notes, 2000), consent: f.consent === 'yes',
+  };
+  if (!form.name || !form.organisation || !form.phone || !form.email || !form.consent) {
+    return res.render('professionals', Object.assign(locals, {
+      form, error: 'Please give your name, organisation, phone and email, and confirm the person knows you’re contacting us.',
+    }));
+  }
+  const rows = [
+    ['Referrer', form.name + (form.role ? ', ' + form.role : '')], ['Organisation', form.organisation],
+    ['Phone', form.phone], ['Email', form.email],
+    ['Person', [form.initials, form.age && 'aged ' + form.age].filter(Boolean).join(', ')],
+    ['Where now', form.location], ['How soon', form.urgency], ['Funding', form.funding],
+    ['Care needed', form.care.join(', ')], ['Specialist needs', form.needs.join(', ')],
+    ['Preferred home', form.home || 'Any'], ['Notes', form.notes],
+  ];
+  await db.addMessage({
+    name: form.name,
+    email: form.email,
+    phone: form.phone,
+    subject: 'Professional referral',
+    bestTime: form.urgency,
+    home: form.home,
+    message: rows.slice(1).filter((r) => r[1] && !['Phone', 'Email'].includes(r[0])).map((r) => r[0] + ': ' + r[1]).join('. ') + '.',
+  });
+  alert(req, res, 'Professional referral: ' + form.organisation, rows, form.email);
+  res.render('professionals', Object.assign(locals, { sent: true }));
+}));
+
 /* Google for Jobs listing for a vacancy. Salary is only included when it can
    be read as numbers, so nothing misleading is published. */
 function jobJsonLd(job, SITE, home) {
@@ -663,7 +729,7 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const base = siteUrl(req);
-  const paths = ['/', '/our-care', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/fees-and-funding', '/cqc-ratings', '/faqs', '/careers', '/contact',
+  const paths = ['/', '/our-care', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
     '/privacy', '/cookies', '/accessibility'];
   (await db.homes()).forEach((h) => paths.push('/care-homes/' + h.id));
   (await db.openJobs()).forEach((j) => paths.push('/careers/' + j.id));

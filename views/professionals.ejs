@@ -1,0 +1,182 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumbs"><a href="/">Home</a> › For professionals</div>
+    <span class="eyebrow hero__eyebrow">For professionals</span>
+    <h1>Referring someone to our care</h1>
+    <p>For hospital discharge teams, social workers, Continuing Healthcare teams, case managers and GPs. Tell us about the person and what they need, and our admissions team will come back to you about a bed and an assessment.</p>
+  </div>
+</section>
+
+<% var tick = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-label="Yes"><path d="M20 6 9 17l-5-5"/></svg>';
+   var dash = '<span class="cmp-no" aria-label="No">—</span>';
+   function has(list, x) { return (list || []).indexOf(x) > -1; } %>
+
+<!-- Specialist care by home -->
+<section class="section" id="specialist-care">
+  <div class="container">
+    <span class="eyebrow">Specialist care</span>
+    <h2 class="h2">What each home specialises in</h2>
+    <p class="lead">The care and specialist support each of our homes offers. If you can’t see the need you’re referring for, call us. A home can often support more than is listed here.</p>
+
+    <div class="table-wrap cmp-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th scope="col"><span class="sr-only">Care</span></th>
+            <% homes.forEach(function (h) { %>
+            <th scope="col"><a href="/care-homes/<%= h.id %>"><%= h.name %></a><span class="cmp-town"><%= h.town %></span></th>
+            <% }) %>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cmp-group"><th scope="rowgroup" colspan="<%= homes.length + 1 %>">Types of care</th></tr>
+          <% careTypeNames(SITE).forEach(function (c) { %>
+          <tr><th scope="row"><%= c %></th><% homes.forEach(function (h) { %><td><%- has(h.careTypes, c) ? tick : dash %></td><% }) %></tr>
+          <% }) %>
+          <% if (specialisms.length) { %>
+          <tr class="cmp-group"><th scope="rowgroup" colspan="<%= homes.length + 1 %>">Specialist care</th></tr>
+          <% specialisms.forEach(function (s) { %>
+          <tr><th scope="row"><%= s %></th><% homes.forEach(function (h) { %><td><%- has(h.specialisms, s) ? tick : dash %></td><% }) %></tr>
+          <% }) %>
+          <% } %>
+          <tr><th scope="row">Beds</th><% homes.forEach(function (h) { %><td><%= h.beds || '—' %></td><% }) %></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Referral form -->
+<section class="section section--alt" id="refer">
+  <div class="container">
+    <div class="contact-grid">
+      <div class="contact-panel">
+        <% if (sent) { %>
+        <div class="alert alert--success" style="font-size:1rem;padding:1.2rem 1.4rem;margin-bottom:1.5rem;">
+          <strong>Thank you — your referral has been sent.</strong><br />Our admissions team will contact you, usually within one working day. If it’s urgent, please also call us on <a href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a>.
+        </div>
+        <% } %>
+        <% if (error) { %><div class="alert alert--error" role="alert" style="margin-bottom:1.5rem;"><%= error %></div><% } %>
+        <span class="eyebrow">Make a referral</span>
+        <h2 class="contact-panel__title">Refer someone to us</h2>
+        <p class="contact-panel__intro">Please don’t include the person’s full name, NHS number or detailed medical history here. We’ll ask for what we need securely when we call you.</p>
+
+        <form action="/professionals/refer" method="post" class="contact-form">
+          <div class="hp" aria-hidden="true"><label for="r-website">Leave this empty</label><input type="text" id="r-website" name="website" tabindex="-1" autocomplete="off" /></div>
+
+          <h3 style="font-size:1.1rem;margin:0 0 .8rem;">About you</h3>
+          <div class="grid-2">
+            <div class="field"><label for="r-name">Your name *</label><input type="text" id="r-name" name="name" required maxlength="120" autocomplete="name" value="<%= form.name || '' %>" /></div>
+            <div class="field"><label for="r-role">Your role</label><input type="text" id="r-role" name="role" maxlength="120" placeholder="e.g. Discharge coordinator" value="<%= form.role || '' %>" /></div>
+          </div>
+          <div class="field"><label for="r-org">Organisation *</label><input type="text" id="r-org" name="organisation" required maxlength="160" autocomplete="organization" placeholder="e.g. Croydon University Hospital, Ward 4" value="<%= form.organisation || '' %>" /></div>
+          <div class="grid-2">
+            <div class="field"><label for="r-phone">Phone *</label><input type="tel" id="r-phone" name="phone" required maxlength="40" autocomplete="tel" value="<%= form.phone || '' %>" /></div>
+            <div class="field"><label for="r-email">Work email *</label><input type="email" id="r-email" name="email" required maxlength="200" autocomplete="email" value="<%= form.email || '' %>" /></div>
+          </div>
+
+          <h3 style="font-size:1.1rem;margin:1rem 0 .8rem;">About the person</h3>
+          <div class="grid-2">
+            <div class="field"><label for="r-initials">Initials</label><input type="text" id="r-initials" name="initials" maxlength="6" value="<%= form.initials || '' %>" /></div>
+            <div class="field"><label for="r-age">Age</label><input type="number" id="r-age" name="age" min="18" max="120" value="<%= form.age || '' %>" /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="r-where">Where they are now</label>
+              <select id="r-where" name="location">
+                <% ['', 'In hospital', 'At home', 'In another care home', 'Other'].forEach(function (o) { %><option value="<%= o %>" <%= form.location === o ? 'selected' : '' %>><%= o || 'Choose…' %></option><% }) %>
+              </select>
+            </div>
+            <div class="field"><label for="r-urgency">How soon is a place needed?</label>
+              <select id="r-urgency" name="urgency">
+                <% urgencies.forEach(function (o) { %><option value="<%= o %>" <%= form.urgency === o ? 'selected' : '' %>><%= o || 'Choose…' %></option><% }) %>
+              </select>
+            </div>
+          </div>
+
+          <fieldset class="field" style="border:0;padding:0;margin:0 0 1.1rem;">
+            <legend style="font-weight:600;font-size:.9rem;color:var(--green-900);">Care needed</legend>
+            <div class="check-grid check-grid--3">
+              <% careTypeNames(SITE).forEach(function (c, i) { %><label><input type="checkbox" name="care" value="<%= c %>" <%= has(form.care, c) ? 'checked' : '' %> /> <%= c %></label><% }) %>
+            </div>
+          </fieldset>
+          <% if (specialisms.length) { %>
+          <fieldset class="field" style="border:0;padding:0;margin:0 0 1.1rem;">
+            <legend style="font-weight:600;font-size:.9rem;color:var(--green-900);">Specialist needs</legend>
+            <div class="check-grid check-grid--3">
+              <% specialisms.forEach(function (s) { %><label><input type="checkbox" name="needs" value="<%= s %>" <%= has(form.needs, s) ? 'checked' : '' %> /> <%= s %></label><% }) %>
+            </div>
+          </fieldset>
+          <% } %>
+
+          <div class="grid-2">
+            <div class="field"><label for="r-funding">Funding</label>
+              <select id="r-funding" name="funding">
+                <% fundings.forEach(function (o) { %><option value="<%= o %>" <%= form.funding === o ? 'selected' : '' %>><%= o || 'Choose…' %></option><% }) %>
+              </select>
+            </div>
+            <div class="field"><label for="r-home">Preferred home</label>
+              <select id="r-home" name="home">
+                <option value="">Any / not sure</option>
+                <% homes.forEach(function (h) { %><option value="<%= h.name %>" <%= form.home === h.name ? 'selected' : '' %>><%= h.name %>, <%= h.town %></option><% }) %>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label for="r-notes">Anything else we should know</label><textarea id="r-notes" name="notes" maxlength="2000" placeholder="e.g. mobility, equipment, behaviour support, family situation. No names or NHS numbers, please."><%= form.notes || '' %></textarea></div>
+
+          <label class="checkbox field" style="align-items:flex-start;">
+            <input type="checkbox" name="consent" value="yes" required <%= form.consent ? 'checked' : '' %> style="margin-top:.25rem;" />
+            <span>The person, or someone acting for them, knows I’m contacting Venza Care about a place. *</span>
+          </label>
+
+          <div class="contact-form__foot">
+            <button type="submit" class="btn btn--primary">Send referral</button>
+            <span class="contact-form__note">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Only our admissions team sees referrals. <a href="/privacy">Privacy policy</a>
+            </span>
+          </div>
+        </form>
+      </div>
+
+      <aside class="contact-aside">
+        <div class="contact-card">
+          <h3 class="contact-card__title">Admissions team</h3>
+          <p class="contact-card__sub">Prefer to talk it through? Call us and ask for admissions.</p>
+          <ul class="contact-list">
+            <li class="contact-list__item">
+              <span class="contact-list__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </span>
+              <span class="contact-list__body">
+                <span class="contact-list__label">Call us</span>
+                <a class="contact-list__value" href="tel:<%= SITE.phone.replace(/\s/g,'') %>"><%= SITE.phone %></a>
+              </span>
+            </li>
+            <li class="contact-list__item">
+              <span class="contact-list__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+              </span>
+              <span class="contact-list__body">
+                <span class="contact-list__label">Email</span>
+                <a class="contact-list__value contact-list__value--break" href="mailto:<%= SITE.email %>"><%= SITE.email %></a>
+              </span>
+            </li>
+          </ul>
+          <a href="#specialist-care" class="btn btn--ghost btn--block">See what each home offers</a>
+        </div>
+
+        <div class="contact-next">
+          <h4>What happens next</h4>
+          <ol class="contact-next__list">
+            <li><span>1</span>We match the referral to the home best able to meet the person’s needs.</li>
+            <li><span>2</span>Our admissions team calls you back, usually within one working day.</li>
+            <li><span>3</span>We arrange an assessment and confirm whether we can offer a place.</li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
