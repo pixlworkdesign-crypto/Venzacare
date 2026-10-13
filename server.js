@@ -365,8 +365,71 @@ async function homeTeam(home) {
   const users = await db.records.list('users');
   return users.filter((u) => u.showOnWebsite && u.status === 'active' && Array.isArray(u.homes) && u.homes.includes(home.id) && u.id !== (home.details || {}).managerId)
     .sort((a, b) => a.name.localeCompare(b.name))
-    .map((u) => ({ name: u.name, title: u.title || '', photo: u.photoKey && u.photoConsent ? '/staff-photo/' + u.id : '' }));
+    .map((u) => ({ name: u.name, title: u.title || '', photo: u.photoKey && u.photoConsent ? '/staff-photo/' + u.id : '',
+      department: u.department || '', startYear: u.startYear || null, loveLine: u.loveLine || '' }));
 }
+
+/* Everything the Meet the team page (and its preview on the home page)
+   needs. Until real staff at the home are switched on in the staff hub,
+   the sample team from team-sample.js is used and marked as a template. */
+const teamSample = require('./team-sample');
+const deptKey = (d) => String(d || '').toLowerCase().replace(/ care$/, '').replace(/[^a-z]/g, '') || 'care';
+async function teamData(home, SITE) {
+  const d = home.details || {};
+  const real = await homeTeam(home);
+  const template = real.length === 0;
+  const members = (template ? teamSample.team.map((m) => Object.assign({ photo: '' }, m)) : real)
+    .map((m) => Object.assign({}, m, { deptKey: m.department ? deptKey(m.department) : '' }));
+  const realManager = !!d.managerName;
+  const mgrName = realManager ? d.managerName : teamSample.manager.name;
+  const first = mgrName.split(/\s+/)[0];
+  const manager = {
+    name: mgrName, first,
+    title: realManager ? 'Home Manager' : teamSample.manager.title,
+    photo: realManager ? d.managerPhoto || '' : '',
+    chips: realManager ? [] : teamSample.manager.chips,
+    letter: (realManager && d.managerBio ? d.managerBio : teamSample.letter(home.name, first)).split(/\n\s*\n|\r?\n/).map((p) => p.trim()).filter(Boolean),
+    exampleLetter: !(realManager && d.managerBio),
+    example: !realManager,
+  };
+  const depts = [];
+  members.forEach((m) => { if (m.department && !depts.some((x) => x.name === m.department)) depts.push({ name: m.department, key: m.deptKey, n: 0 }); });
+  depts.forEach((x) => { x.n = members.filter((m) => m.department === x.name).length; });
+  return {
+    template, members, manager, depts,
+    total: members.length + 1,
+    nursing: (home.careTypes || []).includes('Nursing Care'),
+    booking: !!visits.settingsFor(home).enabled,
+    jobs: (await db.jobsForHome(home.id)).length,
+    values: (content.textOf(SITE).teamValues || []),
+    phone: d.phone || SITE.phone,
+  };
+}
+
+// Meet the team: choose a home (linked from the main menu).
+app.get('/meet-the-team', wrap(async (req, res) => {
+  const homes = await Promise.all((await db.homes()).map(async (h) => {
+    const home = await withManager(h);
+    const t = await teamData(home, res.locals.SITE);
+    return { home, manager: t.manager, count: t.template ? 0 : t.total };
+  }));
+  res.render('meet-the-team', {
+    title: 'Meet the team',
+    description: 'Meet the managers and teams at every ' + res.locals.SITE.name + ' home.',
+    homes,
+  });
+}));
+
+app.get('/care-homes/:id/team', wrap(async (req, res) => {
+  const found = await db.home(req.params.id);
+  if (!found) return notFound(res);
+  const home = await withManager(found);
+  res.render('team', {
+    title: 'Meet the team · ' + home.name,
+    description: 'Meet the team at ' + home.name + ', ' + home.town + ' — the people who care for our residents every day.',
+    home, team: await teamData(home, res.locals.SITE),
+  });
+}));
 
 async function homeLocals(req, res, home, extra) {
   home = await withManager(home);
@@ -378,6 +441,7 @@ async function homeLocals(req, res, home, extra) {
     jobs: await db.jobsForHome(home.id),
     jsonLd: homeJsonLd(home, SITE, res.locals.baseUrl),
     homeTeam: await homeTeam(home),
+    team: await teamData(home, SITE),
     visitSent: false,
     visitForm: {},
     visitError: null,
@@ -464,6 +528,9 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
   const SITE = res.locals.SITE;
   const phoneHome = (home.details && home.details.phone) || SITE.phone;
   const directions = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(home.name + ', ' + content.homeAddress(home));
+  // "You'll be shown round by …" only when the home has a real manager set.
+  const mgr = (await withManager(home)).details.managerName;
+  const meetText = mgr ? 'You’ll be shown round by ' + mgr.split(/\s+/)[0] + ' — meet the team before you come' : 'Meet the people you’ll see on the day';
   if (email) {
     mailer.send({
       to: email,
@@ -471,6 +538,7 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
       heading: 'Your visit is booked',
       lines: ['Hi ' + name.split(' ')[0] + ',', 'You’re booked to visit ' + home.name + ', ' + content.homeAddress(home) + ' on ' + when + '.', 'If you need to change the time, call us on ' + phoneHome + '.'],
       button: { label: 'Get directions', url: directions },
+      link: { text: meetText + '.', label: 'Meet the team', url: res.locals.baseUrl + '/care-homes/' + home.id + '/team' },
     }).catch(() => {});
   }
   alert(req, res, 'Visit booked online — ' + home.name + ', ' + when, [['Name', name], ['Phone', phone], ['Email', email], ['Care needed', f.careType], ['Notes', f.notes]], email, '/admin/enquiries?tab=progress');
@@ -489,7 +557,7 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
     booked: {
       when, name,
       ics: 'data:text/calendar;charset=utf-8,' + encodeURIComponent(visits.calendarFile(home, date, time, SITE.name)),
-      directions, phone: phoneHome,
+      directions, phone: phoneHome, meetText,
     },
   }));
 }));
@@ -766,7 +834,7 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const base = siteUrl(req);
-  const paths = ['/', '/about-us', '/our-care', '/help-and-advice', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
+  const paths = ['/', '/about-us', '/our-care', '/help-and-advice', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/meet-the-team', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
     '/privacy', '/cookies', '/accessibility'];
   (await db.homes()).forEach((h) => paths.push('/care-homes/' + h.id));
   (await db.openJobs()).forEach((j) => paths.push('/careers/' + j.id));
