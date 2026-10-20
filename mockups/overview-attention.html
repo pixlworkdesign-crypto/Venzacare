@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Overview mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink:#1f2d33; --muted:#5c6b70; --line:#e2e9e8; --bg:#f1f5f4; --paper:#fff; --green-900:#0d4f5c; --green-700:#127080; --gold:#d6a446; --red:#a8473f; --amber:#b7791f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:400 15px/1.5 Inter, system-ui, sans-serif; }
+  .wrap { display:grid; grid-template-columns:250px 1fr; min-height:100vh; }
+  nav { background:var(--green-900); color:#fff; padding:1.2rem .8rem; }
+  nav b { display:block; font:600 1rem Poppins, sans-serif; padding:0 .6rem 1.2rem; }
+  nav .lbl { font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; opacity:.6; padding:.9rem .6rem .3rem; }
+  nav a { display:flex; justify-content:space-between; color:#fff; text-decoration:none; padding:.55rem .6rem; border-radius:8px; opacity:.9; }
+  nav a.on { background:#16808f; opacity:1; }
+  nav a i { font-style:normal; background:var(--gold); color:var(--green-900); font-weight:700; font-size:.75rem; border-radius:999px; padding:0 .45rem; }
+  main { padding:2rem 2.5rem; max-width:1150px; }
+  h1 { font:700 1.9rem Poppins, sans-serif; color:var(--green-900); margin:0 0 1.25rem; }
+  .switch { display:inline-flex; background:#fff; border:1px solid var(--line); border-radius:999px; padding:.25rem; margin-bottom:1.5rem; }
+  .switch button { border:0; background:none; font:600 .85rem Inter, sans-serif; padding:.4rem .9rem; border-radius:999px; color:var(--muted); cursor:pointer; }
+  .switch button.on { background:var(--green-900); color:#fff; }
+  .note { font-size:.8rem; color:var(--muted); margin-left:.6rem; }
+  .card { background:var(--paper); border-radius:16px; box-shadow:0 1px 3px rgba(13,79,92,.08); margin-bottom:1.25rem; }
+  .card h2 { font:600 1.05rem Poppins, sans-serif; color:var(--green-900); margin:0; padding:1rem 1.25rem; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; }
+  .att a { display:flex; align-items:center; gap:.9rem; padding:.85rem 1.25rem; border-bottom:1px solid var(--line); color:var(--ink); text-decoration:none; }
+  .att a:last-child { border-bottom:0; }
+  .att a:hover { background:#f7faf9; }
+  .dot { width:10px; height:10px; border-radius:50%; flex:none; }
+  .dot.red { background:var(--red); } .dot.amber { background:var(--amber); } .dot.teal { background:var(--green-700); }
+  .att b { font-weight:700; }
+  .att span.go { margin-left:auto; color:var(--green-700); font-weight:600; font-size:.9rem; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:.75rem 1.25rem; border-bottom:1px solid var(--line); }
+  tr:last-child td { border-bottom:0; }
+  .chip { background:#e6f2f1; color:var(--green-900); font-size:.75rem; font-weight:600; border-radius:999px; padding:.1rem .5rem; }
+  .vs-head { display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); padding-top:1.5rem; margin-top:2rem; }
+  .vs-head h2 { font:700 1.35rem Poppins, sans-serif; color:var(--green-900); margin:0; }
+  .tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:1rem; }
+  .tile { padding:1rem 1.2rem; }
+  .tile span { font-size:.85rem; color:var(--muted); display:block; }
+  .tile b { font:700 1.9rem Poppins, sans-serif; color:var(--green-900); }
+  .chart { height:160px; margin:1rem 1.25rem 1.25rem; background:linear-gradient(to top, rgba(18,112,128,.12), transparent); border-bottom:2px solid var(--green-700); border-radius:4px; }
+  [hidden] { display:none !important; }
+  @media (max-width:800px) { .wrap { grid-template-columns:1fr; } nav { display:none; } main { padding:1.25rem 16px; } .tiles { grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <b>Staff hub</b>
+    <div class="lbl">Work</div>
+    <a class="on" href="#">Overview</a><a href="#">Homes</a><a href="#">Enquiries <i>2</i></a><a href="#">Recruitment</a>
+    <div class="lbl">Staff hub</div>
+    <a href="#">Noticeboard <i>1</i></a><a href="#">Documents</a><a href="#">Staff directory</a>
+    <div class="lbl">Website settings</div>
+    <a href="#">Site images</a><a href="#">Care &amp; facilities</a><a href="#">Website text</a><a href="#">Company details</a>
+    <div class="lbl">Admin</div>
+    <a href="#">People &amp; access</a><a href="#">Data requests</a><a href="#">Activity log</a>
+  </nav>
+  <main>
+    <div class="switch" role="group" aria-label="Mockup state">
+      <button class="on" data-s="busy">Things waiting</button><button data-s="clear">All clear</button>
+    </div><span class="note">Mockup only — switch to see both cases</span>
+
+    <h1>Good morning, Sam</h1>
+
+    <div class="card att" id="attention">
+      <h2>Needs attention</h2>
+      <a href="#"><span class="dot red"></span><span><b>2 families</b> waiting for a call</span><span class="go">See enquiries →</span></a>
+      <a href="#"><span class="dot red"></span><span><b>1 certificate</b> expired</span><span class="go">View certificates →</span></a>
+      <a href="#"><span class="dot amber"></span><span><b>3 certificates</b> due within 30 days</span><span class="go">View certificates →</span></a>
+      <a href="#"><span class="dot teal"></span><span><b>1 must-read notice</b> you haven’t read</span><span class="go">Open noticeboard →</span></a>
+      <a href="#"><span class="dot teal"></span><span><b>2 invites</b> not yet accepted</span><span class="go">People &amp; access →</span></a>
+    </div>
+
+    <div class="card" id="visits">
+      <h2>Upcoming visits <a href="#" style="font:600 .85rem Inter;color:var(--green-700);text-decoration:none;">All enquiries</a></h2>
+      <table>
+        <tr><td><b>Tomorrow, 11:00</b></td><td>Helen Carter <span class="chip">Booked online</span></td><td>Albany Lodge</td></tr>
+        <tr><td><b>Thu 23 Oct, 14:30</b></td><td>Raj Patel</td><td>Bedford Grange</td></tr>
+      </table>
+    </div>
+
+    <div class="vs-head"><h2>Website visitors</h2><span class="switch" style="margin:0"><button>Last 7 days</button><button class="on">30 days</button><button>90 days</button></span></div>
+    <div class="tiles">
+      <div class="card tile"><span>Visitors</span><b>1,284</b></div>
+      <div class="card tile"><span>Page views</span><b>4,960</b></div>
+      <div class="card tile"><span>Enquiries &amp; visit bookings</span><b>23</b></div>
+      <div class="card tile"><span>Visitors who got in touch</span><b>1.8%</b></div>
+    </div>
+    <div class="card"><h2>Daily visitors</h2><div class="chart"></div></div>
+  </main>
+</div>
+<script>
+  document.querySelectorAll('[data-s]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('[data-s]').forEach(function (x) { x.classList.toggle('on', x === b); });
+      var clear = b.dataset.s === 'clear';
+      document.getElementById('attention').hidden = clear;
+    });
+  });
+</script>
+</body>
+</html>
