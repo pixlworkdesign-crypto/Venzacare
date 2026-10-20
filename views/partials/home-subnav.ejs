@@ -5,7 +5,6 @@
   <div class="container tm-subnav__in">
     <a href="<%= onTeam ? base : '#overview' %>" class="<%= !onTeam ? 'is-on' : '' %>">Overview</a>
     <a href="<%= onTeam ? base + '#care' : '#care' %>">Care</a>
-    <a href="<%= onTeam ? base + '#fees' : '#fees' %>">Fees</a>
     <a href="<%= base %>/team" class="<%= onTeam ? 'is-on' : '' %>"<%- onTeam ? ' aria-current="page"' : '' %>>Meet the team</a>
     <a href="<%= onTeam && !hasReviews ? base + '#reviews' : '#reviews' %>">Reviews</a>
     <% if (booking) { %><a href="<%= onTeam ? base + '#visit' : '#visit' %>">Visit</a><% } %>

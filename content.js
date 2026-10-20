@@ -228,7 +228,7 @@ const DEFAULT_TEXT = {
   heroTitle: 'Better Care. Better Living.',
   heroLead: 'High-quality care that supports independence, comfort and wellbeing.',
   homesTitle: '', // blank: "Homes with their own character"
-  homesLead: 'Every home offers residential, nursing and dementia care, so as needs change your loved one rarely has to move. Prices and CQC ratings are shown up front.',
+  homesLead: 'Every home offers residential, nursing and dementia care, so as needs change your loved one rarely has to move. CQC ratings are shown up front.',
   aboutTitle: 'Care that starts with getting to know you',
   aboutText: 'Across our homes, people live the way they want to — a lie-in if they fancy one, a garden to potter in, a cup of tea made just how they like it. Our carers and nurses take time to learn the little things: a grandchild’s name, a favourite song, the routine that makes a day feel right.',
   teamValues: [
@@ -385,8 +385,6 @@ function homeJsonLd(home, SITE, base) {
   if (typeof home.lat === 'number' && typeof home.lng === 'number') {
     data.geo = { '@type': 'GeoCoordinates', latitude: home.lat, longitude: home.lng };
   }
-  const from = fromPrice(home);
-  if (from) data.priceRange = 'From ' + gbp(from) + ' per week';
   return data;
 }
 

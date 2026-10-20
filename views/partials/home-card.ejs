@@ -1,4 +1,4 @@
-<% var d = h.details || {}; var from = fromPrice(h); %>
+<% var d = h.details || {}; %>
 <a class="home-card" href="/care-homes/<%= h.id %>"
    data-id="<%= h.id %>"
    data-name="<%= h.name.toLowerCase() %>"
@@ -22,7 +22,6 @@
     <div class="chips">
       <% h.careTypes.forEach(function(c){ %><span class="chip"><%= c %></span><% }) %>
     </div>
-    <p class="home-card__price"><% if (from) { %>From <strong><%= gbp(from) %></strong> per week<% } else { %>Fees on request — <span class="u">call us</span><% } %></p>
     <span class="btn btn--ghost btn--sm">View this home</span>
   </div>
 </a>

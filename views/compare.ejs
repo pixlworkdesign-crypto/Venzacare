@@ -51,9 +51,6 @@
           <tr><th scope="row">CQC rating</th><% picked.forEach(function (h) { %><td><span class="cqc-pill <%= cqcClass(h) %>"><%= cqcLabel(h) %></span></td><% }) %></tr>
           <tr><th scope="row">Beds</th><% picked.forEach(function (h) { %><td><%= h.beds || '—' %></td><% }) %></tr>
           <tr><th scope="row">Room availability</th><% picked.forEach(function (h) { %><td><%= availWords[h.details.availability] || '—' %></td><% }) %></tr>
-          <% FEE_ROWS.forEach(function (r) { %>
-          <tr><th scope="row"><%= r.label %> <span class="cmp-sub">per week</span></th><% picked.forEach(function (h) { var v = h.details.fees && h.details.fees[r.key]; %><td><%= v ? 'from ' + gbp(v) : '—' %></td><% }) %></tr>
-          <% }) %>
 
           <tr class="cmp-group"><th scope="rowgroup" colspan="<%= picked.length + 1 %>">Types of care</th></tr>
           <% careTypeNames(SITE).forEach(function (c) { %>

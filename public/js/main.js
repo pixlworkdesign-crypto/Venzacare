@@ -94,7 +94,7 @@
       chatPanel.setAttribute('aria-hidden', 'false');
       chatBtn.setAttribute('aria-expanded', 'true');
       if (!greeted) {
-        add('bot', "Hello! I'm the Venza Care assistant. Ask me about our homes, the types of care we offer, visiting, fees or our current jobs.");
+        add('bot', "Hello! I'm the Venza Care assistant. Ask me about our homes, the types of care we offer, visiting or our current jobs.");
         greeted = true;
       }
       setTimeout(function () { input && input.focus(); }, 50);
