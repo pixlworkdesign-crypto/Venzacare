@@ -317,6 +317,7 @@ module.exports = function mountHub(app, deps) {
       pendingInvites: users.filter((u) => u.status === 'invited').length,
       noRealOwner: me.builtin && !users.some((u) => u.preset === 'Site administrator' && u.status === 'active'),
       health: can(me, 'people', 'edit') ? await db.health() : null,
+      stats: can(me, 'activity', 'view') ? await visitorStats(req.query.days) : null,
     });
   }));
 
@@ -1687,10 +1688,11 @@ module.exports = function mountHub(app, deps) {
   };
 
   /* ---------- Visitor stats ----------
-     Counted by analytics.js without cookies. Enquiries and booked visits
-     come from the enquiries themselves. */
-  app.get('/admin/visitor-stats', need('activity', 'view'), wrap(async (req, res) => {
-    const days = [7, 30, 90].includes(+req.query.days) ? +req.query.days : 30;
+     Counted by analytics.js without cookies, shown on the Overview to
+     anyone with Activity log access. Enquiries and booked visits come
+     from the enquiries themselves. */
+  async function visitorStats(daysParam) {
+    const days = [7, 30, 90].includes(+daysParam) ? +daysParam : 30;
     const s = await analytics.summary(days);
     const enq = (await enquiryList({ homes: 'all' })).filter((e) => String(e.createdAt).slice(0, 10) >= s.start);
     const homes = (await db.allHomes()).map((h) => ({
@@ -1700,8 +1702,12 @@ module.exports = function mountHub(app, deps) {
     })).filter((h) => h.views || h.enquiries).sort((a, b) => b.views - a.views);
     const top = (obj, n) => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n);
     analytics.tidy().catch(() => {});
-    res.render('hub/visitor-stats', { title: 'Visitor stats', s, enquiries: enq.length, homes, top });
-  }));
+    return { s, enquiries: enq.length, homes, top };
+  }
+
+  app.get('/admin/visitor-stats', need('activity', 'view'), (req, res) => {
+    res.redirect('/admin' + (req.query.days ? '?days=' + encodeURIComponent(req.query.days) : '') + '#stats');
+  });
 
   app.get('/admin/activity', need('activity', 'view'), wrap(async (req, res) => {
     const all = (await db.records.list('activity')).sort((a, b) => new Date(b.at) - new Date(a.at));
