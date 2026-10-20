@@ -478,7 +478,7 @@ textarea { resize: vertical; min-height: 120px; }
   .nav__links.open { display: flex; }
   .nav__links a:not(.btn) { padding: 0.7rem 0; }
   .nav__cta { margin-left: auto; }
-  .nav-toggle { display: block; }
+  .nav-toggle { display: block; margin-left: auto; }
   .care-grid, .homes-grid, .testi-grid { grid-template-columns: 1fr 1fr; }
   .guides { grid-template-columns: 1fr 1fr; }
   .stats { grid-template-columns: 1fr 1fr; gap: 2rem 1rem; }
