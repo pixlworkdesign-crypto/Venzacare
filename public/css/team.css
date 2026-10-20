@@ -226,3 +226,12 @@ html { scroll-padding-top: 140px; }
 .hero-team__txt span { opacity: .85; font-size: .82rem; }
 .hero-team__go { font-weight: 700; padding-left: .3rem; }
 .hero-team__txt + .hero-team__go { border-left: 1px solid rgba(255,255,255,.3); padding-left: .75rem; }
+
+/* Home manager card on a home's page */
+.mgr-card { display: grid; grid-template-columns: 180px 1fr; gap: 1.5rem; align-items: start; background: var(--paper, #fff); border-radius: 18px; padding: 1.25rem; box-shadow: var(--shadow-sm); }
+.tm .mgr-card__photo { width: 180px; aspect-ratio: 1; border-radius: 14px; font-size: 2.6rem; }
+.tm .mgr-card__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
+.mgr-card h3 { margin: .2rem 0 0; font-size: 1.3rem; }
+.mgr-card__title { margin: 0 0 .8rem; color: var(--muted); font-weight: 600; }
+.mgr-card p:last-child { margin-bottom: 0; }
+@media (max-width: 560px) { .mgr-card { grid-template-columns: 1fr; } .tm .mgr-card__photo { width: 140px; } }

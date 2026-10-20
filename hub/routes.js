@@ -332,16 +332,8 @@ module.exports = function mountHub(app, deps) {
      with "Website photos" access (Site administrators and Admins) can see or change it. */
   const teamUpload = uploader(['.jpg', '.jpeg', '.png', '.webp', '.avif']).single('photoFile');
 
-  app.get('/admin/team', need('photos', 'edit'), wrap(async (req, res) => {
-    const team = await db.teamMembers();
-    const onTeam = new Set(team.map((m) => m.userId).filter(Boolean));
-    const staff = (await auth.allUsers())
-      .filter((u) => u.status !== 'invited' && !onTeam.has(u.id))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    const homeStaff = (await auth.allUsers()).filter((u) => u.status !== 'invited' && u.homes !== 'all' && (u.homes || []).length)
-      .sort((a, b) => a.name.localeCompare(b.name));
-    res.render('admin/team', { title: 'Our team', team, staff, homeStaff, canEdit: true, hidden: !!(await db.settings()).teamHidden });
-  }));
+  // The Our team page is switched off; its hub page is no longer in the menu.
+  app.get('/admin/team', need('photos', 'edit'), (req, res) => res.redirect('/admin'));
 
   // Put someone from the staff directory on the page, at the end.
   app.post('/admin/team/from-directory', need('photos', 'edit'), wrap(async (req, res) => {

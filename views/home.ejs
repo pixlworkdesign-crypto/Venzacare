@@ -14,11 +14,12 @@
       <a href="#visit" class="btn btn--gold">Book a visit</a>
       <a href="tel:<%= homeTel %>" class="btn btn--outline-light">Call <%= homePhone %></a>
     </div>
-    <a class="hero-team" href="/care-homes/<%= home.id %>/team">
-      <% if (!team.manager.example) { %><span class="hero-team__face"><% if (team.manager.photo) { %><img src="<%= photoSrc(team.manager.photo) %>" alt="" /><% } else { %><%= team.manager.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %><% } %></span>
-      <span class="hero-team__txt"><b><%= team.manager.name %></b><span>Home Manager</span></span><% } %>
-      <span class="hero-team__go">Meet the team <span aria-hidden="true">→</span></span>
+    <% if (!team.manager.example) { %>
+    <a class="hero-team" href="#manager">
+      <span class="hero-team__face"><% if (team.manager.photo) { %><img src="<%= photoSrc(team.manager.photo) %>" alt="" /><% } else { %><%= team.manager.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %><% } %></span>
+      <span class="hero-team__txt"><b><%= team.manager.name %></b><span>Home Manager</span></span>
     </a>
+    <% } %>
   </div>
 </section>
 <% if (home.photo) { %><div class="home-hero__photo" role="img" aria-label="Outside <%= home.name %>" style="background-image:url('<%= photoSrc(home.photo) %>');"></div><% } %>
@@ -79,7 +80,7 @@
         </ul>
         <a href="#visit" class="btn btn--primary btn--block">Book a visit</a>
         <a href="tel:<%= homeTel %>" class="btn btn--ghost btn--block mt-1">Call the home</a>
-        <p class="home-aside__more"><a href="/care-homes/<%= home.id %>/brochure" target="_blank" rel="noopener">Printable brochure</a> · <a href="/compare?h=<%= home.id %>">Compare with other homes</a><br /><a href="/care-homes/<%= home.id %>/team">Meet the team</a></p>
+        <p class="home-aside__more"><a href="/care-homes/<%= home.id %>/brochure" target="_blank" rel="noopener">Printable brochure</a> · <a href="/compare?h=<%= home.id %>">Compare with other homes</a></p>
       </aside>
     </div>
 
@@ -103,28 +104,20 @@
       </div>
     </div>
 
-    <!-- MEET THE TEAM (preview; the full page is /care-homes/<id>/team) -->
-    <% var tmIni = function (n) { return String(n).split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase(); };
-       var tmG = ['g2', 'g6', 'g8', 'g3', 'g7']; var tmFaces = team.members.slice(0, 5); %>
-    <div class="home-section tm" id="team">
-      <h2 class="h2" style="font-size:1.6rem;">Meet the team</h2>
-      <% if (team.template) { %><p class="tm-example" role="note" style="margin-bottom:1rem;"><span>⚠</span><span><strong>Example only — template.</strong> Real team members will appear here once they’re added in the staff hub.</span></p><% } %>
-      <div class="team-preview">
-        <div class="mgr-mini">
-          <div class="ph ph--g3" role="img" aria-label="<%= team.manager.photo ? team.manager.name : 'Photo placeholder for ' + team.manager.name %>"><span><%= tmIni(team.manager.name) %></span><% if (team.manager.photo) { %><img src="<%= photoSrc(team.manager.photo) %>" alt="" loading="lazy" /><% } %></div>
-          <div><b><%= team.manager.name %></b><span><%= team.manager.title %></span></div>
+    <!-- HOME MANAGER -->
+    <% var M = team.manager; if (!M.example) { %>
+    <div class="home-section tm" id="manager">
+      <h2 class="h2" style="font-size:1.6rem;">Your home manager</h2>
+      <div class="mgr-card">
+        <div class="ph ph--g3 mgr-card__photo" role="img" aria-label="<%= M.name %>"><span><%= M.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %></span><% if (M.photo) { %><img src="<%= photoSrc(M.photo) %>" alt="" loading="lazy" /><% } %></div>
+        <div>
+          <h3><%= M.name %></h3>
+          <p class="mgr-card__title"><%= M.title %></p>
+          <% if (!M.exampleLetter) { M.letter.forEach(function (p) { %><p><%= p %></p><% }) } %>
         </div>
-        <a href="/care-homes/<%= home.id %>/team" class="btn btn--gold">Meet the team <span aria-hidden="true">→</span></a>
-        <% if (tmFaces.length) { %>
-        <div class="preview-faces">
-          <div class="stack" aria-hidden="true">
-            <% tmFaces.forEach(function (m, i) { %><div class="ph ph--<%= tmG[i % tmG.length] %>"><span><%= tmIni(m.name) %></span><% if (m.photo) { %><img src="<%= m.photo %>" alt="" loading="lazy" /><% } %></div><% }) %>
-            <% if (team.members.length > tmFaces.length) { %><div class="stack__more">+<%= team.members.length - tmFaces.length %> more</div><% } %>
-          </div>
-        </div>
-        <% } %>
       </div>
     </div>
+    <% } %>
 
     <% var revs = d.testimonials || []; if (revs.length || d.carehomeUrl || d.googleUrl) { %>
     <div class="home-section reviews" id="reviews">
@@ -212,7 +205,7 @@
               <a class="btn btn--primary" href="<%= booked.ics %>" download="visit-<%= home.id %>.ics">Add to my calendar</a>
               <a class="btn btn--ghost" href="<%= booked.directions %>" target="_blank" rel="noopener">Get directions ↗</a>
             </div>
-            <a class="booked__team" href="/care-homes/<%= home.id %>/team"><span><%= booked.meetText %></span><b>Meet the team →</b></a>
+            <% if (booked.meetText) { %><p class="booked__when" style="font-size:1rem;"><%= booked.meetText %></p><% } %>
             <p class="hint" style="margin-top:1rem;">Need to change it? Call <a href="tel:<%= booked.phone.replace(/\s/g, '') %>"><%= booked.phone %></a>. We look forward to meeting you.</p>
           </div>
           <% } else if (visitSent) { %>
