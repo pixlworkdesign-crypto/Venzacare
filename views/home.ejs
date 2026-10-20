@@ -10,10 +10,6 @@
     </a>
     <h1><%= home.name %></h1>
     <p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px" aria-hidden="true"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg> <%= home.town %> · <%= home.postcode %></p>
-    <div class="hero__cta" style="margin-top:1.2rem;">
-      <a href="#visit" class="btn btn--gold">Book a visit</a>
-      <a href="tel:<%= homeTel %>" class="btn btn--outline-light">Call <%= homePhone %></a>
-    </div>
     <% if (!team.manager.example) { %>
     <a class="hero-team" href="#manager">
       <span class="hero-team__face"><% if (team.manager.photo) { %><img src="<%= photoSrc(team.manager.photo) %>" alt="" /><% } else { %><%= team.manager.name.split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() %><% } %></span>
@@ -32,7 +28,6 @@
       <div class="prose">
         <p class="lead"><%= home.blurb %></p>
         <h2>About this home</h2>
-        <p><%= home.name %> is a<%= home.beds ? ' ' + home.beds + '-bed' : '' %> care home in <%= home.town %>.</p>
         <div class="care-panel" id="care">
           <h3>Types of care</h3>
           <ul class="tick-list">
@@ -68,10 +63,8 @@
         <% if (d.availability) { %>
         <p class="avail-line is-<%= d.availability %>"><span class="dot" aria-hidden="true"></span><strong><%= { available: 'Rooms available now', limited: 'Limited availability', waitlist: 'Currently a waiting list' }[d.availability] %></strong><% if (d.availabilityNote) { %><br /><span class="muted"><%= d.availabilityNote %></span><% } %></p>
         <% } %>
-        <h3>Visit <%= home.name %></h3>
-        <p class="muted" style="margin-top:0;">The best way to judge a home is to see it. We'll show you round and answer your questions — no obligation.</p>
+        <h3>Key Details</h3>
         <ul class="job-facts">
-          <li><span>CQC rating</span><span><a href="#cqc"><%= cqcLabel(home) %></a></span></li>
           <li><span>Beds</span><span><%= home.beds %></span></li>
           <% if (d.managerName) { %><li><span>Manager</span><span><%= d.managerName %></span></li><% } %>
           <li><span>Call</span><span><a href="tel:<%= homeTel %>"><%= homePhone %></a></span></li>
@@ -79,7 +72,6 @@
           <% if (d.visitingHours) { %><li><span>Visiting</span><span><%= d.visitingHours %></span></li><% } %>
         </ul>
         <a href="#visit" class="btn btn--primary btn--block">Book a visit</a>
-        <a href="tel:<%= homeTel %>" class="btn btn--ghost btn--block mt-1">Call the home</a>
         <p class="home-aside__more"><a href="/care-homes/<%= home.id %>/brochure" target="_blank" rel="noopener">Printable brochure</a> · <a href="/compare?h=<%= home.id %>">Compare with other homes</a></p>
       </aside>
     </div>
@@ -164,7 +156,7 @@
 
     <% if (home.gallery && home.gallery.length) { %>
     <div style="margin-top:3.5rem;">
-      <h2 class="h2" style="font-size:1.6rem;">A look around <%= home.name %></h2>
+      <h2 class="h2" style="font-size:1.6rem;">Photos</h2>
       <div class="gallery-grid">
         <% home.gallery.forEach(function(g, gi){ %>
         <button type="button" class="gallery-item" data-full="<%= photoSrc(g) %>" aria-label="View photo <%= gi+1 %> of <%= home.gallery.length %>" style="background-image:url('<%= photoSrc(g) %>');"></button>
@@ -183,9 +175,8 @@
     <div class="home-section visit-section" id="visit">
       <div class="visit-grid">
         <div>
-          <span class="eyebrow">Come and see us</span>
-          <h2 class="h2">Book a visit to <%= home.name %></h2>
-          <p class="lead" style="font-size:1.05rem;"><% if (slots.length) { %>Pick a time that suits you and it’s booked straight away — no waiting for a call back.<% } else { %>Pick a day that suits you and we’ll call or email to confirm.<% } %> There’s no obligation, and you’re welcome to bring family along.</p>
+          <h2 class="h2">Book a visit</h2>
+          <p class="lead" style="font-size:1.05rem;"><% if (slots.length) { %>Pick a time and it’s booked straight away.<% } else { %>Pick a day and we’ll call or email to confirm.<% } %> No obligation, and family are welcome.</p>
           <div class="directions">
             <h3>Finding us</h3>
             <p style="margin:0 0 .4rem;"><%= home.name %>, <%= homeAddress(home) %></p>
