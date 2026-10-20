@@ -506,8 +506,10 @@ module.exports = function mountHub(app, deps) {
     const facilities = [];
     for (const r of fac.out) if (!facilities.some((x) => x.name === r.name)) facilities.push({ name: r.name, group: groupNames.includes(f['facgroup_' + r.n]) ? f['facgroup_' + r.n] : 'Other' });
     const facNames = facilities.map((x) => x.name);
-    const feeItems = [];
-    for (const r of fee.out) if (!feeItems.some((x) => x.name === r.name)) feeItems.push({ name: r.name, usually: f['feeusually_' + r.n] === 'extra' ? 'extra' : 'included' });
+    // "What the fee covers" is no longer on this form; keep what's saved.
+    const feeSent = Object.keys(f).some((k) => k.startsWith('fee_'));
+    const feeItems = feeSent ? [] : feeItemsOf(res.locals.SITE);
+    if (feeSent) for (const r of fee.out) if (!feeItems.some((x) => x.name === r.name)) feeItems.push({ name: r.name, usually: f['feeusually_' + r.n] === 'extra' ? 'extra' : 'included' });
 
     // Carry renames and removals through to every home.
     for (const h of await db.allHomes()) {
@@ -515,7 +517,7 @@ module.exports = function mountHub(app, deps) {
       const careTypes = (h.careTypes || []).filter((c) => !removed.includes(c)).map((c) => renames[c] || c);
       const homeFac = Array.isArray(d.facilities) ? homeFacilityNames(h).map((x) => fac.ren[x] || x).filter((x) => facNames.includes(x)) : d.facilities;
       let homeFee = d.feeItems;
-      if (homeFee) {
+      if (homeFee && feeSent) {
         homeFee = {};
         for (const [k, v] of Object.entries(d.feeItems)) { const nk = fee.ren[k] || k; if (feeItems.some((x) => x.name === nk)) homeFee[nk] = v; }
       }

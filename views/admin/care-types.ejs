@@ -66,21 +66,7 @@
     </div>
   </div>
 
-  <div class="panel" id="fee-items">
-    <div class="panel__head"><h2>What the fee covers</h2></div>
-    <div class="panel__body list-rows list-rows--pair">
-      <% feeItems.concat([{ name: '', usually: 'included' }, { name: '', usually: 'extra' }]).forEach(function (it, n) { %>
-      <input type="hidden" name="fee_orig_<%= n %>" value="<%= it.name %>" />
-      <input name="fee_<%= n %>" value="<%= it.name %>" maxlength="120" aria-label="Fee item <%= n + 1 %>" <%- it.name ? '' : 'placeholder="Add an item"' %> />
-      <select name="feeusually_<%= n %>" aria-label="Usually">
-        <option value="included" <%= it.usually === 'included' ? 'selected' : '' %>>Usually included</option>
-        <option value="extra" <%= it.usually === 'extra' ? 'selected' : '' %>>Usually extra</option>
-      </select>
-      <% }) %>
-    </div>
-  </div>
-
-  <p class="hint">Pictures: JPEG, PNG or WebP, up to 10 MB. To remove a facility or fee item, clear its box.</p>
+  <p class="hint">Pictures: JPEG, PNG or WebP, up to 10 MB. To remove a facility, clear its box.</p>
   <div style="display:flex;gap:.8rem;margin:1rem 0 3rem;"><button type="submit" class="btn btn--primary">Save changes</button></div>
 </form>
 
