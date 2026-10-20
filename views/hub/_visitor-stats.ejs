@@ -1,5 +1,5 @@
-<%- include('../partials/admin-header') %>
-<% var fmt = function (n) { return Number(n).toLocaleString('en-GB'); };
+<% var s = stats.s, enquiries = stats.enquiries, homes = stats.homes, top = stats.top;
+   var fmt = function (n) { return Number(n).toLocaleString('en-GB'); };
    var change = s.prevVisitors ? Math.round((s.visitors - s.prevVisitors) / s.prevVisitors * 100) : null;
    var conv = s.visitors ? (enquiries / s.visitors * 100).toFixed(1) : '0.0';
    var sources = top(s.sources, 8), srcTotal = sources.reduce(function (n, x) { return n + x[1]; }, 0);
@@ -16,10 +16,10 @@
    var area = line + ' L' + x(s.daily.length - 1).toFixed(1) + ' ' + y(0) + ' L' + x(0).toFixed(1) + ' ' + y(0) + ' Z';
    var labelEvery = Math.ceil(s.daily.length / 5); %>
 
-<div class="hub-head">
-  <div><h1 class="hub-h1">Visitor stats</h1></div>
+<div class="hub-head vs-head" id="stats">
+  <div><h2 class="hub-h2">Website visitors</h2></div>
   <div class="vs-range" role="group" aria-label="Period">
-    <% [7, 30, 90].forEach(function (d) { %><a href="?days=<%= d %>" class="<%= s.days === d ? 'is-on' : '' %>"><%= d === 7 ? 'Last 7 days' : d + ' days' %></a><% }) %>
+    <% [7, 30, 90].forEach(function (d) { %><a href="?days=<%= d %>#stats" class="<%= s.days === d ? 'is-on' : '' %>"><%= d === 7 ? 'Last 7 days' : d + ' days' %></a><% }) %>
   </div>
 </div>
 
@@ -79,4 +79,3 @@
   </div>
 </div>
 
-<%- include('../partials/admin-footer') %>

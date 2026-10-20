@@ -17,13 +17,7 @@
   var sections = [
     { label: 'Work', items: [
       { href: '/admin', key: 'overview', label: 'Overview', show: true, icon: 'M3 12 12 4l9 8M5 10v10h14V10' },
-      { href: '/admin/visitor-stats', key: 'visitor-stats', label: 'Visitor stats', show: hubCan('activity'), icon: 'M4 20V10M10 20V4M16 20v-7M22 20H2' },
       { href: '/admin/homes', key: 'homes', label: 'Homes', show: hubCan('homes') || hubCan('availability'), icon: 'M3 21h18M5 21V8l7-5 7 5v13M10 21v-6h4v6' },
-      { href: '/admin/images', key: 'images', label: 'Site images', show: hubCan('photos', 'edit'), icon: 'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15.5 9.5a1.5 1.5 0 1 0 0-.01' },
-      { href: '/admin/care-types', key: 'care-types', label: 'Care & facilities', show: hubCan('homes', 'edit') && me.homes === 'all', icon: 'M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z' },
-      { href: '/admin/website-text', key: 'website-text', label: 'Website text', show: hubCan('homes', 'edit') && me.homes === 'all', icon: 'M4 6h16M4 12h16M4 18h10' },
-      { href: '/admin/company', key: 'company', label: 'Company details', show: me.builtin || me.preset === 'Site administrator', icon: 'M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2' },
-      { href: '/admin/team', key: 'team', label: 'Our team', show: hubCan('photos', 'edit'), icon: 'M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M17 11a3 3 0 1 0-1-5.8M21.5 20a5.5 5.5 0 0 0-4-5.3' },
       { href: '/admin/enquiries', key: 'enquiries', label: 'Enquiries', show: hubCan('enquiries'), count: navCounts.enquiries, icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
       { href: '/admin/recruitment', key: 'recruitment', label: 'Recruitment', show: hubCan('jobs') || hubCan('applications'), count: navCounts.recruitment, also: ['/admin/jobs', '/admin/applications'], icon: 'M3 7h18v13H3zM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2' }
     ]},
@@ -31,6 +25,12 @@
       { href: '/admin/noticeboard', key: 'noticeboard', label: 'Noticeboard', show: true, count: navCounts.noticeboard, icon: 'M4 4h16v12H8l-4 4zM8 8h8M8 12h5' },
       { href: '/admin/documents', key: 'documents', label: 'Documents', show: true, icon: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6' },
       { href: '/admin/directory', key: 'directory', label: 'Staff directory', show: true, icon: 'M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M17 11a3 3 0 1 0-1-5.8M21.5 20a5.5 5.5 0 0 0-4-5.3' }
+    ]},
+    { label: 'Website settings', items: [
+      { href: '/admin/images', key: 'images', label: 'Site images', show: hubCan('photos', 'edit'), icon: 'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15.5 9.5a1.5 1.5 0 1 0 0-.01' },
+      { href: '/admin/care-types', key: 'care-types', label: 'Care & facilities', show: hubCan('homes', 'edit') && me.homes === 'all', icon: 'M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z' },
+      { href: '/admin/website-text', key: 'website-text', label: 'Website text', show: hubCan('homes', 'edit') && me.homes === 'all', icon: 'M4 6h16M4 12h16M4 18h10' },
+      { href: '/admin/company', key: 'company', label: 'Company details', show: me.builtin || me.preset === 'Site administrator', icon: 'M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2' }
     ]},
     { label: 'Admin', items: [
       { href: '/admin/people', key: 'people', label: 'People & access', show: hubCan('people'), icon: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4' },

@@ -215,3 +215,23 @@ html { scroll-padding-top: 140px; }
 .tm .tm-example--bar { border-radius: 0; border-width: 0 0 2px; justify-content: center; text-align: center; }
 .tm .tm-ex-tag { position: absolute; z-index: 4; top: .6rem; right: .6rem; background: #fff4d6; color: #5a3d00; border: 1px solid #cf9c3c; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: .15rem .45rem; border-radius: 999px; }
 .tm .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
+
+/* Home page banner: manager + Meet the team */
+.hero-team { display: inline-flex; align-items: center; gap: .75rem; margin-top: 1.1rem; padding: .45rem 1.1rem .45rem .45rem; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.28); color: #fff; text-decoration: none; backdrop-filter: blur(4px); transition: background .2s; }
+.hero-team:hover { background: rgba(255,255,255,.24); color: #fff; }
+.hero-team:focus-visible { outline: 3px solid var(--gold-400); outline-offset: 3px; }
+.hero-team__face { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--gold-400); color: var(--green-900); font: 700 .95rem var(--font-display); flex: none; }
+.hero-team__face img { width: 100%; height: 100%; object-fit: cover; }
+.hero-team__txt { display: flex; flex-direction: column; line-height: 1.2; font-size: .92rem; }
+.hero-team__txt span { opacity: .85; font-size: .82rem; }
+.hero-team__go { font-weight: 700; padding-left: .3rem; }
+.hero-team__txt + .hero-team__go { border-left: 1px solid rgba(255,255,255,.3); padding-left: .75rem; }
+
+/* Home manager card on a home's page */
+.mgr-card { display: grid; grid-template-columns: 180px 1fr; gap: 1.5rem; align-items: start; background: var(--paper, #fff); border-radius: 18px; padding: 1.25rem; box-shadow: var(--shadow-sm); }
+.tm .mgr-card__photo { width: 180px; aspect-ratio: 1; border-radius: 14px; font-size: 2.6rem; }
+.tm .mgr-card__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
+.mgr-card h3 { margin: .2rem 0 0; font-size: 1.3rem; }
+.mgr-card__title { margin: 0 0 .8rem; color: var(--muted); font-weight: 600; }
+.mgr-card p:last-child { margin-bottom: 0; }
+@media (max-width: 560px) { .mgr-card { grid-template-columns: 1fr; } .tm .mgr-card__photo { width: 140px; } }

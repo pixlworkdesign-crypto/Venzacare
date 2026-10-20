@@ -148,7 +148,7 @@ app.use(wrap(async (req, res, next) => {
   // …and the "Type of care" filters list the care the homes actually offer.
   res.locals.homeCareTypes = content.careTypeNames(res.locals.SITE).filter((c) => liveHomes.some((h) => (h.careTypes || []).includes(c)));
   // The "Our team" page shows only if an admin hasn't hidden it and someone has been added.
-  res.locals.hasTeam = !res.locals.SITE.teamHidden && (await db.teamMembers()).length > 0;
+  res.locals.hasTeam = false; // Our team page switched off (views/our-team.ejs is kept)
   res.locals.year = new Date().getFullYear();
   res.locals.currentPath = req.path;
   res.locals.title = '';
@@ -250,7 +250,7 @@ app.get('/our-care', wrap(async (req, res) => {
 }));
 
 // The old fees page is gone; send old links somewhere useful.
-app.get('/fees-and-funding', (req, res) => res.redirect(301, '/help-and-advice'));
+app.get('/fees-and-funding', (req, res) => res.redirect(302, '/help-and-advice'));
 
 // CQC ratings (Regulation 20A: every location's rating, one click from the menu)
 app.get('/cqc-ratings', wrap(async (req, res) => {
@@ -397,16 +397,11 @@ async function teamData(home, SITE) {
   };
 }
 
-app.get('/care-homes/:id/team', wrap(async (req, res) => {
-  const found = await db.home(req.params.id);
-  if (!found) return notFound(res);
-  const home = await withManager(found);
-  res.render('team', {
-    title: 'Meet the team · ' + home.name,
-    description: 'Meet the team at ' + home.name + ', ' + home.town + ' — the people who care for our residents every day.',
-    home, team: await teamData(home, res.locals.SITE),
-  });
-}));
+// The old Meet the team chooser page was removed; send old links to Find a home.
+app.get('/meet-the-team', (req, res) => res.redirect(301, '/care-homes'));
+
+// Meet the team page switched off (views/team.ejs is kept): the home page shows the manager.
+app.get('/care-homes/:id/team', (req, res) => res.redirect(301, '/care-homes/' + encodeURIComponent(req.params.id)));
 
 async function homeLocals(req, res, home, extra) {
   home = await withManager(home);
@@ -505,6 +500,9 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
   const SITE = res.locals.SITE;
   const phoneHome = (home.details && home.details.phone) || SITE.phone;
   const directions = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(home.name + ', ' + content.homeAddress(home));
+  // "You'll be shown round by …" only when the home has a real manager set.
+  const mgr = (await withManager(home)).details.managerName;
+  const meetText = mgr ? 'You’ll be shown round by ' + mgr.split(/\s+/)[0] + '.' : '';
   if (email) {
     mailer.send({
       to: email,
@@ -512,6 +510,7 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
       heading: 'Your visit is booked',
       lines: ['Hi ' + name.split(' ')[0] + ',', 'You’re booked to visit ' + home.name + ', ' + content.homeAddress(home) + ' on ' + when + '.', 'If you need to change the time, call us on ' + phoneHome + '.'],
       button: { label: 'Get directions', url: directions },
+      ...(meetText ? { link: { text: meetText, label: 'About ' + mgr.split(/\s+/)[0], url: res.locals.baseUrl + '/care-homes/' + home.id + '#manager' } } : {}),
     }).catch(() => {});
   }
   alert(req, res, 'Visit booked online — ' + home.name + ', ' + when, [['Name', name], ['Phone', phone], ['Email', email], ['Care needed', f.careType], ['Notes', f.notes]], email, '/admin/enquiries?tab=progress');
@@ -530,7 +529,7 @@ app.post('/care-homes/:id/book', wrap(async (req, res) => {
     booked: {
       when, name,
       ics: 'data:text/calendar;charset=utf-8,' + encodeURIComponent(visits.calendarFile(home, date, time, SITE.name)),
-      directions, phone: phoneHome,
+      directions, phone: phoneHome, meetText,
     },
   }));
 }));
@@ -903,7 +902,7 @@ async function buildKnowledge() {
 
   lines.push(`\n## How to get in touch / next steps`);
   lines.push(`- Find a home and filter by region/care type at /care-homes.`);
-  lines.push(`- CQC ratings: /cqc-ratings. Common questions: /faqs.`);
+  lines.push(`- Fees: not published on the website — ask people to call ${S.phone}. CQC ratings: /cqc-ratings. Common questions: /faqs.`);
   lines.push(`- Book a visit or send an enquiry at /contact, or call ${S.phone}.`);
   lines.push(`- Browse and apply for jobs at /careers.`);
   return lines.join('\n');
