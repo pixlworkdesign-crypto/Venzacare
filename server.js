@@ -406,19 +406,8 @@ async function teamData(home, SITE) {
   };
 }
 
-// Meet the team: choose a home (linked from the main menu).
-app.get('/meet-the-team', wrap(async (req, res) => {
-  const homes = await Promise.all((await db.homes()).map(async (h) => {
-    const home = await withManager(h);
-    const t = await teamData(home, res.locals.SITE);
-    return { home, manager: t.manager, count: t.template ? 0 : t.total };
-  }));
-  res.render('meet-the-team', {
-    title: 'Meet the team',
-    description: 'Meet the managers and teams at every ' + res.locals.SITE.name + ' home.',
-    homes,
-  });
-}));
+// The old Meet the team chooser page was removed; send old links to Find a home.
+app.get('/meet-the-team', (req, res) => res.redirect(301, '/care-homes'));
 
 app.get('/care-homes/:id/team', wrap(async (req, res) => {
   const found = await db.home(req.params.id);
@@ -834,7 +823,7 @@ app.get('/robots.txt', (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const base = siteUrl(req);
-  const paths = ['/', '/about-us', '/our-care', '/help-and-advice', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/meet-the-team', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
+  const paths = ['/', '/about-us', '/our-care', '/help-and-advice', ...(res.locals.hasTeam ? ['/our-team'] : []), '/care-homes', '/compare', '/fees-and-funding', '/cqc-ratings', '/faqs', '/professionals', '/careers', '/contact',
     '/privacy', '/cookies', '/accessibility'];
   (await db.homes()).forEach((h) => paths.push('/care-homes/' + h.id));
   (await db.openJobs()).forEach((j) => paths.push('/careers/' + j.id));
