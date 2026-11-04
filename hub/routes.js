@@ -71,6 +71,28 @@ async function geocode(postcode) {
   } catch (e) { return null; }
 }
 
+/* A CSV file as rows of cells. Handles quoted cells with commas, quotes
+   ("") and line breaks inside them, as Excel and Google Sheets save them. */
+function parseCsv(src) {
+  const rows = [];
+  let row = [], cell = '', quoted = false;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (quoted) {
+      if (c === '"' && src[i + 1] === '"') { cell += '"'; i++; }
+      else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && src[i + 1] === '\n') i++;
+      row.push(cell); rows.push(row); row = []; cell = '';
+    } else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter((r) => r.some((c) => c.trim()));
+}
+
 module.exports = function mountHub(app, deps) {
   const { wrap, siteUrl, config } = deps;
   const careNames = (res) => careTypeNames(res.locals.SITE);
@@ -651,6 +673,86 @@ module.exports = function mountHub(app, deps) {
     req.params.id = id;
     req.newHome = true;
     return saveHomeForm(req, res);
+  }));
+
+  /* ---------- Import homes from a spreadsheet ----------
+     One row per home, with a header row naming the columns (the same names
+     as the Add a home form). Every home is added as a draft, so nothing
+     shows on the website until someone makes it live. A home whose name and
+     postcode are already in the hub is skipped, so the same file can be
+     uploaded twice safely. */
+  const IMPORT_COLUMNS = {
+    name: ['home name', 'name'], phone: ['phone'], email: ['email'], blurb: ['short description', 'description'],
+    address: ['address'], town: ['town'], postcode: ['postcode'], beds: ['beds', 'number of beds'],
+    careTypes: ['types of care', 'care types'], specialisms: ['specialist care'], facilities: ['facilities'],
+    cqc: ['cqc rating', 'overall rating'], cqcRatedOn: ['date of latest report'], cqcLocationId: ['cqc location id'],
+    carehomeUrl: ['carehome.co.uk link'], reviewScore: ['score'], reviewCount: ['reviews', 'number of reviews'],
+    googleUrl: ['google maps link'], visitingHours: ['visiting hours'], parking: ['parking and travel', 'parking'],
+  };
+  const needImport = [need('homes', 'edit'), (req, res, next) => (req.me.homes === 'all' ? next() : deny(res, 'Only people who cover the whole company can import homes.'))];
+
+  app.get('/admin/homes/import', ...needImport, (req, res) => {
+    res.render('admin/home-import', { title: 'Import homes', results: null });
+  });
+
+  app.post('/admin/homes/import', ...needImport, csvUpload.single('file'), wrap(async (req, res) => {
+    const rows = parseCsv(req.file ? req.file.buffer.toString('utf8').replace(/^﻿/, '') : '');
+    if (rows.length < 2) return back(res, '/admin/homes/import', 'Choose a CSV file with a header row and at least one home.');
+    const header = rows[0].map((h) => h.trim().toLowerCase());
+    const col = {};
+    for (const [key, names] of Object.entries(IMPORT_COLUMNS)) col[key] = header.findIndex((h) => names.includes(h));
+    if (col.name < 0 || col.town < 0) return back(res, '/admin/homes/import', 'The file needs “Home name” and “Town” columns.');
+
+    const SITE = res.locals.SITE;
+    const careList = careNames(res), specList = specialistCareOf(SITE), facList = facilityNames(SITE);
+    const existing = await db.allHomes();
+    const results = [];
+    for (const cells of rows.slice(1, 201)) {
+      const get = (key, max) => (col[key] >= 0 ? text(cells[col[key]], max) : '');
+      const list = (key) => get(key, 4000).split(/\s*[;|]\s*/).filter(Boolean);
+      const pick = (key, allowed, dropped) => list(key).filter((x) => {
+        const ok = allowed.includes(x);
+        if (!ok) dropped.push(x);
+        return ok;
+      });
+      const name = get('name', 80), town = get('town', 60), postcode = get('postcode', 12).toUpperCase();
+      if (!name && !town) continue; // blank row
+      const row = { name: name || '(no name)', town };
+      if (!name || !town) { results.push(Object.assign(row, { error: 'Needs a name and a town' })); continue; }
+      const same = existing.find((h) => h.name.toLowerCase() === name.toLowerCase() && String(h.postcode || '').replace(/\s/g, '') === postcode.replace(/\s/g, ''));
+      if (same) { results.push(Object.assign(row, { skipped: true, id: same.id })); continue; }
+
+      const dropped = [];
+      const rating = get('cqc', 40).toLowerCase();
+      const cqc = CQC_OPTIONS.find((o) => o.toLowerCase() === rating) || 'Registered';
+      const carehomeUrl = get('carehomeUrl', 300), googleUrl = get('googleUrl', 400), email = get('email', 120);
+      let id = slug(name);
+      while (existing.some((h) => h.id === id)) id = slug(name) + '-' + Math.random().toString(36).slice(2, 5);
+      const pt = postcode ? await geocode(postcode) : null;
+      const home = Object.assign(blankHome(res), {
+        id, name, town, postcode, sortOrder: existing.length,
+        region: (pt && pt.region) || '', lat: pt ? pt.lat : null, lng: pt ? pt.lng : null,
+        blurb: get('blurb', 600), beds: parseInt(get('beds', 6), 10) || null, cqc,
+        careTypes: pick('careTypes', careList, dropped),
+        specialisms: pick('specialisms', specList, dropped),
+      });
+      Object.assign(home.details, {
+        phone: get('phone', 40), email: isEmail(email) ? email : '',
+        address: addressLine(get('address', 200)),
+        cqcLocationId: get('cqcLocationId', 30).replace(/[^0-9A-Za-z-]/g, ''), cqcRatedOn: get('cqcRatedOn', 40),
+        carehomeUrl: /^https:\/\/(www\.)?carehome\.co\.uk\//.test(carehomeUrl) ? carehomeUrl : '',
+        googleUrl: /^https:\/\/((www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|g\.page)\//.test(googleUrl) ? googleUrl : '',
+        reviewScore: get('reviewScore', 6), reviewCount: get('reviewCount', 8),
+        visitingHours: get('visitingHours', 120), parking: get('parking', 400),
+        facilities: pick('facilities', facList, dropped),
+      });
+      await db.saveHome(home);
+      existing.push(home);
+      results.push(Object.assign(row, { ok: true, id, noPin: !pt, dropped }));
+    }
+    const added = results.filter((r) => r.ok).length;
+    if (added) await log(req.me, req.me.name + ' imported ' + added + ' home' + (added === 1 ? '' : 's') + ' as drafts from a spreadsheet');
+    res.render('admin/home-import', { title: 'Import homes', results });
   }));
 
   app.get('/admin/homes/:id/edit', need(['homes', 'availability'], 'view'), wrap(async (req, res) => {

@@ -4,7 +4,7 @@
   <div>
     <h1 class="hub-h1">Homes</h1>
   </div>
-  <% if (hubCan('homes', 'edit') && me.homes === 'all') { %><a href="/admin/homes/new" class="btn btn--primary">+ Add a home</a><% } %>
+  <% if (hubCan('homes', 'edit') && me.homes === 'all') { %><div style="display:flex;gap:.5rem;flex-wrap:wrap;"><a href="/admin/homes/import" class="btn btn--ghost">Import from a spreadsheet</a><a href="/admin/homes/new" class="btn btn--primary">+ Add a home</a></div><% } %>
 </div>
 
 <div class="home-tiles">

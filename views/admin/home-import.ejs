@@ -1,0 +1,29 @@
+<%- include('../partials/admin-header') %>
+<div class="hub-crumb"><a href="/admin/homes">Homes</a> › Import homes</div>
+<h1 class="hub-h1">Import homes from a spreadsheet</h1>
+<% if (results) { var ok = results.filter(function (r) { return r.ok; }), skipped = results.filter(function (r) { return r.skipped; }); %>
+  <div class="hub-notice <%= ok.length ? 'hub-notice--ok' : 'hub-notice--warn' %>"><%= ok.length %> of <%= results.length %> added as drafts<%= skipped.length ? ', ' + skipped.length + ' already in the hub' : '' %>. Drafts don’t show on the website until you open each one and make it live.</div>
+  <div class="hub-card"><div class="table-wrap"><table class="table">
+    <thead><tr><th>Home</th><th>Town</th><th>Result</th></tr></thead>
+    <tbody><% results.forEach(function (r) { %><tr>
+      <td><% if (r.id) { %><a href="/admin/homes/<%= r.id %>/edit"><%= r.name %></a><% } else { %><%= r.name %><% } %></td>
+      <td><%= r.town || '—' %></td>
+      <td>
+        <% if (r.ok) { %><span class="hub-pill hub-pill--ok">Added as a draft</span><% } else if (r.skipped) { %><span class="hub-pill">Already in the hub — skipped</span><% } else { %><span class="hub-pill hub-pill--bad"><%= r.error %></span><% } %>
+        <% if (r.noPin) { %><div class="hint">Postcode not found, so there’s no map pin or region yet — open the home and save it to try again.</div><% } %>
+        <% if (r.dropped && r.dropped.length) { %><div class="hint">Not recognised, so left off: <%= r.dropped.join(', ') %></div><% } %>
+      </td>
+    </tr><% }) %></tbody>
+  </table></div></div>
+  <p><a class="btn btn--primary" href="/admin/homes">Back to Homes</a></p>
+<% } else { %>
+<div class="hub-card" style="padding:1.1rem 1.25rem;">
+  <p style="margin-top:0;">Add several homes at once from a CSV file — one row per home, with a header row. Every home is added as a <strong>draft</strong>: nothing shows on the website until you open the home, check it, add photos and make it live.</p>
+  <p class="muted" style="margin-bottom:0;">Columns used (others are ignored): Home name, Phone, Email, Short description, Address, Town, Postcode, Beds, Types of care, Specialist care, Facilities, CQC rating, Date of latest report, CQC location ID, carehome.co.uk link, Score, Reviews, Google Maps link, Visiting hours, Parking and travel. Separate several care types or facilities with “;”. Homes already in the hub (same name and postcode) are skipped.</p>
+</div>
+<form action="/admin/homes/import" method="post" enctype="multipart/form-data" class="admin-form" style="margin-top:1rem;">
+  <div class="field"><label for="i-file">CSV file (in Excel or Google Sheets: Save as / Download → CSV)</label><input id="i-file" type="file" name="file" accept=".csv,.txt" required /></div>
+  <div><button class="btn btn--primary" type="submit">Import as drafts</button></div>
+</form>
+<% } %>
+<%- include('../partials/admin-footer') %>
